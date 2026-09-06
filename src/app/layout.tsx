@@ -30,6 +30,9 @@ export const metadata: Metadata = {
   keywords: ["CV oluşturucu", "özgeçmiş hazırlama", "PDF düzenleme", "Word PDF dönüştürme", "CV builder"],
   applicationName: "AI CV Builder",
   authors: [{ name: "AI CV Builder" }],
+  verification: {
+    google: "OSus5UTi3QuVh6gDZtcqMmoxSfLKMIOQEkbAus0L59c",
+  },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",

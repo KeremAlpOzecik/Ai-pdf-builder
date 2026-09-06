@@ -33,7 +33,9 @@ const MODELS = ["gemini-3.7-flash", "gemini-3.6-flash"] as const;
 export function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured.");
+    const error = new Error("AI service is not configured.");
+    error.name = "AI_CONFIGURATION_ERROR";
+    throw error;
   }
   return new GoogleGenAI({ apiKey });
 }

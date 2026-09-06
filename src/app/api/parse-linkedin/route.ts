@@ -69,6 +69,12 @@ export async function POST(request: Request) {
 
     return Response.json({ cv });
   } catch (error) {
+    if (error instanceof Error && error.name === "AI_CONFIGURATION_ERROR") {
+      return Response.json(
+        { error: "AI import is temporarily unavailable. Configure GEMINI_API_KEY in the Vercel Production environment." },
+        { status: 503 },
+      );
+    }
     return Response.json({ error: safeServerError(error, "Failed to parse PDF.") }, { status: 500 });
   }
 }

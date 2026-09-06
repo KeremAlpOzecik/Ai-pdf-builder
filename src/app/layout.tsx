@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist_Mono, Source_Sans_3 } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ai-pdf-builder.vercel.app"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "AI CV Builder | PDF araçları ve CV oluşturucu",
     template: "%s | AI CV Builder",

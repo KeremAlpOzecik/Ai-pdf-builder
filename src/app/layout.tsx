@@ -51,6 +51,14 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "AI CV Builder",
+    url: "https://ai-pdf-builder.vercel.app",
+    description: "Ücretsiz PDF araçları ve yapay zekâ destekli CV oluşturucu.",
+  };
+
   return (
     <html
       lang="tr"
@@ -59,6 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col font-sans">
         <Providers>{children}</Providers>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
       </body>
     </html>
   );

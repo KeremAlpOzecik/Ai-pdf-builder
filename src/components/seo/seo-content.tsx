@@ -85,6 +85,23 @@ export function SeoContent() {
           ))}
         </div>
       </section>
+      <section className="mx-auto max-w-7xl border-t border-border/70 px-5 py-14 sm:px-8" aria-labelledby="guides-title">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">PDF ve CV rehberleri</p>
+        <h2 id="guides-title" className="mt-3 text-3xl font-semibold tracking-tight">Dosyalarını daha iyi hazırlamak için kısa rehberler</h2>
+        <div className="mt-7 grid gap-4 md:grid-cols-3">
+          {[
+            ["/guides/ucretsiz-pdf-birlestirme", "Ücretsiz PDF birleştirme nasıl yapılır?"],
+            ["/guides/pdf-word-cevirme", "PDF’i Word’e ücretsiz çevirme"],
+            ["/guides/ats-uyumlu-cv-olusturma", "ATS uyumlu CV nasıl oluşturulur?"],
+            ["/guides/cv-pdf-duzenleme", "CV PDF dosyası nasıl düzenlenir?"],
+            ["/guides/pdf-sikistirma", "PDF dosya boyutu nasıl küçültülür?"],
+          ].map(([href, title]) => (
+            <Link key={href} href={href} className="rounded-2xl border border-border/70 bg-card p-5 text-sm font-semibold transition hover:-translate-y-0.5 hover:border-primary/40">
+              {title} <span className="ml-1 text-primary">→</span>
+            </Link>
+          ))}
+        </div>
+      </section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
     </>
   );

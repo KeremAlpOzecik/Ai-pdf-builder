@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site-url";
+import { guides } from "@/lib/guides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
-  const routes = ["/", "/studio", "/tools/edit-pdf", "/tools/word-to-pdf", "/tools/pdf-to-word", "/tools/merge", "/tools/split", "/tools/compress", "/tools/jpg-pdf"];
+  const routes = ["/", "/studio", "/tools/edit-pdf", "/tools/word-to-pdf", "/tools/pdf-to-word", "/tools/merge", "/tools/split", "/tools/compress", "/tools/jpg-pdf", ...guides.map((guide) => `/guides/${guide.slug}`)];
   return routes.map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),

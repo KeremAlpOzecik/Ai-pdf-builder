@@ -35,11 +35,8 @@ export async function POST(request: Request) {
     if (!hasPdfSignature(new Uint8Array(buffer))) {
       return Response.json({ error: "The uploaded PDF could not be validated." }, { status: 400 });
     }
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: new Uint8Array(buffer) });
-    const extracted = await parser.getText();
-    await parser.destroy();
-
+    const pdfParse = (await import("pdf-parse")).default;
+    const extracted = await pdfParse(buffer);
     const text = extracted.text?.trim() ?? "";
     const prompt =
       `Parse this resume PDF into CVData. Extract only. Do not optimize wording. targetLanguage=${targetLanguage}. Do not invent facts.`;

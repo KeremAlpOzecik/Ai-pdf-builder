@@ -287,9 +287,9 @@ export const copy = {
     previewActions: "Canlı önizleme",
     previewHint: "Yazdıkça güncellenir",
     hubKicker: "Ücretsiz PDF araçları",
-    hubTitle: "Dosyayı düzenle. Yeniden yazma.",
+    hubTitle: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
     hubSubtitle:
-      "PDF’te metne tıkla, Word çevir, birleştir, böl, sıkıştır veya görselleri sayfa yap. Dosyalar bu tarayıcıda kalır.",
+      "PDF’te yazım hatasına tıkla ve düzelt, Word çevir, birleştir veya sıkıştır. LinkedIn özgeçmişini stüdyoda ATS uyumlu hale getir. Hesap yok; dosyalar tarayıcıda kalır.",
     hubPrivacy: "Hesap yok. İşlem cihazında olur.",
     studioCardTitle: "CV stüdyosu",
     studioCardHint: "Özgeçmişi canlı önizlemeyle kur, PDF veya Word indir.",

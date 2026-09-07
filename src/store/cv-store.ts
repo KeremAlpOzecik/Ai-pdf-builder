@@ -74,8 +74,8 @@ function finishTranslateIfDone(
 export const useCvStore = create<CVStore>()(
   persist(
     (set) => ({
-      cv: createEmptyCv("EN"),
-      uiLanguage: "EN",
+      cv: createEmptyCv("TR"),
+      uiLanguage: "TR",
       mobileView: "edit",
       screen: "home",
       formTab: "import",
@@ -157,14 +157,14 @@ export const useCvStore = create<CVStore>()(
           mobileView: "edit",
         }),
       reset: () =>
-        set({
-          cv: createEmptyCv("EN"),
-          uiLanguage: "EN",
+        set((state) => ({
+          cv: createEmptyCv(state.uiLanguage),
+          uiLanguage: state.uiLanguage,
           screen: "home",
           formTab: "import",
           sourceFileName: null,
           pendingReview: null,
-        }),
+        })),
     }),
     {
       name: "ai-cv-builder",

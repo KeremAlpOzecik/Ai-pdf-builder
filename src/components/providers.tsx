@@ -8,8 +8,8 @@ import type { TargetLanguage } from "@/types/cv";
 import { useCvStore } from "@/store/cv-store";
 
 type Labels = (typeof copy)[TargetLanguage];
-const LabelsContext = createContext<Labels>(copy.EN);
-const LangContext = createContext<TargetLanguage>("EN");
+const LabelsContext = createContext<Labels>(copy.TR);
+const LangContext = createContext<TargetLanguage>("TR");
 
 export function useLabels() {
   return useContext(LabelsContext);

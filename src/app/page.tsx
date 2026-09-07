@@ -1,19 +1,25 @@
 import { ToolsHub } from "@/components/tools/tools-hub";
 import { SeoContent } from "@/components/seo/seo-content";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Ücretsiz PDF Araçları ve Yapay Zekâ CV Oluşturucu",
+export const metadata: Metadata = {
+  title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
   description:
-    "PDF düzenle, Word-PDF dönüştür, PDF birleştir veya sıkıştır. CV’ni yapay zekâ ile güncelle ve ATS için hazırla.",
+    "LinkedIn CV PDF’ini tarayıcıda düzenle, yazım hatasını düzelt, Word çevir veya birleştir. ATS uyumlu Türkçe özgeçmiş indir. Hesap yok.",
   keywords: [
-    "ücretsiz PDF araçları",
-    "PDF düzenleme",
-    "PDF Word dönüştürme",
+    "ücretsiz PDF düzenle",
+    "linkedin cv pdf düzenle ücretsiz",
+    "ATS uyumlu CV Türkçe ücretsiz",
+    "cv pdf yazım hatası düzelt",
     "yapay zekâ CV oluşturucu",
-    "ATS uyumlu CV",
-    "free PDF tools",
-    "AI resume builder",
+    "PDF Word çevirme",
   ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
+    description: "LinkedIn özgeçmişini tarayıcıda düzelt. Hesap yok, dosya sende kalır.",
+    url: "/",
+  },
 };
 
 export default function Home() {

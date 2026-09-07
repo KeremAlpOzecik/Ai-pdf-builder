@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { downloadBlob, stem } from "@/lib/download";
 import { copy } from "@/lib/i18n";
-import { useLabels } from "@/components/providers";
+import { useDisplayLanguage, useLabels } from "@/components/providers";
 import { compressPdf, imagesToPdf, mergePdfs, pdfToJpegs, splitPdf } from "@/lib/pdf/ops";
 import { docxToPdf, pdfToDocx } from "@/lib/pdf/word";
 import { openPdf } from "@/lib/pdf/pdfjs-client";
+import { getToolSeo } from "@/lib/tool-seo";
 import { isToolSlug, type ToolSlug } from "@/lib/tools";
 
 function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
@@ -31,6 +32,7 @@ function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
 
 export function ToolWorkspace({ slug }: { slug: string }) {
   const labels = useLabels();
+  const lang = useDisplayLanguage();
   if (!isToolSlug(slug)) {
     return (
       <ToolShell title={labels.unknownTool} hint="">
@@ -38,9 +40,10 @@ export function ToolWorkspace({ slug }: { slug: string }) {
       </ToolShell>
     );
   }
+  const seo = getToolSeo(slug);
   const [title, hint] = copyFor(slug, labels);
   return (
-    <ToolShell title={title} hint={hint} wide={slug === "edit-pdf"}>
+    <ToolShell title={lang === "TR" && seo ? seo.h1 : title} hint={seo && lang === "TR" ? seo.summary : hint} wide={slug === "edit-pdf"}>
       {slug === "edit-pdf" ? <EditPdfEditor /> : <GenericTool slug={slug} />}
     </ToolShell>
   );

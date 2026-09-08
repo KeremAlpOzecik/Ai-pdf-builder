@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createEmptyCv } from "@/lib/empty-cv";
 import type { ChangeStatus, CvChange } from "@/lib/cv-diff";
-import type { CVData, TargetLanguage } from "@/types/cv";
+import type { CVData, ResumeTemplate, TargetLanguage } from "@/types/cv";
 
 type MobileView = "edit" | "preview";
 export type Screen = "home" | "editor";
@@ -33,6 +33,7 @@ interface CVStore {
   mobileView: MobileView;
   screen: Screen;
   formTab: FormTab;
+  resumeTemplate: ResumeTemplate;
   sourceFileName: string | null;
   aiJob: AiJobKind | null;
   aiStep: number;
@@ -43,6 +44,7 @@ interface CVStore {
   setMobileView: (view: MobileView) => void;
   setScreen: (screen: Screen) => void;
   setFormTab: (tab: FormTab) => void;
+  setResumeTemplate: (template: ResumeTemplate) => void;
   setSourceFileName: (name: string | null) => void;
   startAiJob: (kind: AiJobKind) => void;
   setAiStep: (step: number) => void;
@@ -79,6 +81,7 @@ export const useCvStore = create<CVStore>()(
       mobileView: "edit",
       screen: "home",
       formTab: "import",
+      resumeTemplate: "modern",
       sourceFileName: null,
       aiJob: null,
       aiStep: 0,
@@ -94,6 +97,7 @@ export const useCvStore = create<CVStore>()(
       setMobileView: (mobileView) => set({ mobileView }),
       setScreen: (screen) => set({ screen }),
       setFormTab: (formTab) => set({ formTab }),
+      setResumeTemplate: (resumeTemplate) => set({ resumeTemplate }),
       setSourceFileName: (sourceFileName) => set({ sourceFileName }),
       startAiJob: (aiJob) => set({ aiJob, aiStep: 1 }),
       setAiStep: (aiStep) => set({ aiStep }),
@@ -174,6 +178,7 @@ export const useCvStore = create<CVStore>()(
         uiLanguage: state.uiLanguage,
         screen: state.screen,
         formTab: state.formTab,
+        resumeTemplate: state.resumeTemplate,
         sourceFileName: state.sourceFileName,
       }),
     }

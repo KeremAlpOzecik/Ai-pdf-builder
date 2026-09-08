@@ -6,7 +6,7 @@ const faq = [
   {
     question: "PDF işlemleri ücretsiz mi?",
     answer:
-      "Evet. PDF düzenleme, Word-PDF dönüşümü, birleştirme, bölme, sıkıştırma ve JPG-PDF işlemleri ücretsiz. Hesap açmazsın.",
+      "Evet. PDF düzenleme, Word-PDF, birleştirme, OCR, imza, filigran, döndürme, sayfa numarası ve sıkıştırma ücretsiz. Günlük limit yok; hesap açmazsın.",
   },
   {
     question: "LinkedIn CV PDF’ini ücretsiz düzenleyebilir miyim?",
@@ -59,8 +59,9 @@ export function SeoContent() {
           </div>
           <div className="space-y-5 text-base leading-7 text-muted-foreground">
             <p>
-              AI CV Builder; PDF düzenleme, PDF’i Word’e çevirme, Word’ü PDF yapma, birleştirme, bölme, sıkıştırma ve
-              JPG-PDF dönüşümü sunar. Hesap açmadan dosyanı seç, işlemi çalıştır, sonucu indir.
+              AI CV Builder; PDF düzenleme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
+              sayfa numarası sunar. Smallpdf / iLovePDF’de ücretli kalan bu işlemler burada ücretsizdir. Hesap açmadan
+              dosyanı seç, işlemi çalıştır, sonucu indir.
             </p>
             <p>
               CV stüdyosunda LinkedIn PDF’ini veya ekran görüntünü içe aktar, yazım hatasını düzelt ve ATS için ifade

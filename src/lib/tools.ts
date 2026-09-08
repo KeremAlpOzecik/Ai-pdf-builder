@@ -6,6 +6,11 @@ export const TOOL_SLUGS = [
   "split",
   "compress",
   "jpg-pdf",
+  "ocr",
+  "sign",
+  "watermark",
+  "rotate",
+  "page-numbers",
 ] as const;
 
 export type ToolSlug = (typeof TOOL_SLUGS)[number];

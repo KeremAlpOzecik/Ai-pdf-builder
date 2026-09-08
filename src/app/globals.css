@@ -190,7 +190,7 @@
 
 .pdf-text-editor {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   margin: 0;
   border: 1px solid var(--primary);
   background: #fff;
@@ -199,4 +199,22 @@
   line-height: 1.1;
   outline: none;
   box-sizing: border-box;
+}
+
+.pdf-edited-text {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  border: 0;
+  padding: 0 1px;
+  white-space: pre;
+  line-height: 1;
+  text-align: left;
+  cursor: text;
+  outline: 1px solid transparent;
+  transform-origin: 0 0;
+}
+
+.pdf-edited-text:hover {
+  outline-color: rgb(34 120 80 / 0.55);
 }

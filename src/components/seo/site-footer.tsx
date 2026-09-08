@@ -11,8 +11,8 @@ export function SiteFooter() {
         <div>
           <p className="font-heading text-base tracking-tight">AI CV Builder</p>
           <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-            Ücretsiz PDF düzenle, Word çevir, birleştir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda ATS uyumlu hale
-            getir. Hesap yok.
+            Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda ATS
+            uyumlu hale getir. Hesap yok.
           </p>
         </div>
         <div>

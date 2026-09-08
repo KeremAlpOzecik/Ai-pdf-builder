@@ -22,12 +22,13 @@ export function Welcome() {
   const busy = aiJob !== null;
   const canContinue = cvHasContent(cv);
 
-  async function importFile(kind: "pdf" | "image", file: File) {
+  async function importFiles(kind: "pdf" | "image", files: File[]) {
+    if (files.length === 0) return;
     startAiJob("parse");
     try {
-      const next = await parseCvFile(file, kind, targetLanguage);
+      const next = await parseCvFile(files, kind, targetLanguage);
       setCv(next);
-      setSourceFileName(file.name);
+      setSourceFileName(files.map((file) => file.name).join(", "));
       openEditor("personal");
       toast.success(labels.importDone);
     } catch (error) {
@@ -122,8 +123,8 @@ export function Welcome() {
             className="hidden"
             disabled={busy}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void importFile("pdf", file);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void importFiles("pdf", files);
               e.currentTarget.value = "";
             }}
           />
@@ -139,11 +140,12 @@ export function Welcome() {
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp,image/jpg"
+            multiple
             className="hidden"
             disabled={busy}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void importFile("image", file);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void importFiles("image", files);
               e.currentTarget.value = "";
             }}
           />

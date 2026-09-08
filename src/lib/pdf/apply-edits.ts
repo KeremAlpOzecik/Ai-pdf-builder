@@ -26,7 +26,6 @@ export async function applyTextEdits(
     const coverW = Math.max(
       box.pdfW,
       font.widthOfTextAtSize(box.text || " ", box.fontSize),
-      font.widthOfTextAtSize(next || " ", box.fontSize),
     );
     page.drawRectangle({
       x: box.pdfX - padX,
@@ -41,7 +40,7 @@ export async function applyTextEdits(
         y: box.pdfY,
         size: box.fontSize,
         font,
-        color: rgbFromCss(28, 25, 23),
+        color: rgbFromCss(...box.color),
       });
     }
   }

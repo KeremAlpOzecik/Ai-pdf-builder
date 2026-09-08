@@ -188,6 +188,119 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     ],
     related: [{ label: "PDF düzenle", href: "/tools/edit-pdf" }],
   },
+  ocr: {
+    slug: "ocr",
+    title: "Ücretsiz OCR PDF | Taramayı aranabilir yap",
+    h1: "Taranmış PDF’i ücretsiz OCR ile aranabilir yap",
+    description:
+      "Tarama veya fotoğraf PDF’sine metin katmanı ekle. Smallpdf ve iLovePDF’de ücretli olan OCR burada ücretsiz, tarayıcıda çalışır.",
+    keywords: ["ücretsiz OCR PDF", "tarama PDF metin", "OCR PDF ücretsiz"],
+    summary:
+      "Görüntü sayfalarını okuyup görünmez bir metin katmanı ekler. Belge görünümü aynı kalır; kopyala-yapıştır ve arama çalışır. Uzun dosyalarda ilk 20 sayfa işlenir.",
+    steps: [
+      { title: "Tarama PDF’ini seç", body: "Telefon fotoğrafı veya tarayıcı çıktısı yükle. Her dosya 25 MB altında olmalı." },
+      { title: "OCR çalıştır", body: "Sayfalar tarayıcıda okunur. Türkçe ve İngilizce birlikte tanınır." },
+      { title: "Aranabilir PDF indir", body: "İndirdiğin dosyada Ctrl+F ile isim veya tarih ara. ATS için mümkünse dijital CV tercih et." },
+    ],
+    faqs: [
+      {
+        question: "OCR ücretsiz mi?",
+        answer: "Evet. Günlük işlem limiti yok. Dosya cihazında işlenir; hesap açmazsın.",
+      },
+    ],
+    related: [
+      { label: "PDF → Word", href: "/tools/pdf-to-word" },
+      { label: "PDF düzenle", href: "/tools/edit-pdf" },
+    ],
+  },
+  sign: {
+    slug: "sign",
+    title: "Ücretsiz PDF imzala",
+    h1: "PDF’e ücretsiz imza ekle",
+    description: "PDF’in son sayfasına yazı veya görsel imza ekle. E-imza damgası ücretsiz, hesapsız.",
+    keywords: ["ücretsiz PDF imzala", "PDF imza ekle", "e-imza PDF ücretsiz"],
+    summary:
+      "İsim yaz veya şeffaf PNG imza yükle. Damga son sayfanın sağına konur. Bu görsel imzadır; nitelikli elektronik imza (e-imza / KEP) yerine geçmez.",
+    steps: [
+      { title: "PDF seç", body: "İmzalanacak belgeyi yükle." },
+      { title: "İsim veya görsel ekle", body: "Adını yaz, istersen imza görseli de seç." },
+      { title: "İndir", body: "Son sayfayı açıp damganın okunduğunu kontrol et." },
+    ],
+    faqs: [
+      {
+        question: "Bu yasal e-imza mı?",
+        answer:
+          "Hayır. Görsel damgadır. Resmi e-imza için nitelikli sertifika gerekir. Teklif, tutanak veya iç evrak için pratik bir damga olarak kullanılır.",
+      },
+    ],
+    related: [{ label: "Filigran", href: "/tools/watermark" }],
+  },
+  watermark: {
+    slug: "watermark",
+    title: "Ücretsiz PDF filigran",
+    h1: "PDF’e ücretsiz filigran ekle",
+    description: "Her sayfaya TASLAK veya isim damgası bas. Ücretsiz PDF watermark, tarayıcıda.",
+    keywords: ["PDF filigran ücretsiz", "PDF watermark", "taslak damgası PDF"],
+    summary:
+      "Metin çapraz ve yarı saydam basılır. CV taslağı, sözleşme kopyası veya ‘gizli’ işareti için kullan. Orijinal dosyayı sakla.",
+    steps: [
+      { title: "PDF yükle", body: "Damgalanacak dosyayı seç." },
+      { title: "Metni yaz", body: "TASLAK, GİZLİ veya adın gibi kısa tut." },
+      { title: "İndir", body: "Birkaç sayfayı açıp okunabilirliği kontrol et." },
+    ],
+    faqs: [
+      {
+        question: "Filigran ücretsiz mi?",
+        answer: "Evet. Limit ve hesap yok. İşlem tarayıcıda olur.",
+      },
+    ],
+    related: [{ label: "Sayfa numarası", href: "/tools/page-numbers" }],
+  },
+  rotate: {
+    slug: "rotate",
+    title: "Ücretsiz PDF döndür",
+    h1: "PDF sayfalarını ücretsiz döndür",
+    description: "Yatay taranmış sayfaları 90, 180 veya 270 derece çevir. Ücretsiz PDF rotate.",
+    keywords: ["PDF döndürme ücretsiz", "PDF rotate", "sayfa çevirme PDF"],
+    summary:
+      "Telefonla çekilmiş evrak ters duruyorsa tüm sayfaları aynı açıyla çevir. Tek sayfa için önce böl, döndür, sonra birleştir.",
+    steps: [
+      { title: "PDF seç", body: "Yanlış yöndeki dosyayı yükle." },
+      { title: "Açıyı seç", body: "90° çoğu yatay taramayı düzeltir." },
+      { title: "Yeni PDF indir", body: "İlk sayfayı açıp yönün doğru olduğunu gör." },
+    ],
+    faqs: [
+      {
+        question: "Tek sayfayı döndürebilir miyim?",
+        answer: "Önce sayfa aralığını ayır, döndür, gerekirse tekrar birleştir.",
+      },
+    ],
+    related: [
+      { label: "PDF böl", href: "/tools/split" },
+      { label: "PDF birleştir", href: "/tools/merge" },
+    ],
+  },
+  "page-numbers": {
+    slug: "page-numbers",
+    title: "Ücretsiz PDF sayfa numarası",
+    h1: "PDF’e ücretsiz sayfa numarası ekle",
+    description: "Her sayfanın altına 1 / N formatında numara bas. Ücretsiz, hesapsız.",
+    keywords: ["PDF sayfa numarası ücretsiz", "PDF page numbers", "PDF numaralandır"],
+    summary:
+      "Başvuru paketi veya çok sayfalı evrakta sayfa kaybını azaltır. Numara alt ortada durur. Kapak sayfasını hariç tutmak için önce kapağı ayır.",
+    steps: [
+      { title: "PDF yükle", body: "Numaralanacak belgeyi seç." },
+      { title: "Numaralandır", body: "İşlem tarayıcıda sayfa sayar ve basar." },
+      { title: "İndir", body: "Son sayfadaki toplamın doğru olduğunu kontrol et." },
+    ],
+    faqs: [
+      {
+        question: "Sayfa numarası ücretsiz mi?",
+        answer: "Evet. Günlük limit yok.",
+      },
+    ],
+    related: [{ label: "PDF birleştir", href: "/tools/merge" }],
+  },
 };
 
 export function getToolSeo(slug: string): ToolSeo | undefined {

@@ -6,7 +6,8 @@ import {
   HeadingLevel,
   AlignmentType,
 } from "docx";
-import type { CVData } from "@/types/cv";
+import type { CVData, ResumeTemplate } from "@/types/cv";
+import { formatCvDate, formatCvDateRange, getCvDocumentLabels } from "@/lib/cv-format";
 
 function bullets(items: string[]) {
   return items.filter(Boolean).map(
@@ -18,8 +19,11 @@ function bullets(items: string[]) {
   );
 }
 
-export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
+export async function cvToDocxBlob(cv: CVData, template: ResumeTemplate = "modern"): Promise<Blob> {
   const { personalInfo } = cv;
+  const labels = getCvDocumentLabels(cv.targetLanguage);
+  const headingColor = template === "modern" ? "173F3B" : template === "compact" ? "214B72" : "302A27";
+  const headerAlignment = template === "classic" ? AlignmentType.CENTER : AlignmentType.LEFT;
   const contact = [
     personalInfo.email,
     personalInfo.phone,
@@ -34,15 +38,15 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
   const children: Paragraph[] = [
     new Paragraph({
       heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: personalInfo.fullName || "Curriculum Vitae", bold: true })],
+      alignment: headerAlignment,
+      children: [new TextRun({ text: personalInfo.fullName || "Curriculum Vitae", bold: true, color: headingColor })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
+      alignment: headerAlignment,
       children: [new TextRun({ text: personalInfo.title, italics: true, size: 22 })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
+      alignment: headerAlignment,
       spacing: { after: 200 },
       children: [new TextRun({ text: contact, size: 18 })],
     }),
@@ -52,7 +56,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Professional Summary")],
+        children: [new TextRun({ text: labels.summary, color: headingColor })],
       }),
       new Paragraph({ children: [new TextRun({ text: personalInfo.summary, size: 20 })] })
     );
@@ -62,13 +66,11 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Experience")],
+        children: [new TextRun({ text: labels.experience, color: headingColor })],
       })
     );
     for (const job of cv.workExperience) {
-      const dates = [job.startDate, job.current ? "Present" : job.endDate]
-        .filter(Boolean)
-        .join(" – ");
+      const dates = formatCvDateRange(job.startDate, job.endDate, job.current, cv.targetLanguage);
       children.push(
         new Paragraph({
           children: [
@@ -88,7 +90,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Education")],
+        children: [new TextRun({ text: labels.education, color: headingColor })],
       })
     );
     for (const edu of cv.education) {
@@ -96,7 +98,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
         new Paragraph({
           children: [
             new TextRun({
-              text: [edu.degree, edu.fieldOfStudy].filter(Boolean).join(" in "),
+              text: [edu.degree, edu.fieldOfStudy].filter(Boolean).join(labels.in),
               bold: true,
               size: 22,
             }),
@@ -105,7 +107,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
         new Paragraph({
           children: [
             new TextRun({
-              text: [edu.institution, `${edu.startDate} – ${edu.endDate}`]
+              text: [edu.institution, formatCvDateRange(edu.startDate, edu.endDate, false, cv.targetLanguage)]
                 .filter(Boolean)
                 .join("  |  "),
               size: 20,
@@ -120,7 +122,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Skills")],
+        children: [new TextRun({ text: labels.skills, color: headingColor })],
       })
     );
     for (const group of cv.skills) {
@@ -140,7 +142,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Projects")],
+        children: [new TextRun({ text: labels.projects, color: headingColor })],
       })
     );
     for (const project of cv.projects) {
@@ -164,7 +166,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Certifications")],
+        children: [new TextRun({ text: labels.certifications, color: headingColor })],
       })
     );
     for (const cert of cv.certifications) {
@@ -172,7 +174,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
         new Paragraph({
           children: [
             new TextRun({
-              text: [cert.name, cert.issuer, cert.date].filter(Boolean).join("  |  "),
+              text: [cert.name, cert.issuer, formatCvDate(cert.date, cv.targetLanguage)].filter(Boolean).join("  |  "),
               size: 20,
             }),
           ],
@@ -185,7 +187,7 @@ export async function cvToDocxBlob(cv: CVData): Promise<Blob> {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
-        children: [new TextRun("Languages")],
+        children: [new TextRun({ text: labels.languages, color: headingColor })],
       }),
       new Paragraph({
         children: [

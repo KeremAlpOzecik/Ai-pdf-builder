@@ -1,4 +1,5 @@
 export type TargetLanguage = "TR" | "EN";
+export type ResumeTemplate = "modern" | "classic" | "compact";
 
 export interface PersonalInfo {
   fullName: string;

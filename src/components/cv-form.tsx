@@ -245,6 +245,7 @@ export function CvForm() {
               <Field label={labels.startDate}>
                 <Input
                   value={job.startDate}
+                  placeholder={labels.datePlaceholder}
                   onChange={(e) => {
                     const workExperience = [...cv.workExperience];
                     workExperience[index] = { ...job, startDate: e.target.value };
@@ -255,6 +256,7 @@ export function CvForm() {
               <Field label={labels.endDate}>
                 <Input
                   value={job.endDate}
+                  placeholder={labels.datePlaceholder}
                   disabled={job.current}
                   onChange={(e) => {
                     const workExperience = [...cv.workExperience];
@@ -273,7 +275,7 @@ export function CvForm() {
                   workExperience[index] = {
                     ...job,
                     current: e.target.checked,
-                    endDate: e.target.checked ? "Present" : job.endDate,
+                    endDate: e.target.checked ? "" : job.endDate,
                   };
                   update({ ...cv, workExperience });
                 }}
@@ -359,6 +361,7 @@ export function CvForm() {
               <Field label={labels.startDate}>
                 <Input
                   value={edu.startDate}
+                  placeholder={labels.datePlaceholder}
                   onChange={(e) => {
                     const education = [...cv.education];
                     education[index] = { ...edu, startDate: e.target.value };
@@ -369,6 +372,7 @@ export function CvForm() {
               <Field label={labels.endDate}>
                 <Input
                   value={edu.endDate}
+                  placeholder={labels.datePlaceholder}
                   onChange={(e) => {
                     const education = [...cv.education];
                     education[index] = { ...edu, endDate: e.target.value };
@@ -574,6 +578,7 @@ export function CvForm() {
               <Field label={labels.date}>
                 <Input
                   value={cert.date}
+                  placeholder={labels.datePlaceholder}
                   onChange={(e) => {
                     const certifications = [...(cv.certifications ?? [])];
                     certifications[index] = { ...cert, date: e.target.value };

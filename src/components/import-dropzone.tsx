@@ -18,12 +18,13 @@ export function ImportDropzones() {
   const aiJob = useCvStore((s) => s.aiJob);
   const busy = aiJob !== null;
 
-  async function send(kind: "pdf" | "image", file: File) {
+  async function send(kind: "pdf" | "image", files: File[]) {
+    if (files.length === 0) return;
     startAiJob("parse");
     try {
-      const cv = await parseCvFile(file, kind, targetLanguage);
+      const cv = await parseCvFile(files, kind, targetLanguage);
       setCv(cv);
-      setSourceFileName(file.name);
+      setSourceFileName(files.map((file) => file.name).join(", "));
       setFormTab("personal");
       toast.success(labels.importDone);
     } catch (error) {
@@ -50,8 +51,8 @@ export function ImportDropzones() {
             className="hidden"
             disabled={busy}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void send("pdf", file);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void send("pdf", files);
               e.currentTarget.value = "";
             }}
           />
@@ -67,11 +68,12 @@ export function ImportDropzones() {
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp,image/jpg"
+            multiple
             className="hidden"
             disabled={busy}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void send("image", file);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void send("image", files);
               e.currentTarget.value = "";
             }}
           />

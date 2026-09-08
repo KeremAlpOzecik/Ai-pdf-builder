@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { CvForm } from "@/components/cv-form";
 import { CvPreview } from "@/components/cv-preview";
+import { ResumeTemplatePicker } from "@/components/resume-template-picker";
 import { Welcome } from "@/components/welcome";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,13 +28,14 @@ export function Dashboard() {
   const mobileView = useCvStore((s) => s.mobileView);
   const setMobileView = useCvStore((s) => s.setMobileView);
   const screen = useCvStore((s) => s.screen);
+  const resumeTemplate = useCvStore((s) => s.resumeTemplate);
   const labels = useLabels();
   const canExport = cvHasContent(cv);
 
   async function exportPdf() {
     try {
       const { cvToPdfBlob } = await import("@/lib/export-pdf");
-      const blob = await cvToPdfBlob(cv);
+      const blob = await cvToPdfBlob(cv, resumeTemplate);
       downloadBlob(blob, `${cv.personalInfo.fullName || "cv"}.pdf`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "PDF export failed");
@@ -43,7 +45,7 @@ export function Dashboard() {
   async function exportDocx() {
     try {
       const { cvToDocxBlob } = await import("@/lib/export-docx");
-      const blob = await cvToDocxBlob(cv);
+      const blob = await cvToDocxBlob(cv, resumeTemplate);
       downloadBlob(blob, `${cv.personalInfo.fullName || "cv"}.docx`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Word export failed");
@@ -71,7 +73,7 @@ export function Dashboard() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 }}
-              className={`min-h-0 rounded-2xl border border-border/80 bg-[oklch(0.93_0.014_80)] p-5 sm:p-6 ${mobileView === "edit" ? "hidden lg:block" : ""}`}
+              className={`h-[calc(100vh-8.75rem)] min-h-0 flex-col rounded-2xl border border-border/80 bg-[oklch(0.93_0.014_80)] p-5 sm:p-6 ${mobileView === "edit" ? "hidden lg:flex" : "flex"}`}
             >
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -99,8 +101,9 @@ export function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <ScrollArea className="h-[calc(100vh-12.25rem)]">
-                <CvPreview cv={cv} />
+              <ResumeTemplatePicker />
+              <ScrollArea className="min-h-0 flex-1">
+                <CvPreview cv={cv} template={resumeTemplate} />
               </ScrollArea>
             </motion.section>
           </div>

@@ -10,6 +10,12 @@ export type PdfTextBox = {
   pdfH: number;
   fontSize: number;
   bg: [number, number, number];
+  color: [number, number, number];
+  fontFamily: string;
+  viewLeft: number;
+  viewTop: number;
+  viewWidth: number;
+  viewHeight: number;
 };
 
 type PdfStrItem = {
@@ -35,6 +41,7 @@ export async function extractTextBoxes(
 ): Promise<PdfTextBox[]> {
   const pdfjs = await loadPdfjs();
   const content = await page.getTextContent();
+  const styles = content.styles as Record<string, { fontFamily?: string }>;
   const ctx = canvas.getContext("2d");
   const sx = canvas.width / viewport.width;
   const sy = canvas.height / viewport.height;
@@ -51,6 +58,7 @@ export async function extractTextBoxes(
     const viewW = raw.width * viewport.scale;
     const left = m[4];
     const top = m[5] - viewH;
+    const bg = samplePaper(ctx, left * sx, top * sy, viewW * sx, viewH * sy);
     boxes.push({
       id: `${page.pageNumber - 1}-${index}`,
       pageIndex: page.pageNumber - 1,
@@ -60,12 +68,53 @@ export async function extractTextBoxes(
       pdfW: raw.width,
       pdfH: fontSize,
       fontSize,
-      bg: samplePaper(ctx, left * sx, top * sy, viewW * sx, viewH * sy),
+      bg,
+      color: sampleTextColor(ctx, left * sx, top * sy, viewW * sx, viewH * sy, bg),
+      fontFamily: (raw.fontName && styles[raw.fontName]?.fontFamily) || "sans-serif",
+      viewLeft: left,
+      viewTop: top,
+      viewWidth: viewW,
+      viewHeight: viewH,
     });
     index += 1;
   }
 
   return boxes;
+}
+
+function sampleTextColor(
+  ctx: CanvasRenderingContext2D | null,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  bg: [number, number, number],
+): [number, number, number] {
+  if (!ctx || width < 1 || height < 1) return [28, 25, 23];
+  const x = Math.max(0, Math.floor(left));
+  const y = Math.max(0, Math.floor(top));
+  const w = Math.min(ctx.canvas.width - x, Math.max(1, Math.ceil(width)));
+  const h = Math.min(ctx.canvas.height - y, Math.max(1, Math.ceil(height)));
+  if (w <= 0 || h <= 0) return [28, 25, 23];
+  try {
+    const pixels = ctx.getImageData(x, y, w, h).data;
+    const buckets = new Map<string, { count: number; rgb: [number, number, number] }>();
+    for (let i = 0; i < pixels.length; i += 16) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const distance = Math.hypot(r - bg[0], g - bg[1], b - bg[2]);
+      if (distance < 48) continue;
+      const key = `${Math.round(r / 24)}-${Math.round(g / 24)}-${Math.round(b / 24)}`;
+      const found = buckets.get(key);
+      if (found) found.count += 1;
+      else buckets.set(key, { count: 1, rgb: [r, g, b] });
+    }
+    const best = [...buckets.values()].sort((a, b) => b.count - a.count)[0];
+    return best?.rgb ?? [28, 25, 23];
+  } catch {
+    return [28, 25, 23];
+  }
 }
 
 function samplePaper(

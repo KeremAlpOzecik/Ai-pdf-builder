@@ -46,8 +46,9 @@ export async function openPdf(data: ArrayBuffer | Uint8Array): Promise<PDFDocume
 export async function renderPage(
   page: PDFPageProxy,
   scale: number,
+  rotation?: number,
 ): Promise<{ canvas: HTMLCanvasElement; viewport: PageViewport }> {
-  const viewport = page.getViewport({ scale });
+  const viewport = page.getViewport({ scale, ...(rotation === undefined ? {} : { rotation }) });
   const outputScale = Math.min(window.devicePixelRatio || 1, 2);
   const canvas = document.createElement("canvas");
   canvas.width = Math.floor(viewport.width * outputScale);

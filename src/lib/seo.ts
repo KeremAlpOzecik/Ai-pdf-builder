@@ -1,7 +1,7 @@
 import { getSiteUrl } from "@/lib/site-url";
 
 export const SITE_NAME = "AI CV Builder";
-export const SEO_UPDATED_AT = "2026-09-07";
+export const SEO_UPDATED_AT = "2026-09-08";
 
 export function absoluteUrl(path = "/") {
   const base = getSiteUrl();

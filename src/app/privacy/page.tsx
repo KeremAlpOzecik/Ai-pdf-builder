@@ -1,11 +1,12 @@
+import { pageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Gizlilik politikası",
   description: "AI CV Builder’da PDF araçları, CV verileri, AI özellikleri ve analitik kullanımı hakkında açıklama.",
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

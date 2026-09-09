@@ -304,5 +304,5 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
 };
 
 export function getToolSeo(slug: string): ToolSeo | undefined {
-  return toolSeo[slug as ToolSlug];
+  return Object.hasOwn(toolSeo, slug) ? toolSeo[slug as ToolSlug] : undefined;
 }

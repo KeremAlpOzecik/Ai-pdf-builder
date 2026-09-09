@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getGuide, guides } from "@/lib/guides";
-import { absoluteUrl, SEO_UPDATED_AT, SITE_NAME } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SEO_UPDATED_AT, SITE_NAME } from "@/lib/seo";
 
 export function generateStaticParams() {
   return guides.map((guide) => ({ slug: guide.slug }));
@@ -13,14 +13,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const guide = getGuide(slug);
-  if (!guide) return {};
-  return {
+  if (!guide) notFound();
+  return pageMetadata({
     title: guide.title,
     description: guide.description,
     keywords: guide.keywords,
-    alternates: { canonical: `/guides/${guide.slug}` },
-    openGraph: { title: guide.title, description: guide.description, url: `/guides/${guide.slug}`, type: "article" },
-  };
+    path: `/guides/${guide.slug}`,
+    type: "article",
+  });
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -33,10 +33,11 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     "@type": "Article",
     headline: guide.title,
     description: guide.description,
+    image: absoluteUrl("/opengraph-image"),
     dateModified: SEO_UPDATED_AT,
     inLanguage: "tr-TR",
-    author: { "@type": "Organization", name: SITE_NAME },
-    publisher: { "@type": "Organization", name: SITE_NAME },
+    author: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl() },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl() },
     mainEntityOfPage: url,
   };
   const breadcrumb = {

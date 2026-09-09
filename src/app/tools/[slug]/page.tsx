@@ -2,6 +2,7 @@ import { ToolWorkspace } from "@/components/tools/tool-workspace";
 import { ToolArticle } from "@/components/seo/tool-article";
 import { TOOL_SLUGS } from "@/lib/tools";
 import { getToolSeo } from "@/lib/tool-seo";
+import { pageMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -12,20 +13,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const seo = getToolSeo(slug);
-  if (!seo) {
-    return {
-      title: "Ücretsiz PDF aracı",
-      description: "Ücretsiz PDF araçlarıyla dosyalarını tarayıcıda kolayca işle.",
-    };
-  }
-  return {
+  if (!seo) notFound();
+  return pageMetadata({
     title: seo.title,
     description: seo.description,
     keywords: seo.keywords,
-    alternates: { canonical: `/tools/${slug}` },
-    openGraph: { title: seo.title, description: seo.description, url: `/tools/${slug}` },
-    twitter: { title: seo.title, description: seo.description },
-  };
+    path: `/tools/${slug}`,
+  });
 }
 
 export default async function ToolPage({

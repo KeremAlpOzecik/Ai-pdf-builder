@@ -3,19 +3,14 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { AppHeader } from "@/components/app-header";
 import { guides } from "@/lib/guides";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "PDF ve CV rehberleri",
   description:
     "LinkedIn CV PDF düzenleme, ATS uyumlu Türkçe özgeçmiş, yazım hatası düzeltme ve ücretsiz PDF birleştirme rehberleri.",
-  alternates: { canonical: "/guides" },
-  openGraph: {
-    title: "PDF ve CV rehberleri",
-    description: "ATS uyumlu CV ve ücretsiz PDF işlemleri için kısa, uygulanabilir rehberler.",
-    url: "/guides",
-  },
-};
+  path: "/guides",
+});
 
 export default function GuidesIndexPage() {
   return (

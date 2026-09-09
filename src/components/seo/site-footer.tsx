@@ -50,6 +50,11 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
+      <div className="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 border-t border-border/70 px-5 py-5 text-xs text-muted-foreground sm:px-8">
+        <Link className="hover:text-foreground hover:underline" href="/privacy">Gizlilik politikası</Link>
+        <Link className="hover:text-foreground hover:underline" href="/terms">Kullanım şartları</Link>
+        <span>Temel PDF araçları tarayıcıda çalışır; AI özellikleri Google Gemini kullanır.</span>
+      </div>
     </footer>
   );
 }

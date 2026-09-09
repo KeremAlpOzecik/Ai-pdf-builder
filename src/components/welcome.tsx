@@ -51,7 +51,12 @@ export function Welcome() {
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
             {labels.welcomeSubtitle}
           </p>
-          <p className="mt-3 text-sm text-muted-foreground/80">{labels.welcomeNoAccount}</p>
+      <p className="mt-3 text-sm text-muted-foreground/80">{labels.welcomeNoAccount}</p>
+          <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
+            {targetLanguage === "TR"
+              ? "AI ile içe aktarma CV içeriğini Google Gemini API’ye gönderir. Hassas bilgi yükleme."
+              : "AI import sends CV content to the Google Gemini API. Do not upload sensitive information."}
+          </p>
 
       <ol className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
         {[labels.welcomeStep1, labels.welcomeStep2, labels.welcomeStep3].map(

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist_Mono, Source_Sans_3 } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteFooter } from "@/components/seo/site-footer";
@@ -32,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s | AI CV Builder",
   },
   description:
-    "LinkedIn CV PDF’ini tarayıcıda düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. ATS uyumlu Türkçe özgeçmiş indir. Hesap yok.",
+    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
@@ -51,13 +50,11 @@ export const metadata: Metadata = {
     url: "/",
     siteName: SITE_NAME,
     title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
-    description: "LinkedIn özgeçmişini tarayıcıda düzelt. Hesap yok, dosya sende kalır.",
+    description: "Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",
     locale: "tr_TR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
-    description: "CV PDF yazım hatasını düzelt, ATS uyumlu özgeçmiş indir.",
   },
   robots: {
     index: true,
@@ -111,7 +108,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Providers>
         <JsonLd data={websiteSchema} />
         <JsonLd data={appSchema} />
-        <Analytics />
       </body>
     </html>
   );

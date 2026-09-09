@@ -46,6 +46,10 @@ export function StudioSeo() {
           Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için
           PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin.
         </p>
+        <p className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
+          Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Google Gemini
+          API’ye gönderilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.
+        </p>
         <ol className="mt-8 space-y-5">
           {steps.map((step, index) => (
             <li key={step.title}>

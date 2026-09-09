@@ -36,6 +36,11 @@ export function ImportDropzones() {
 
   return (
     <div className="space-y-5">
+      <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
+        {targetLanguage === "TR"
+          ? "AI içe aktarma CV metnini veya görselini Google Gemini API’ye gönderir. Hassas bilgileri yükleme."
+          : "AI import sends CV text or images to the Google Gemini API. Do not upload sensitive information."}
+      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex cursor-pointer flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/20 p-5 transition hover:border-foreground/25 hover:bg-muted/35">
           <span className="flex size-10 items-center justify-center rounded-md border border-border bg-card text-foreground">

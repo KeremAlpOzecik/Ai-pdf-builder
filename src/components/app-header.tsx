@@ -36,6 +36,7 @@ function downloadBlob(blob: Blob, filename: string) {
 export function AppHeader() {
   const pathname = usePathname();
   const cv = useCvStore((s) => s.cv);
+  const resumeTemplate = useCvStore((s) => s.resumeTemplate);
   const uiLanguage = useDisplayLanguage();
   const setUiLanguage = useCvStore((s) => s.setUiLanguage);
   const startAiJob = useCvStore((s) => s.startAiJob);
@@ -97,7 +98,7 @@ export function AppHeader() {
   async function exportPdf() {
     try {
       const { cvToPdfBlob } = await import("@/lib/export-pdf");
-      const blob = await cvToPdfBlob(cv);
+      const blob = await cvToPdfBlob(cv, resumeTemplate);
       downloadBlob(blob, `${cv.personalInfo.fullName || "cv"}.pdf`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "PDF export failed");
@@ -107,7 +108,7 @@ export function AppHeader() {
   async function exportDocx() {
     try {
       const { cvToDocxBlob } = await import("@/lib/export-docx");
-      const blob = await cvToDocxBlob(cv);
+      const blob = await cvToDocxBlob(cv, resumeTemplate);
       downloadBlob(blob, `${cv.personalInfo.fullName || "cv"}.docx`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Word export failed");

@@ -26,7 +26,7 @@ const faq = [
   {
     question: "Dosyalarım sunucuya yükleniyor mu?",
     answer:
-      "Tarayıcıdaki PDF araçları dosyayı cihazında işler. Yapay zekâ analizi kullandığın stüdyo akışında içerik ilgili API’ye gider.",
+      "Temel PDF araçları dosyayı tarayıcıda işler. CV içe aktarma, ATS düzenleme ve çeviri gibi yapay zekâ özelliklerinde CV içeriği, Google Gemini API’ye işlenmek üzere gönderilir.",
   },
   {
     question: "Hesap açmam gerekiyor mu?",
@@ -60,12 +60,13 @@ export function SeoContent() {
           <div className="space-y-5 text-base leading-7 text-muted-foreground">
             <p>
               AI CV Builder; PDF düzenleme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
-              sayfa numarası sunar. Smallpdf / iLovePDF’de ücretli kalan bu işlemler burada ücretsizdir. Hesap açmadan
-              dosyanı seç, işlemi çalıştır, sonucu indir.
+              sayfa numarası sunar. Bu araçları ücretsiz ve hesap açmadan kullanabilirsin:
+              dosyanı seç, işlemi çalıştır, sonucu indir. Bu temel araçlarda dosyan sunucuya yüklenmez.
             </p>
             <p>
               CV stüdyosunda LinkedIn PDF’ini veya ekran görüntünü içe aktar, yazım hatasını düzelt ve ATS için ifade
-              önerisi al. Dosya tarayıcıda kalır; büyük revizyonu satır tıklayarak yapmak zorunda değilsin.
+              önerisi al. Yapay zekâ özelliklerinde CV içeriği Google Gemini API’ye gönderilir; ayrıntılar için gizlilik
+              politikasını inceleyebilirsin.
             </p>
             <div className="flex flex-wrap gap-3 text-sm font-semibold text-foreground">
               <Link className="underline decoration-primary/40 underline-offset-4" href="/studio">

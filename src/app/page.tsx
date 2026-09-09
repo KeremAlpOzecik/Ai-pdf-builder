@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
   description:
-    "LinkedIn CV PDF’ini tarayıcıda düzenle, yazım hatasını düzelt, Word çevir veya birleştir. ATS uyumlu Türkçe özgeçmiş indir. Hesap yok.",
+    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word çevir veya birleştir. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
-    description: "LinkedIn özgeçmişini tarayıcıda düzelt. Hesap yok, dosya sende kalır.",
+    description: "Ücretsiz PDF araçlarıyla düzenle, birleştir ve dönüştür. Yapay zekâ desteğiyle CV hazırla; hesap gerekmez.",
     url: "/",
   },
 };

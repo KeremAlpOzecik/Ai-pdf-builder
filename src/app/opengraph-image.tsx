@@ -37,7 +37,7 @@ export default function OpenGraphImage() {
             Ücretsiz PDF düzenle, ATS uyumlu CV oluştur
           </div>
           <div style={{ fontSize: 28, color: "rgba(255,255,255,0.72)", maxWidth: 860 }}>
-            LinkedIn özgeçmişini tarayıcıda düzelt. Hesap yok, dosya sende kalır.
+            Temel PDF araçları tarayıcıda çalışır. AI özellikleri Gemini API kullanır.
           </div>
         </div>
       </div>

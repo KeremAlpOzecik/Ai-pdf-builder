@@ -27,8 +27,8 @@ export default function GuidesIndexPage() {
           LinkedIn CV PDF, ATS özgeçmiş ve ücretsiz PDF işlemleri
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-          Kısa kuyrukta iLovePDF ile yarışmıyoruz. Buradaki yazılar «LinkedIn CV PDF düzenle ücretsiz», «ATS uyumlu CV
-          Türkçe» ve «CV PDF yazım hatası» gibi net aramalar için.
+          LinkedIn özgeçmişini düzenleme, CV’de yazım hatalarını düzeltme, ATS için okunabilir bir belge hazırlama
+          ve PDF dönüştürme adımlarını öğren. İhtiyacına uygun rehberi seçip ilgili aracı ücretsiz kullanabilirsin.
         </p>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           {guides.map((guide) => (

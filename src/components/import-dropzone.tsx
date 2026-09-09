@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, ImageIcon } from "lucide-react";
+import { FileDrop } from "@/components/tools/file-drop";
 import { toast } from "sonner";
 import { AiProgress } from "@/components/ai-progress";
 import { useLabels } from "@/components/providers";
@@ -42,47 +42,8 @@ export function ImportDropzones() {
           : "AI import sends CV text or images to the Google Gemini API. Do not upload sensitive information."}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex cursor-pointer flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/20 p-5 transition hover:border-foreground/25 hover:bg-muted/35">
-          <span className="flex size-10 items-center justify-center rounded-md border border-border bg-card text-foreground">
-            <FileText className="size-5" />
-          </span>
-          <span className="text-sm font-semibold">{labels.dropPdf}</span>
-          <span className="text-[13px] leading-relaxed text-muted-foreground">
-            {labels.dropPdfHint}
-          </span>
-          <input
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            disabled={busy}
-            onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
-              if (files.length) void send("pdf", files);
-              e.currentTarget.value = "";
-            }}
-          />
-        </label>
-        <label className="flex cursor-pointer flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/20 p-5 transition hover:border-foreground/25 hover:bg-muted/35">
-          <span className="flex size-10 items-center justify-center rounded-md border border-border bg-card text-foreground">
-            <ImageIcon className="size-5" />
-          </span>
-          <span className="text-sm font-semibold">{labels.dropImage}</span>
-          <span className="text-[13px] leading-relaxed text-muted-foreground">
-            {labels.dropImageHint}
-          </span>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/jpg"
-            multiple
-            className="hidden"
-            disabled={busy}
-            onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
-              if (files.length) void send("image", files);
-              e.currentTarget.value = "";
-            }}
-          />
-        </label>
+        <FileDrop accept="application/pdf,.pdf" disabled={busy} onFiles={files => void send("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropPdfHint}</span></FileDrop>
+        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={busy} onFiles={files => void send("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropImageHint}</span></FileDrop>
       </div>
       <AiProgress />
     </div>

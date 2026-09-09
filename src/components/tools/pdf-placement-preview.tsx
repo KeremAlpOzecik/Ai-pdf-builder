@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { ChevronLeft, ChevronRight, Grip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLabels } from "@/components/providers";
+import { useDisplayLanguage, useLabels } from "@/components/providers";
 import { openPdf, renderPage } from "@/lib/pdf/pdfjs-client";
 import type { PdfPlacement } from "@/lib/pdf/ops";
 
@@ -27,6 +27,8 @@ export function PdfPlacementPreview({
   signatureImage,
 }: PdfPlacementPreviewProps) {
   const labels = useLabels();
+  const tr = useDisplayLanguage() === "TR";
+  const [previewError, setPreviewError] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const canvasHostRef = useRef<HTMLDivElement>(null);
@@ -77,7 +79,7 @@ export function PdfPlacementPreview({
       canvasHostRef.current.replaceChildren(canvas);
       setRenderedSize({ width: viewport.width, height: viewport.height });
     }
-    void draw();
+    void draw().catch(() => { if (!cancelled) setPreviewError(true); });
     return () => {
       cancelled = true;
     };
@@ -133,7 +135,8 @@ export function PdfPlacementPreview({
   const pageScale = renderedSize.width ? renderedSize.width / 595 : 1;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-muted/30">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-muted/30">
+      {previewError && <p role="alert" className="p-4 text-sm text-destructive">{tr ? "Önizleme yüklenemedi. Başka bir PDF seçin veya işlemi yeniden deneyin." : "Preview could not load. Choose another PDF or retry the operation."}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3">
         <div>
           <p className="text-sm font-semibold">{labels.outputPreview}</p>

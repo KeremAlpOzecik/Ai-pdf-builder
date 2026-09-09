@@ -1,17 +1,21 @@
 import { degrees, PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { openPdf, renderPageToCanvas } from "@/lib/pdf/pdfjs-client";
+import { editorFontUrls, type UiFontVariant } from "@/lib/pdf/editor-fonts";
 
-let fontBytesPromise: Promise<ArrayBuffer> | null = null;
+const fontBytesPromises = new Map<UiFontVariant, Promise<ArrayBuffer>>();
 
-export async function loadUiFontBytes() {
-  fontBytesPromise ??= fetch("/fonts/NotoSans-Regular.ttf").then((res) => {
+export async function loadUiFontBytes(variant: UiFontVariant = "regular") {
+  const existing = fontBytesPromises.get(variant);
+  if (existing) return existing;
+  const promise = fetch(editorFontUrls[variant]).then((res) => {
     if (!res.ok) throw new Error("Font missing");
     return res.arrayBuffer();
   });
-  return fontBytesPromise;
+  fontBytesPromises.set(variant, promise);
+  return promise;
 }
 
-export async function embedUiFont(pdf: PDFDocument) {
+export async function embedUiFont(pdf: PDFDocument, variant: UiFontVariant = "regular") {
   try {
     const fontkitMod = await import("@pdf-lib/fontkit");
     const fontkit =
@@ -19,11 +23,12 @@ export async function embedUiFont(pdf: PDFDocument) {
         ? fontkitMod.default
         : fontkitMod;
     pdf.registerFontkit(fontkit);
-    const bytes = await loadUiFontBytes();
+    const bytes = await loadUiFontBytes(variant);
     return pdf.embedFont(bytes, { subset: true });
   } catch {
     const { StandardFonts } = await import("pdf-lib");
-    return pdf.embedFont(StandardFonts.Helvetica);
+    const fallback = variant === "boldItalic" ? StandardFonts.HelveticaBoldOblique : variant === "bold" ? StandardFonts.HelveticaBold : variant === "italic" ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica;
+    return pdf.embedFont(fallback);
   }
 }
 
@@ -192,9 +197,10 @@ export async function watermarkPdf(
   return pdf.save();
 }
 
-export async function rotatePdf(file: File, angle: 90 | 180 | 270) {
+export async function rotatePdf(file: File, angle: 90 | 180 | 270, selectedPages?: number[]) {
   const pdf = await PDFDocument.load(await file.arrayBuffer());
-  for (const page of pdf.getPages()) {
+  for (const [index, page] of pdf.getPages().entries()) {
+    if (selectedPages && !selectedPages.includes(index + 1)) continue;
     const current = page.getRotation().angle;
     page.setRotation(degrees((current + angle) % 360));
   }
@@ -333,4 +339,12 @@ function drawInvisibleText(page: PDFPage, font: PDFFont, text: string) {
     y -= 10;
     if (y < 24) break;
   }
+}
+
+export async function extractPdfPages(file: File, pages: number[]) {
+  const src = await PDFDocument.load(await file.arrayBuffer());
+  if (!pages.length || pages.some(page => !Number.isInteger(page) || page < 1 || page > src.getPageCount())) throw new Error("Invalid page selection");
+  const out = await PDFDocument.create();
+  for (const page of await out.copyPages(src, pages.map(page => page - 1))) out.addPage(page);
+  return out.save();
 }

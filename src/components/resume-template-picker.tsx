@@ -80,6 +80,15 @@ export function ResumeTemplatePicker() {
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
+              onKeyDown={event => {
+                const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+                if (!delta) return;
+                event.preventDefault();
+                const next = (templates.findIndex(item => item.id === template.id) + delta + templates.length) % templates.length;
+                setSelected(templates[next].id);
+                (event.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
+              }}
               onClick={() => setSelected(template.id)}
               className={`relative rounded-xl border p-2 text-left transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
                 active ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-card"

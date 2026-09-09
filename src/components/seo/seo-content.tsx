@@ -16,7 +16,7 @@ const faq = [
   {
     question: "ATS uyumlu CV’yi Türkçe ve ücretsiz hazırlar mısınız?",
     answer:
-      "Stüdyoda PDF veya ekran görüntüsü içe aktarılır, sade tek kolonlu özgeçmiş üretilir. ATS için ifade önerilerini tek tek kabul edebilirsin.",
+      "Stüdyoda PDF veya ekran görüntüsü içe aktarılır; modern, klasik ve kompakt şablonlarla özgeçmiş hazırlanır. ATS için ifade önerilerini tek tek kabul edebilirsin.",
   },
   {
     question: "CV PDF yazım hatasını nasıl düzeltirim?",

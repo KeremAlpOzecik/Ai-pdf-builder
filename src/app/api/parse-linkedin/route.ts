@@ -36,8 +36,17 @@ export async function POST(request: Request) {
       return Response.json({ error: "The uploaded PDF could not be validated." }, { status: 400 });
     }
     const pdfParse = (await import("pdf-parse")).default;
-    const extracted = await pdfParse(buffer);
-    const text = extracted.text?.trim() ?? "";
+    let text = "";
+    try {
+      const extracted = await pdfParse(buffer);
+      text = extracted.text?.trim() ?? "";
+    } catch {
+      // The legacy text parser rejects some valid PDFs with object streams.
+      // Validate the document before using the existing Gemini PDF input path.
+      const { PDFDocument } = await import("pdf-lib");
+      await PDFDocument.load(buffer);
+      console.info("CV import: using PDF input after legacy text extraction failed.");
+    }
     const prompt =
       `Parse this resume PDF into CVData. Extract only. Do not optimize wording. targetLanguage=${targetLanguage}. Do not invent facts.`;
 

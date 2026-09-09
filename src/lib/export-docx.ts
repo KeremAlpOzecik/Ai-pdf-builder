@@ -5,6 +5,7 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
+  Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, TableLayoutType,
 } from "docx";
 import type { CVData, ResumeTemplate } from "@/types/cv";
 import { formatCvDate, formatCvDateRange, getCvDocumentLabels } from "@/lib/cv-format";
@@ -118,7 +119,7 @@ export async function cvToDocxBlob(cv: CVData, template: ResumeTemplate = "moder
     }
   }
 
-  if (cv.skills.some((g) => g.items.length)) {
+  if (cv.skills.some((g) => g.items.length) && template !== "modern") {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
@@ -183,7 +184,7 @@ export async function cvToDocxBlob(cv: CVData, template: ResumeTemplate = "moder
     }
   }
 
-  if (cv.languages?.length) {
+  if (cv.languages?.length && template !== "modern") {
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
@@ -202,8 +203,27 @@ export async function cvToDocxBlob(cv: CVData, template: ResumeTemplate = "moder
     );
   }
 
+  const sidebarParagraph = (text: string, heading = false) => new Paragraph({
+    spacing: { after: heading ? 140 : 100, before: heading ? 260 : 0 },
+    children: [new TextRun({ text, color: "F4F0E8", size: heading ? 22 : 18, bold: heading, font: "Arial" })],
+  });
+  const side = [sidebarParagraph((personalInfo.fullName || "CV").split(/\s+/).slice(0, 2).map(part => part[0]).join(""), true),
+    ...[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.linkedinUrl, personalInfo.githubUrl, personalInfo.portfolioUrl].filter(Boolean).map(value => sidebarParagraph(value!)),
+    ...(cv.skills.some(group => group.items.length) ? [sidebarParagraph(labels.skills, true), ...cv.skills.filter(group => group.items.length).flatMap(group => [sidebarParagraph(group.category, true), sidebarParagraph(group.items.join(" · "))])] : []),
+    ...(cv.languages?.length ? [sidebarParagraph(labels.languages, true), ...cv.languages.map(language => sidebarParagraph(`${language.language} · ${language.proficiency}`))] : []),
+  ];
+  const border = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const modernTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE }, layout: TableLayoutType.FIXED,
+    columnWidths: [3500, 6800], borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border },
+    rows: [new TableRow({ children: [
+      new TableCell({ width: { size: 3500, type: WidthType.DXA }, shading: { type: ShadingType.CLEAR, fill: "173F3B" }, margins: { top: 360, bottom: 360, left: 260, right: 260 }, children: side }),
+      new TableCell({ width: { size: 6800, type: WidthType.DXA }, margins: { top: 300, bottom: 300, left: 380, right: 300 }, children: children.filter((_, i) => i !== 2) }),
+    ] })],
+  });
   const doc = new Document({
-    sections: [{ properties: {}, children }],
+    styles: { default: { document: { run: { font: "Arial", size: 20 }, paragraph: { spacing: { after: 100, line: 276 } } } } },
+    sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: template === "modern" ? { top: 500, bottom: 500, left: 500, right: 500 } : { top: 800, bottom: 800, left: 800, right: 800 } } }, children: template === "modern" ? [modernTable] : children }],
   });
   return Packer.toBlob(doc);
 }

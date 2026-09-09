@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandMark } from "@/components/brand-mark";
+import { ProductNav } from "@/components/product-nav";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -67,7 +68,8 @@ export function AppHeader() {
       startReview("ats", json.cv, changes);
       toast.success(labels.atsDone);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : labels.atsFailed);
+      console.error("ATS request failed", error);
+      toast.error(uiLanguage === "TR" ? "AI önerisi alınamadı. Hizmet geçici olarak kullanılamıyor olabilir. Yeniden deneyin." : "AI suggestions are temporarily unavailable. Please retry.");
     } finally {
       stopAiJob();
     }
@@ -89,7 +91,8 @@ export function AppHeader() {
       startReview("translate", json.cv, changes);
       toast.success(labels.translateDone);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : labels.translateFailed);
+      console.error("Translation failed", error);
+      toast.error(uiLanguage === "TR" ? "Çeviri tamamlanamadı. Yeniden deneyin." : "Translation failed. Please retry.");
     } finally {
       stopAiJob();
     }
@@ -123,7 +126,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
+      <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-2 px-3 py-3 sm:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3 text-left">
           <BrandMark className="size-9 shrink-0 text-primary" />
           <div className="min-w-0">
@@ -139,11 +142,13 @@ export function AppHeader() {
             </p>
           </div>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <ProductNav />
           <div className="flex rounded-md border border-border bg-card p-0.5">
             {(["EN", "TR"] as const).map((lang) => (
               <Button
                 key={lang}
+                aria-pressed={uiLanguage === lang}
                 size="sm"
                 variant={uiLanguage === lang ? "secondary" : "ghost"}
                 className={`h-7 rounded-sm px-2.5 text-[11px] font-semibold tracking-wide ${

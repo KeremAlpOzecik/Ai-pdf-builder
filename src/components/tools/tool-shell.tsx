@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { FileText } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { useLabels } from "@/components/providers";
+import { useDisplayLanguage, useLabels } from "@/components/providers";
 
 export function ToolShell({
   title,
@@ -16,22 +17,24 @@ export function ToolShell({
   children: React.ReactNode;
 }) {
   const labels = useLabels();
+  const tr = useDisplayLanguage() === "TR";
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <AppHeader />
-      <div
-        className={`mx-auto flex w-full flex-1 flex-col px-6 py-10 ${wide ? "max-w-[1200px]" : "max-w-3xl"}`}
+      <main
+        className={`mx-auto flex w-full flex-1 flex-col px-4 py-8 sm:px-8 ${wide ? "max-w-[1440px]" : "max-w-5xl"}`}
       >
-        <Link
-          href="/"
+        <nav aria-label={tr ? "İçerik yolu" : "Breadcrumb"}><Link
+          href="/#tools"
           className="text-[12px] font-medium text-muted-foreground hover:text-foreground"
         >
           ← {labels.toolsHome}
-        </Link>
-        <h1 className="font-heading mt-4 text-3xl tracking-tight">{title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{hint}</p>
+        </Link></nav>
+        <div className="mt-4 flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><FileText className="size-6" /></span><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1></div>
+        <p className="mt-3 max-w-3xl text-base leading-relaxed text-muted-foreground">{hint}</p>
+        <p className="mt-4 text-sm font-medium text-primary">{tr ? "✓ Dosyalarınız tarayıcınızda işlenir. Kayıt gerekmez." : "✓ Files are processed in your browser. No account needed."}</p>
         <div className="mt-8">{children}</div>
-      </div>
+      </main>
     </div>
   );
 }

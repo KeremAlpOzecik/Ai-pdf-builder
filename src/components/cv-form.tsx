@@ -1,21 +1,19 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, useId, type ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImportDropzones } from "@/components/import-dropzone";
-import { ChangeSummary } from "@/components/change-summary";
 import type { FormTab } from "@/store/cv-store";
 import {
   newEducation,
   newExperience,
   newProject,
 } from "@/lib/empty-cv";
-import { useLabels } from "@/components/providers";
+import { useDisplayLanguage, useLabels } from "@/components/providers";
 import { useCvStore } from "@/store/cv-store";
 import type { CVData } from "@/types/cv";
 
@@ -26,10 +24,11 @@ function Field({
   label: string;
   children: ReactNode;
 }) {
+  const id = useId();
   return (
     <div className="grid gap-2">
-      <Label>{label}</Label>
-      {children}
+      <label htmlFor={id} className="text-sm font-medium">{label}</label>
+      {isValidElement<{ id?: string }>(children) ? cloneElement(children, { id }) : children}
     </div>
   );
 }
@@ -40,6 +39,7 @@ export function CvForm() {
   const formTab = useCvStore((s) => s.formTab);
   const setFormTab = useCvStore((s) => s.setFormTab);
   const labels = useLabels();
+  const tr = useDisplayLanguage() === "TR";
 
   function update(next: CVData) {
     setCv(next);
@@ -47,7 +47,7 @@ export function CvForm() {
 
   return (
     <div>
-      <ChangeSummary />
+
     <Tabs
       value={formTab}
       onValueChange={(value) => setFormTab(value as FormTab)}
@@ -55,7 +55,7 @@ export function CvForm() {
     >
       <TabsList
         variant="line"
-        className="scrollbar-none flex h-auto w-full flex-nowrap justify-start gap-0 overflow-x-auto border-b pb-px"
+        className="scrollbar-none flex h-auto w-full flex-wrap justify-start gap-0 border-b pb-px"
       >
         <TabsTrigger value="import" className="shrink-0 px-3 py-2.5 text-[13px]">
           {labels.import}
@@ -79,7 +79,7 @@ export function CvForm() {
           {labels.certifications}
         </TabsTrigger>
         <TabsTrigger value="other" className="shrink-0 px-3 py-2.5 text-[13px]">
-          {labels.other}
+          {tr ? "Diller" : "Languages"}
         </TabsTrigger>
       </TabsList>
 
@@ -199,6 +199,7 @@ export function CvForm() {
               <Button
                 variant="ghost"
                 size="icon-sm"
+                aria-label={labels.delete}
                 onClick={() =>
                   update({
                     ...cv,
@@ -315,6 +316,7 @@ export function CvForm() {
               <Button
                 variant="ghost"
                 size="icon-sm"
+                aria-label={labels.delete}
                 onClick={() =>
                   update({
                     ...cv,
@@ -482,6 +484,7 @@ export function CvForm() {
               <Button
                 variant="ghost"
                 size="icon-sm"
+                aria-label={labels.delete}
                 onClick={() =>
                   update({
                     ...cv,

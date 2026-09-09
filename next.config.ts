@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    rules: {
+      "*.woff": { type: "asset" },
+      "*.woff2": { type: "asset" },
+    },
+  },
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "tesseract.js"],
   poweredByHeader: false,
   async headers() {

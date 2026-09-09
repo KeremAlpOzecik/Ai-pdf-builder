@@ -34,7 +34,8 @@ test('real PDFs preserve content and use distinct template layouts', async () =>
     const page = await doc.getPage(1);
     const { items } = await page.getTextContent();
     const locate = (text) => { const item = items.find(item => item.str?.includes(text)); assert.ok(item, `${template} preserves ${text}`); return item.transform; };
-    layouts[template] = { name: locate('Test Candidate'), skill: locate('TypeScript'), school: locate('Test University'), email: locate('test@example.com') };
+    layouts[template] = { name: locate('Test Candidate'), title: locate('Engineer'), skill: locate('TypeScript'), school: locate('Test University'), email: locate('test@example.com') };
+    assert.ok(layouts[template].name[5] - layouts[template].title[5] > 14, `${template}: name and title must not overlap`);
     await loading.destroy();
   }
   assert.ok(layouts.modern.email[4] < 100, 'modern contact belongs in sidebar');

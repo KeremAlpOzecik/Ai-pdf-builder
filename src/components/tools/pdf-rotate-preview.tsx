@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
-import { useLabels } from "@/components/providers";
+import { useDisplayLanguage, useLabels } from "@/components/providers";
 import { Button } from "@/components/ui/button";
 import { openPdf, renderPage } from "@/lib/pdf/pdfjs-client";
 
@@ -16,6 +16,8 @@ export function PdfRotatePreview({
   angle: 90 | 180 | 270;
 }) {
   const labels = useLabels();
+  const tr = useDisplayLanguage() === "TR";
+  const [previewError, setPreviewError] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
   const beforeRef = useRef<HTMLDivElement>(null);
   const afterRef = useRef<HTMLDivElement>(null);
@@ -72,14 +74,15 @@ export function PdfRotatePreview({
       }
     }
 
-    void draw();
+    void draw().catch(() => { if (!cancelled) setPreviewError(true); });
     return () => {
       cancelled = true;
     };
   }, [angle, availableWidth, file, page]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-muted/30">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-muted/30">
+      {previewError && <p role="alert" className="p-4 text-sm text-destructive">{tr ? "Önizleme yüklenemedi. Başka bir PDF seçin veya işlemi yeniden deneyin." : "Preview could not load. Choose another PDF or retry the operation."}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold">{labels.rotatePreviewTitle}</p>

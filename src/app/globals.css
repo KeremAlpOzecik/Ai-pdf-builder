@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@font-face { font-family: "Noto Sans"; src: url("/fonts/NotoSans-Regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -49,22 +51,22 @@
 }
 
 :root {
-  --background: oklch(0.96 0.012 82);
-  --foreground: oklch(0.24 0.02 48);
-  --card: oklch(0.992 0.004 90);
+  --background: #F7F4EE;
+  --foreground: #12212A;
+  --card: #FFFFFF;
   --card-foreground: oklch(0.24 0.02 48);
   --popover: oklch(0.995 0.003 90);
   --popover-foreground: oklch(0.24 0.02 48);
-  --primary: oklch(0.34 0.048 158);
+  --primary: #0E6655;
   --primary-foreground: oklch(0.98 0.01 95);
   --secondary: oklch(0.94 0.014 82);
   --secondary-foreground: oklch(0.28 0.03 50);
   --muted: oklch(0.945 0.012 82);
-  --muted-foreground: oklch(0.5 0.02 55);
+  --muted-foreground: #66727A;
   --accent: oklch(0.935 0.018 80);
   --accent-foreground: oklch(0.28 0.03 50);
   --destructive: oklch(0.55 0.18 28);
-  --border: oklch(0.88 0.016 78);
+  --border: #DCD8D0;
   --input: oklch(0.88 0.016 78);
   --ring: oklch(0.34 0.048 158);
   --chart-1: oklch(0.87 0 0);
@@ -153,7 +155,8 @@
   word-spacing: normal;
   text-size-adjust: none;
   transform-origin: 0 0;
-  z-index: 2;
+  z-index: 5;
+  pointer-events: none;
   --min-font-size: 1;
   --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
   --min-font-size-inv: calc(1 / var(--min-font-size));
@@ -187,6 +190,9 @@
   outline-offset: 1px;
   border-radius: 2px;
 }
+.pdf-text-layer span[data-box-id] {
+  pointer-events: auto;
+}
 
 .pdf-text-editor {
   position: absolute;
@@ -217,4 +223,13 @@
 
 .pdf-edited-text:hover {
   outline-color: rgb(34 120 80 / 0.55);
+}
+
+@layer base {
+ :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+ button, a, input, select, textarea { touch-action: manipulation; }
+ button:not(:disabled), summary { cursor: pointer; }
+ @media (prefers-reduced-motion: reduce) {
+ *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+ }
 }

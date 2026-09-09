@@ -13,12 +13,12 @@ const styles = StyleSheet.create({
   accentRail: { position: "absolute", left: 0, top: 0, bottom: 0, width: 18, backgroundColor: "#173f3b" },
   header: { marginBottom: 22, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: "#d8d2ca" },
   headerClassic: { textAlign: "center" },
-  headerModern: { borderBottomWidth: 0, paddingBottom: 4 },
+  headerModern: { borderBottomWidth: 0, paddingBottom: 10, flexShrink: 0 },
   headerCompact: { marginBottom: 14, paddingBottom: 10, borderBottomWidth: 3, borderBottomColor: "#214b72" },
-  name: { fontSize: 24, fontWeight: 700, color: "#25211f", marginBottom: 4 },
+  name: { lineHeight: 1.25, flexShrink: 0, fontSize: 24, fontWeight: 700, color: "#25211f", marginBottom: 4 },
   nameModern: { fontSize: 26, color: "#173f3b" },
   nameCompact: { fontSize: 20, color: "#183b5b" },
-  title: { fontSize: 10.5, color: "#315c4a", marginBottom: 7 },
+  title: { lineHeight: 1.4, flexShrink: 0, fontSize: 10.5, color: "#315c4a", marginBottom: 7 },
   titleModern: { color: "#a96238", textTransform: "uppercase", letterSpacing: 1.2 },
   titleCompact: { color: "#356a94", marginBottom: 4 },
   contact: { fontSize: 8, color: "#625b56", lineHeight: 1.5 },
@@ -30,9 +30,9 @@ const styles = StyleSheet.create({
   row: { marginBottom: 8 },
   rowCompact: { marginBottom: 5 },
   rowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 10 },
-  jobTitle: { fontWeight: 700, fontSize: 10 },
+  jobTitle: { flex: 1, lineHeight: 1.4, fontWeight: 700, fontSize: 10 },
   company: { fontSize: 9.2, color: "#315c4a", marginTop: 1 },
-  dates: { fontSize: 8, color: "#6b6661", textAlign: "right" },
+  dates: { flexShrink: 0, maxWidth: "35%", lineHeight: 1.4, fontSize: 8, color: "#6b6661", textAlign: "right" },
   meta: { fontSize: 8, color: "#6b6661", marginTop: 1 },
   bulletRow: { flexDirection: "row", marginTop: 2, paddingLeft: 5 },
   bulletMark: { width: 9, color: "#315c4a" },
@@ -75,10 +75,10 @@ function CvPdfDocument({ cv, template }: { cv: CVData; template: ResumeTemplate 
   const labels = getCvDocumentLabels(cv.targetLanguage);
   const contact = [p.email, p.phone, p.location, p.linkedinUrl, p.githubUrl, p.portfolioUrl].filter(Boolean).join("  ·  ");
   const compact = template === "compact";
-  if (template === "modern") return <Document><Page size="A4" style={[styles.page, { padding: 0 }]}>
+  if (template === "modern") return <Document><Page size="A4" style={[styles.page, { paddingHorizontal: 0, paddingTop: 28, paddingBottom: 28 }]}>
     <View fixed style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "34%", backgroundColor: "#173f3b" }} />
     <View style={{ flexDirection: "row" }}>
-      <View style={{ width: "34%", padding: 24, color: "#f4f0e8" }}>
+      <View style={{ width: "34%", paddingHorizontal: 24, paddingVertical: 0, color: "#f4f0e8" }}>
         <Text style={{ fontSize: 24, marginBottom: 28 }}>{(p.fullName || "CV").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</Text>
         {[p.email, p.phone, p.location, p.portfolioUrl, p.linkedinUrl, p.githubUrl].filter(Boolean).map((value, index) => <Text key={index} style={{ fontSize: 8, marginBottom: 8 }}>{value}</Text>)}
         {cv.skills.some((group) => group.items.length) ? <View style={{ marginTop: 24 }}>
@@ -87,8 +87,8 @@ function CvPdfDocument({ cv, template }: { cv: CVData; template: ResumeTemplate 
         </View> : null}
         {cv.languages?.length ? <View style={{ marginTop: 24 }}><Text style={{ fontSize: 10, marginBottom: 12 }}>{labels.languages}</Text>{cv.languages.map((language, index) => <Text key={index} style={{ fontSize: 8, marginBottom: 5 }}>{language.language} · {language.proficiency}</Text>)}</View> : null}
       </View>
-      <View style={{ width: "66%", padding: 28 }}>
-        <View style={styles.headerModern}><Text style={[styles.name, styles.nameModern]}>{p.fullName || "Curriculum Vitae"}</Text>{p.title ? <Text style={[styles.title, styles.titleModern]}>{p.title}</Text> : null}</View>
+      <View style={{ width: "66%", paddingHorizontal: 28, paddingVertical: 0 }}>
+        <View wrap={false} style={styles.headerModern}><Text style={[styles.name, styles.nameModern]}>{p.fullName || "Curriculum Vitae"}</Text>{p.title ? <Text style={[styles.title, styles.titleModern]}>{p.title}</Text> : null}</View>
         {p.summary ? <Section title={labels.summary} template={template}><Text>{p.summary}</Text></Section> : null}
         {cv.workExperience.length ? <Section title={labels.experience} template={template}><Experience cv={cv} template={template} /></Section> : null}
         {cv.education.length ? <Section title={labels.education} template={template}><Education cv={cv} template={template} /></Section> : null}

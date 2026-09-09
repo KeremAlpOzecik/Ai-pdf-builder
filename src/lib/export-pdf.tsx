@@ -75,11 +75,32 @@ function CvPdfDocument({ cv, template }: { cv: CVData; template: ResumeTemplate 
   const labels = getCvDocumentLabels(cv.targetLanguage);
   const contact = [p.email, p.phone, p.location, p.linkedinUrl, p.githubUrl, p.portfolioUrl].filter(Boolean).join("  ·  ");
   const compact = template === "compact";
-  return <Document><Page size="A4" style={[styles.page, template === "modern" ? styles.pageModern : {}, compact ? styles.pageCompact : {}]}>
-    {template === "modern" ? <View style={styles.accentRail} fixed /> : null}
-    <View style={[styles.header, template === "classic" ? styles.headerClassic : {}, template === "modern" ? styles.headerModern : {}, compact ? styles.headerCompact : {}]}>
-      <Text style={[styles.name, template === "modern" ? styles.nameModern : {}, compact ? styles.nameCompact : {}]}>{p.fullName || "Curriculum Vitae"}</Text>
-      {p.title ? <Text style={[styles.title, template === "modern" ? styles.titleModern : {}, compact ? styles.titleCompact : {}]}>{p.title}</Text> : null}
+  if (template === "modern") return <Document><Page size="A4" style={[styles.page, { padding: 0 }]}>
+    <View fixed style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "34%", backgroundColor: "#173f3b" }} />
+    <View style={{ flexDirection: "row" }}>
+      <View style={{ width: "34%", padding: 24, color: "#f4f0e8" }}>
+        <Text style={{ fontSize: 24, marginBottom: 28 }}>{(p.fullName || "CV").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</Text>
+        {[p.email, p.phone, p.location, p.portfolioUrl, p.linkedinUrl, p.githubUrl].filter(Boolean).map((value, index) => <Text key={index} style={{ fontSize: 8, marginBottom: 8 }}>{value}</Text>)}
+        {cv.skills.some((group) => group.items.length) ? <View style={{ marginTop: 24 }}>
+          <Text style={{ fontSize: 10, marginBottom: 12 }}>{labels.skills}</Text>
+          {cv.skills.filter((group) => group.items.length).map((group) => <View key={group.category} style={{ marginBottom: 12 }}><Text>{group.category}</Text><Text style={{ fontSize: 8, marginTop: 4 }}>{group.items.join(" · ")}</Text></View>)}
+        </View> : null}
+        {cv.languages?.length ? <View style={{ marginTop: 24 }}><Text style={{ fontSize: 10, marginBottom: 12 }}>{labels.languages}</Text>{cv.languages.map((language, index) => <Text key={index} style={{ fontSize: 8, marginBottom: 5 }}>{language.language} · {language.proficiency}</Text>)}</View> : null}
+      </View>
+      <View style={{ width: "66%", padding: 28 }}>
+        <View style={styles.headerModern}><Text style={[styles.name, styles.nameModern]}>{p.fullName || "Curriculum Vitae"}</Text>{p.title ? <Text style={[styles.title, styles.titleModern]}>{p.title}</Text> : null}</View>
+        {p.summary ? <Section title={labels.summary} template={template}><Text>{p.summary}</Text></Section> : null}
+        {cv.workExperience.length ? <Section title={labels.experience} template={template}><Experience cv={cv} template={template} /></Section> : null}
+        {cv.education.length ? <Section title={labels.education} template={template}><Education cv={cv} template={template} /></Section> : null}
+        {cv.projects?.length ? <Section title={labels.projects} template={template}>{cv.projects.map((project) => <View key={project.id} style={styles.row}><Text style={styles.jobTitle}>{project.name}</Text><Text>{project.description}</Text><Text style={styles.meta}>{project.technologies.join(" · ")}</Text></View>)}</Section> : null}
+        {cv.certifications?.length ? <Section title={labels.certifications} template={template}>{cv.certifications.map((certification, index) => <Text key={index}>{[certification.name, certification.issuer, formatCvDate(certification.date, cv.targetLanguage)].filter(Boolean).join(" · ")}</Text>)}</Section> : null}
+      </View>
+    </View>
+  </Page></Document>;
+  return <Document><Page size="A4" style={[styles.page, compact ? styles.pageCompact : {}]}>
+    <View style={[styles.header, template === "classic" ? styles.headerClassic : {}, compact ? styles.headerCompact : {}]}>
+      <Text style={[styles.name, compact ? styles.nameCompact : {}]}>{p.fullName || "Curriculum Vitae"}</Text>
+      {p.title ? <Text style={[styles.title, compact ? styles.titleCompact : {}]}>{p.title}</Text> : null}
       {contact ? <Text style={styles.contact}>{contact}</Text> : null}
     </View>
     {p.summary ? <Section title={labels.summary} template={template}><Text style={styles.summary}>{p.summary}</Text></Section> : null}

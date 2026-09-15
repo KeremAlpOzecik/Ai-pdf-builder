@@ -69,7 +69,7 @@ export function AppHeader() {
       toast.success(labels.atsDone);
     } catch (error) {
       console.error("ATS request failed", error);
-      toast.error(uiLanguage === "TR" ? "AI önerisi alınamadı. Hizmet geçici olarak kullanılamıyor olabilir. Yeniden deneyin." : "AI suggestions are temporarily unavailable. Please retry.");
+      toast.error(error instanceof Error ? error.message : labels.atsFailed);
     } finally {
       stopAiJob();
     }
@@ -92,7 +92,7 @@ export function AppHeader() {
       toast.success(labels.translateDone);
     } catch (error) {
       console.error("Translation failed", error);
-      toast.error(uiLanguage === "TR" ? "Çeviri tamamlanamadı. Yeniden deneyin." : "Translation failed. Please retry.");
+      toast.error(error instanceof Error ? error.message : labels.translateFailed);
     } finally {
       stopAiJob();
     }

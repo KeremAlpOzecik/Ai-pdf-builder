@@ -14,10 +14,10 @@ export async function parseCvFile(
   }
   form.append("targetLanguage", targetLanguage);
   const res = await fetch(endpoint, { method: "POST", body: form });
-  const json = (await res.json()) as { cv?: CVData; error?: string };
+  const json = (await res.json().catch(() => ({}))) as { cv?: CVData; error?: string };
   if (!res.ok || !json.cv) {
     console.error("CV import failed", res.status);
-    throw new Error(targetLanguage === "TR" ? "CV içe aktarılamadı. Dosyanızı kontrol edin ve yeniden deneyin. AI hizmeti geçici olarak kullanılamıyor olabilir." : "CV import failed. Check your file and retry. The AI service may be temporarily unavailable.");
+    throw new Error(json.error || (targetLanguage === "TR" ? "CV içe aktarılamadı. Dosyanızı kontrol edin ve yeniden deneyin." : "CV import failed. Check your file and retry."));
   }
   return json.cv;
 }

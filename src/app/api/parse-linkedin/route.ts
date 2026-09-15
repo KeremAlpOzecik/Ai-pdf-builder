@@ -1,11 +1,12 @@
 import { generateCvJson } from "@/lib/gemini";
 import type { TargetLanguage } from "@/types/cv";
-import { isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge, safeServerError } from "@/lib/request-validation";
+import { aiErrorResponse, isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest, hasPdfSignature } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  let responseLanguage: TargetLanguage = "EN";
   try {
     const blocked = guardAiRequest(request);
     if (blocked) return blocked;
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     const file = form.get("file");
     const requestedLanguage = form.get("targetLanguage");
     const targetLanguage: TargetLanguage = isTargetLanguage(requestedLanguage) ? requestedLanguage : "EN";
+    responseLanguage = targetLanguage;
     if (!(file instanceof File)) {
       return Response.json({ error: "PDF file is required." }, { status: 400 });
     }
@@ -41,17 +43,30 @@ export async function POST(request: Request) {
       const extracted = await pdfParse(buffer);
       text = extracted.text?.trim() ?? "";
     } catch {
-      // The legacy text parser rejects some valid PDFs with object streams.
-      // Validate the document before using the existing Gemini PDF input path.
+      // The legacy parser rejects valid object streams. PDF.js handles those and
+      // avoids sending a whole binary document when selectable text is available.
       const { PDFDocument } = await import("pdf-lib");
       await PDFDocument.load(buffer);
-      console.info("CV import: using PDF input after legacy text extraction failed.");
+      const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+      const loading = pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true });
+      const document = await loading.promise;
+      try {
+        const pages: string[] = [];
+        for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+          const content = await (await document.getPage(pageNumber)).getTextContent();
+          pages.push(content.items.map((item) => "str" in item ? item.str : "").join(" "));
+        }
+        text = pages.join("\n").trim();
+      } finally {
+        await loading.destroy();
+      }
+      console.info("CV import: recovered selectable text with PDF.js after legacy extraction failed.");
     }
     const prompt =
       `Parse this resume PDF into CVData. Extract only. Do not optimize wording. targetLanguage=${targetLanguage}. Do not invent facts.`;
 
     const cv =
-      text.length > 80
+      text.length > 20
         ? await generateCvJson({
             mode: "parse",
             targetLanguage,
@@ -75,12 +90,6 @@ export async function POST(request: Request) {
 
     return Response.json({ cv });
   } catch (error) {
-    if (error instanceof Error && error.name === "AI_CONFIGURATION_ERROR") {
-      return Response.json(
-        { error: "AI import is temporarily unavailable. Configure GEMINI_API_KEY in the Vercel Production environment." },
-        { status: 503 },
-      );
-    }
-    return Response.json({ error: safeServerError(error, "Failed to parse PDF.") }, { status: 500 });
+    return aiErrorResponse(error, responseLanguage === "TR" ? "PDF içe aktarılamadı." : "Failed to parse PDF.", responseLanguage);
   }
 }

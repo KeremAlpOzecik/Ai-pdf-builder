@@ -4,7 +4,6 @@ import { formatCvDate, formatCvDateRange, getCvDocumentLabels } from "@/lib/cv-f
 import type { CVData, ResumeTemplate } from "@/types/cv";
 
 Font.register({ family: "NotoSans", src: "/fonts/NotoSans-Regular.ttf", fontWeight: 400 });
-Font.register({ family: "NotoSans", src: "/fonts/NotoSans-Regular.ttf", fontWeight: 700 });
 
 const styles = StyleSheet.create({
   page: { paddingTop: 38, paddingBottom: 38, paddingHorizontal: 42, fontFamily: "NotoSans", fontSize: 9.5, color: "#202624", lineHeight: 1.42 },
@@ -15,22 +14,22 @@ const styles = StyleSheet.create({
   headerClassic: { textAlign: "center" },
   headerModern: { borderBottomWidth: 0, paddingBottom: 10, flexShrink: 0 },
   headerCompact: { marginBottom: 14, paddingBottom: 10, borderBottomWidth: 3, borderBottomColor: "#214b72" },
-  name: { lineHeight: 1.25, flexShrink: 0, fontSize: 24, fontWeight: 700, color: "#25211f", marginBottom: 4 },
+  name: { lineHeight: 1.25, flexShrink: 0, fontSize: 24, color: "#25211f", marginBottom: 4 },
   nameModern: { fontSize: 26, color: "#173f3b" },
   nameCompact: { fontSize: 20, color: "#183b5b" },
   title: { lineHeight: 1.4, flexShrink: 0, fontSize: 10.5, color: "#315c4a", marginBottom: 7 },
-  titleModern: { color: "#a96238", textTransform: "uppercase", letterSpacing: 1.2 },
+  titleModern: { color: "#a96238", letterSpacing: 1.2 },
   titleCompact: { color: "#356a94", marginBottom: 4 },
   contact: { fontSize: 8, color: "#625b56", lineHeight: 1.5 },
   section: { marginBottom: 13 },
   sectionCompact: { marginBottom: 9 },
-  heading: { fontSize: 9, fontWeight: 700, color: "#625b56", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 },
+  heading: { fontSize: 9, color: "#625b56", marginBottom: 6 },
   headingModern: { color: "#173f3b", borderLeftWidth: 3, borderLeftColor: "#b06f43", paddingLeft: 6 },
   headingCompact: { color: "#214b72", borderBottomWidth: 1.5, borderBottomColor: "#214b72", paddingBottom: 2, marginBottom: 5 },
   row: { marginBottom: 8 },
   rowCompact: { marginBottom: 5 },
   rowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 10 },
-  jobTitle: { flex: 1, lineHeight: 1.4, fontWeight: 700, fontSize: 10 },
+  jobTitle: { flex: 1, lineHeight: 1.4, fontSize: 10 },
   company: { fontSize: 9.2, color: "#315c4a", marginTop: 1 },
   dates: { flexShrink: 0, maxWidth: "35%", lineHeight: 1.4, fontSize: 8, color: "#6b6661", textAlign: "right" },
   meta: { fontSize: 8, color: "#6b6661", marginTop: 1 },
@@ -45,7 +44,7 @@ const styles = StyleSheet.create({
 
 function Section({ title, template, children }: { title: string; template: ResumeTemplate; children: ReactNode }) {
   return <View style={[styles.section, template === "compact" ? styles.sectionCompact : {}]}>
-    <Text style={[styles.heading, template === "modern" ? styles.headingModern : {}, template === "compact" ? styles.headingCompact : {}]}>{title}</Text>
+    <Text style={[styles.heading, template === "modern" ? styles.headingModern : {}, template === "compact" ? styles.headingCompact : {}]}>{title.toLocaleUpperCase("tr-TR")}</Text>
     {children}
   </View>;
 }
@@ -67,7 +66,7 @@ function Education({ cv, template }: { cv: CVData; template: ResumeTemplate }) {
 }
 
 function Skills({ cv }: { cv: CVData }) {
-  return <>{cv.skills.filter((group) => group.items.length).map((group) => <Text key={group.category} style={styles.skillRow}><Text style={{ fontWeight: 700 }}>{group.category}: </Text>{group.items.join(", ")}</Text>)}</>;
+  return <>{cv.skills.filter((group) => group.items.length).map((group) => <Text key={group.category} style={styles.skillRow}><Text>{group.category}: </Text>{group.items.join(", ")}</Text>)}</>;
 }
 
 function CvPdfDocument({ cv, template }: { cv: CVData; template: ResumeTemplate }) {
@@ -88,7 +87,7 @@ function CvPdfDocument({ cv, template }: { cv: CVData; template: ResumeTemplate 
         {cv.languages?.length ? <View style={{ marginTop: 24 }}><Text style={{ fontSize: 10, marginBottom: 12 }}>{labels.languages}</Text>{cv.languages.map((language, index) => <Text key={index} style={{ fontSize: 8, marginBottom: 5 }}>{language.language} · {language.proficiency}</Text>)}</View> : null}
       </View>
       <View style={{ width: "66%", paddingHorizontal: 28, paddingVertical: 0 }}>
-        <View wrap={false} style={styles.headerModern}><Text style={[styles.name, styles.nameModern]}>{p.fullName || "Curriculum Vitae"}</Text>{p.title ? <Text style={[styles.title, styles.titleModern]}>{p.title}</Text> : null}</View>
+        <View wrap={false} style={styles.headerModern}><Text style={[styles.name, styles.nameModern]}>{p.fullName || "Curriculum Vitae"}</Text>{p.title ? <Text style={[styles.title, styles.titleModern]}>{p.title.toLocaleUpperCase(cv.targetLanguage === "TR" ? "tr-TR" : "en-US")}</Text> : null}</View>
         {p.summary ? <Section title={labels.summary} template={template}><Text>{p.summary}</Text></Section> : null}
         {cv.workExperience.length ? <Section title={labels.experience} template={template}><Experience cv={cv} template={template} /></Section> : null}
         {cv.education.length ? <Section title={labels.education} template={template}><Education cv={cv} template={template} /></Section> : null}

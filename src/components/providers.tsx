@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { copy, t } from "@/lib/i18n";
@@ -21,6 +22,7 @@ export function useDisplayLanguage() {
 
 export function Providers({ children }: { children: ReactNode }) {
   const lang = useCvStore((s) => s.uiLanguage);
+  const pathname = usePathname();
 
   useEffect(() => {
     void useCvStore.persist.rehydrate();
@@ -28,7 +30,16 @@ export function Providers({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang === "TR" ? "tr" : "en";
-  }, [lang]);
+    const studio = pathname === "/studio";
+    const tools = pathname.startsWith("/tools/");
+    document.title = lang === "TR"
+      ? studio ? "ATS CV Stüdyosu | AI CV Builder" : tools ? "Ücretsiz PDF araçları | AI CV Builder" : "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | AI CV Builder"
+      : studio ? "ATS CV Studio | AI CV Builder" : tools ? "Free PDF tools | AI CV Builder" : "Edit PDFs and build an ATS-ready CV for free | AI CV Builder";
+    const description = lang === "TR"
+      ? "PDF düzenleme ve ATS uyumlu CV oluşturma araçları."
+      : "PDF editing tools and an ATS-ready CV builder.";
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+  }, [lang, pathname]);
 
   const displayLang = lang;
 

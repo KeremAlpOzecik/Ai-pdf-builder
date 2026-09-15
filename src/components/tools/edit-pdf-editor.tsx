@@ -80,6 +80,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function withTimeout<T>(promise: Promise<T>, milliseconds: number) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("EXPORT_TIMEOUT")), milliseconds);
+    promise.then((value) => { window.clearTimeout(timer); resolve(value); }, (error) => { window.clearTimeout(timer); reject(error); });
+  });
+}
+
 function readAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -465,7 +472,10 @@ export function EditPdfEditor() {
     const nextEdits = sourceMutation && target.sourceBoxId ? { ...edits, [target.sourceBoxId]: "" } : edits;
     applyChange(elements.map((element) => {
       if (element.id !== elementId) return element;
-      const merged = element.type === "text" ? adjustTextLayout(element, patch) : { ...element, ...patch } as PdfCanvasElement;
+      const textPatch = sourceMutation && element.type === "text" && typeof (patch as Partial<CanvasTextElement>).text === "string"
+        ? { ...patch, autoHeight: true }
+        : patch;
+      const merged = element.type === "text" ? adjustTextLayout(element, textPatch) : { ...element, ...patch } as PdfCanvasElement;
       return { ...merged, ...(sourceMutation ? { sourcePristine: false } : {}) } as PdfCanvasElement;
     }), nextEdits);
   }
@@ -659,6 +669,18 @@ export function EditPdfEditor() {
       toast.error(tr ? "Bu değişiklik orijinal PDF yapısı korunarak güvenle dışa aktarılamıyor. Piksel eşlemeli modu seçin." : "This change cannot be exported safely while preserving the original PDF structure. Choose pixel-perfect mode.");
       return;
     }
+    const invalidText = persistedElements.find((element) => {
+      if (element.hidden || element.type !== "text") return false;
+      const metrics = textLayoutMetrics(element);
+      const clipped = metrics.requiredHeight > metrics.availableHeight + 0.5;
+      const outsidePage = element.x < 0 || element.y < 0 || element.x + element.width > 1 || element.y + element.height > 1;
+      return clipped || (outsidePage && !element.allowOverflow);
+    });
+    if (invalidText) {
+      setSelectedId(invalidText.id);
+      toast.error(tr ? "Metin sayfaya veya kutuya sığmıyor. İndirmeden önce kutuyu büyütün ya da otomatik sığdırmayı açın." : "Text does not fit inside its box or page. Resize it or enable auto fit before downloading.");
+      return;
+    }
     setBusy(true);
     try {
       let out: Uint8Array;
@@ -667,7 +689,7 @@ export function EditPdfEditor() {
       } else if (exportMode === "standard") {
         out = await exportCanvasPdf(originalBytes, [], {}, persistedElements.filter(e => e.sourceOp === undefined && e.sourceBoxId === undefined && !e.hidden));
       } else {
-        out = await exportFlattenedScenePdf(originalBytes, Object.values(boxesByPage).flat(), finalEdits, persistedElements);
+        out = await withTimeout(exportFlattenedScenePdf(originalBytes, Object.values(boxesByPage).flat(), finalEdits, persistedElements), 45_000);
       }
       const suffix = exportMode === "flattened" ? "pixel-perfect" : "edited";
       const result = { blob: new Blob([out as BlobPart], { type: "application/pdf" }), name: `${stem(file.name)}-${suffix}.pdf` };
@@ -675,7 +697,9 @@ export function EditPdfEditor() {
       downloadBlob(result.blob, result.name);
       toast.success(labels.toolDone);
     } catch (error) {
-      console.error("PDF editor failed", error); toast.error(tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry.");
+      console.error("PDF editor failed", error);
+      const timedOut = error instanceof Error && error.message === "EXPORT_TIMEOUT";
+      toast.error(timedOut ? (tr ? "PDF dışa aktarma zaman aşımına uğradı. Yeniden deneyin." : "PDF export timed out. Please retry.") : (tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry."));
     } finally {
       setBusy(false);
     }

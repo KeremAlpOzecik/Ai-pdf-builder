@@ -1,6 +1,6 @@
 import { generateCvJson } from "@/lib/gemini";
 import type { TargetLanguage } from "@/types/cv";
-import { isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge, safeServerError } from "@/lib/request-validation";
+import { aiErrorResponse, isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest, hasImageSignature } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 const ALLOWED = new Set(["image/png", "image/jpeg", "image/webp", "image/jpg"]);
 
 export async function POST(request: Request) {
+  let responseLanguage: TargetLanguage = "EN";
   try {
     const blocked = guardAiRequest(request);
     if (blocked) return blocked;
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     const files = form.getAll("file");
     const requestedLanguage = form.get("targetLanguage");
     const targetLanguage: TargetLanguage = isTargetLanguage(requestedLanguage) ? requestedLanguage : "EN";
+    responseLanguage = targetLanguage;
     if (files.length === 0 || files.some((file) => !(file instanceof File))) {
       return Response.json({ error: "At least one image file is required." }, { status: 400 });
     }
@@ -64,6 +66,6 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === "INVALID_IMAGE") {
       return Response.json({ error: "An uploaded image could not be validated." }, { status: 400 });
     }
-    return Response.json({ error: safeServerError(error, "Failed to parse image.") }, { status: 500 });
+    return aiErrorResponse(error, responseLanguage === "TR" ? "Görsel içe aktarılamadı." : "Failed to parse image.", responseLanguage);
   }
 }

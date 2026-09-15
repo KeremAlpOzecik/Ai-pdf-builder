@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { CV_JSON_SCHEMA } from "@/lib/cv-json-schema";
 import { normalizeCv } from "@/lib/normalize-cv";
+import { cvHasContent } from "@/lib/cv-utils";
 import type { CVData, TargetLanguage } from "@/types/cv";
 
 export type GeminiMode = "parse" | "enhance" | "translate";
@@ -29,6 +30,25 @@ Rules:
 };
 
 const MODELS = ["gemini-3.7-flash", "gemini-3.6-flash"] as const;
+const REQUEST_TIMEOUT_MS = 25_000;
+
+/** Accept structured output as well as the fenced JSON occasionally returned by providers. */
+export function parseGeminiJson(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) throw new Error("Empty model response.");
+  const unfenced = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(unfenced);
+  } catch (initialError) {
+    const first = unfenced.indexOf("{");
+    const last = unfenced.lastIndexOf("}");
+    if (first >= 0 && last > first) return JSON.parse(unfenced.slice(first, last + 1));
+    throw initialError;
+  }
+}
 
 export function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -71,12 +91,19 @@ export async function generateCvJson(options: {
           temperature: options.temperature,
           responseMimeType: "application/json",
           responseJsonSchema: CV_JSON_SCHEMA,
+          httpOptions: { timeout: REQUEST_TIMEOUT_MS },
         },
       });
       const text = response.text;
       if (!text) throw new Error("Empty model response.");
-      const parsed = JSON.parse(text) as unknown;
-      return normalizeCv(parsed, options.targetLanguage);
+      const parsed = parseGeminiJson(text);
+      const cv = normalizeCv(parsed, options.targetLanguage);
+      if (!cvHasContent(cv)) {
+        const error = new Error("The model response did not contain enough CV information.");
+        error.name = "AI_EMPTY_CV_ERROR";
+        throw error;
+      }
+      return cv;
     } catch (error) {
       lastError = error;
     }

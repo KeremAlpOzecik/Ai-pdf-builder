@@ -284,10 +284,10 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "page-numbers",
     title: "Ücretsiz PDF sayfa numarası",
     h1: "PDF’e ücretsiz sayfa numarası ekle",
-    description: "Her sayfanın altına 1 / N formatında numara bas. Ücretsiz, hesapsız.",
+    description: "Her sayfaya seçtiğin konumda 1 / N formatında numara bas. Ücretsiz, hesapsız.",
     keywords: ["PDF sayfa numarası ücretsiz", "PDF page numbers", "PDF numaralandır"],
     summary:
-      "Başvuru paketi veya çok sayfalı evrakta sayfa kaybını azaltır. Numara alt ortada durur. Kapak sayfasını hariç tutmak için önce kapağı ayır.",
+      "Başvuru paketi veya çok sayfalı evrakta sayfa kaybını azaltır. Numarayı üstte veya altta; sol, orta ya da sağ konuma yerleştirebilirsin. Kapak sayfasını hariç tutmak için önce kapağı ayır.",
     steps: [
       { title: "PDF yükle", body: "Numaralanacak belgeyi seç." },
       { title: "Numaralandır", body: "İşlem tarayıcıda sayfa sayar ve basar." },

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { guides } from "@/lib/guides";
+import { useDisplayLanguage } from "@/components/providers";
 
 const faq = [
   {
@@ -35,6 +38,7 @@ const faq = [
 ];
 
 export function SeoContent() {
+  const tr = useDisplayLanguage() === "TR";
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -44,6 +48,24 @@ export function SeoContent() {
       acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
   };
+
+  if (!tr) return (
+    <>
+      <section className="mx-auto mt-16 max-w-7xl border-t border-border/70 px-5 py-12 sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Free PDF tools · ATS CV</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight">Edit documents in your browser and download an ATS-ready resume</h2>
+        <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">Merge, split, compress, rotate, sign, watermark, convert, and OCR PDF files without an account. Core PDF tools process files locally in your browser. AI import, ATS suggestions, and translation send CV content to Google Gemini.</p>
+        <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold"><Link className="underline" href="/studio">Open CV studio →</Link><Link className="underline" href="/tools/edit-pdf">Open PDF editor →</Link><Link className="underline" href="/guides">View guides →</Link></div>
+      </section>
+      <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">FAQ</p><h2 className="mt-3 text-3xl font-semibold">Frequently asked questions</h2><div className="mt-8 grid gap-4 md:grid-cols-2">{[
+        ["Are the PDF tools free?", "Yes. No account or daily limit is required."],
+        ["Can I edit a LinkedIn resume PDF?", "Yes. Use the PDF editor for small corrections or import it into the CV studio for larger changes."],
+        ["Are my files uploaded?", "Core PDF tools run locally. AI features send CV content to Google Gemini for processing."],
+        ["Does ATS optimization change my CV automatically?", "No. You review and approve each suggestion."],
+      ].map(([question, answer]) => <details key={question} className="rounded-2xl border bg-card p-5"><summary className="cursor-pointer font-semibold">{question}</summary><p className="mt-3 text-sm text-muted-foreground">{answer}</p></details>)}</div></section>
+      <section className="mx-auto max-w-7xl border-t px-5 py-14 sm:px-8"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">PDF and CV guides</p><h2 className="mt-3 text-3xl font-semibold">Practical document guides</h2><Link className="mt-6 inline-block font-semibold underline" href="/guides">Browse all guides →</Link></section>
+    </>
+  );
 
   return (
     <>

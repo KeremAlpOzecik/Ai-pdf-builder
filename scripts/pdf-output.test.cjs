@@ -45,3 +45,26 @@ test('real PDFs preserve content and use distinct template layouts', async () =>
   assert.ok(layouts.compact.name[4] < 100, 'compact name is left aligned');
   assert.ok(layouts.compact.skill[4] > layouts.compact.school[4] + 200, 'compact skills and education form two columns');
 });
+
+test('all CV templates keep Turkish ATS headings as whole extracted words', async () => {
+  const renderer = await import('@react-pdf/renderer');
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const { cvToPdfBlob } = loadTs('src/lib/export-pdf.tsx', {
+    '@react-pdf/renderer': { ...renderer, Font: { register: (config) => renderer.Font.register({ ...config, src: path.join(__dirname, '../public', config.src) }) } },
+    '@/lib/cv-format': loadTs('src/lib/cv-format.ts'),
+  });
+  const cv = {
+    targetLanguage: 'TR', personalInfo: { fullName: 'Test Adayı', title: 'İş Geliştirme Uzmanı', email: 'test@example.com', summary: 'Ölçülebilir sonuçlar üretir.' },
+    workExperience: [{ id: 'job', company: 'Örnek Şirket', position: 'Uzman', startDate: '2020-01', endDate: '', current: true, location: 'İstanbul', highlights: ['Yeni süreç geliştirdi.'] }],
+    education: [], skills: [{ category: 'Teknik', items: ['TypeScript'] }], projects: [], certifications: [], languages: [],
+  };
+  for (const template of ['modern', 'classic', 'compact']) {
+    const blob = await cvToPdfBlob(cv, template);
+    const loading = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), useSystemFonts: true });
+    const doc = await loading.promise;
+    const items = (await (await doc.getPage(1)).getTextContent()).items;
+    const extracted = items.map(item => item.str || '').join(' ').replace(/\s+/g, ' ').toLocaleUpperCase('tr-TR');
+    for (const heading of ['PROFESYONEL ÖZET', 'DENEYİM', 'YETENEKLER']) assert.ok(extracted.includes(heading), `${template} extracts ${heading} as a phrase: ${extracted}`);
+    await loading.destroy();
+  }
+});

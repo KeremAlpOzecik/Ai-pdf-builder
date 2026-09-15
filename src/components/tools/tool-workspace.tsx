@@ -106,6 +106,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
   const [results, setResults] = useState<{ blob: Blob; name: string }[]>([]);
   const [error, setError] = useState("");
   const [validating, setValidating] = useState(false);
+  const [fileValid, setFileValid] = useState(true);
   const [rotateSelection, setRotateSelection] = useState(false);
   const [splitMode, setSplitMode] = useState("range");
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
@@ -146,6 +147,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
 
   async function onFiles(next: File[]) {
     setResults([]); setError(""); setSelectedPages([]);
+    setFileValid(true);
     setFiles(multiple ? (prev) => [...prev, ...next] : [next[0]]);
     if ((slug === "split" || slug === "pdf-to-word" || slug === "ocr") && next[0]) {
       setValidating(true);
@@ -156,6 +158,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
         setToPage(doc.numPages);
         await doc.loadingTask.destroy();
       } catch {
+        setFileValid(false);
         setError(tr ? "Bu PDF okunamadı. Dosya bozuk veya parola korumalı olabilir." : "This PDF could not be read. It may be damaged or password protected.");
       } finally { setValidating(false); }
     }
@@ -179,9 +182,10 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
         return;
       }
       const bytes = splitMode === "selected" ? await (await import("@/lib/pdf/ops")).extractPdfPages(file, selectedPages) : await splitPdf(file, fromPage, toPage);
+      const selectionLabel = splitMode === "selected" ? selectedPages.join("_") : `${fromPage}-${toPage}`;
       downloadBlob(
         new Blob([bytes as BlobPart], { type: "application/pdf" }),
-        `${stem(file.name)}-p${fromPage}-${toPage}.pdf`,
+        `${stem(file.name)}-p${selectionLabel}.pdf`,
       );
     } else if (slug === "compress") {
       const bytes = await compressPdf(file, compressQuality);
@@ -246,6 +250,9 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
             onClick={() => {
               setJpgMode("to-pdf");
               setFiles([]);
+              setResults([]);
+              setError("");
+              setFileValid(true);
             }}
           >
             {labels.jpgToPdf}
@@ -256,6 +263,9 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
             onClick={() => {
               setJpgMode("to-jpg");
               setFiles([]);
+              setResults([]);
+              setError("");
+              setFileValid(true);
             }}
           >
             {labels.pdfToJpg}
@@ -271,11 +281,11 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
               : labels.pickPdf}
         </p>
       </FileDrop>
-      {files.length > 0 && <FileList files={files} disabled={busy || validating} onChange={(next) => { setFiles(next); setResults([]); setError(""); }} />}
+      {files.length > 0 && <FileList files={files} disabled={busy || validating} onChange={(next) => { setFiles(next); setResults([]); setError(""); setFileValid(true); }} />}
       {slug === "ocr" && <p className="rounded-lg bg-muted p-3 text-sm">{tr ? "Türkçe + İngilizce OCR. En fazla ilk 20 sayfa işlenir; çıktı aranabilir PDF’dir." : "Turkish + English OCR. Only the first 20 pages are processed; output is a searchable PDF."}{files.length > 0 && ` (${pageCount} ${tr ? "sayfa" : "pages"})`}</p>}
       {slug === "sign" && <p className="rounded-lg bg-muted p-3 text-sm">{tr ? "Bu araç belge üzerine görsel imza ekler; nitelikli elektronik imza değildir. İmza son sayfaya eklenir." : "This tool adds a visual signature, not a qualified electronic signature. The signature is added to the last page."}</p>}
       {slug === "compress" && <p className="text-sm text-muted-foreground">{tr ? "Sıkıştırma sayfaları görüntüye dönüştürür; seçilebilir metin korunmaz. Dosya boyutu içeriğe göre artabilir." : "Compression rasterizes pages; selectable text is not retained. File size may increase depending on the content."}</p>}
-      {slug === "split" && files.length > 0 && <div className="space-y-3"><label className="grid gap-2 text-sm font-semibold">{tr ? "Ayırma yöntemi" : "Split method"}<select className="h-11 rounded-lg border bg-background px-3" value={splitMode} onChange={e => setSplitMode(e.target.value)}><option value="range">{tr ? "Sayfa aralığı" : "Page range"}</option><option value="every">{tr ? "Her sayfayı ayrı indir" : "Download every page separately"}</option><option value="selected">{tr ? "Sayfaları görsel olarak seç" : "Select pages visually"}</option></select></label>{splitMode === "selected" && <PagePicker key={files[0].name + files[0].lastModified} file={files[0]} selected={selectedPages} onChange={setSelectedPages} />}</div>}
+      {slug === "split" && files.length > 0 && <div className="space-y-3"><label className="grid gap-2 text-sm font-semibold">{tr ? "Ayırma yöntemi" : "Split method"}<select className="h-11 rounded-lg border bg-background px-3" value={splitMode} onChange={e => { setSplitMode(e.target.value); setResults([]); setError(""); }}><option value="range">{tr ? "Sayfa aralığı" : "Page range"}</option><option value="every">{tr ? "Her sayfayı ayrı indir" : "Download every page separately"}</option><option value="selected">{tr ? "Sayfaları görsel olarak seç" : "Select pages visually"}</option></select></label>{splitMode === "selected" && <PagePicker key={files[0].name + files[0].lastModified} file={files[0]} selected={selectedPages} onChange={(pages) => { setSelectedPages(pages); setResults([]); }} />}</div>}
       {slug === "split" && splitMode === "range" && files.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
@@ -377,6 +387,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
         onClick={() => void run()}
         disabled={
           !files.length ||
+          !fileValid ||
           busy || validating ||
           (slug === "split" && (splitMode === "selected" ? !selectedPages.length : splitMode === "range" && (fromPage < 1 || toPage > pageCount || fromPage > toPage))) ||
           (slug === "rotate" && files.length === 1 && rotateSelection && !selectedPages.length) ||

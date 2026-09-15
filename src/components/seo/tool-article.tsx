@@ -1,10 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { absoluteUrl } from "@/lib/seo";
 import { getToolSeo } from "@/lib/tool-seo";
+import { useDisplayLanguage } from "@/components/providers";
 
 export function ToolArticle({ slug }: { slug: string }) {
   const seo = getToolSeo(slug);
+  const tr = useDisplayLanguage() === "TR";
   if (!seo) return null;
 
   const faqSchema = {
@@ -41,9 +45,9 @@ export function ToolArticle({ slug }: { slug: string }) {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-16">
-      <p className="text-base leading-7 text-muted-foreground">{seo.summary}</p>
+      <p className="text-base leading-7 text-muted-foreground">{tr ? seo.summary : "Choose your file, configure the available options, then process and download the result. Your file is handled in the browser unless the tool explicitly states that it uses AI."}</p>
       <ol className="mt-10 space-y-6">
-        {seo.steps.map((step, index) => (
+        {(tr ? seo.steps : [{ title: "Choose a file", body: "Select a supported file within the size limit." }, { title: "Configure", body: "Review the options and preview before processing." }, { title: "Download", body: "Open the result and verify its content." }]).map((step, index) => (
           <li key={step.title}>
             <h2 className="text-xl font-semibold tracking-tight">
               {index + 1}. {step.title}
@@ -53,7 +57,7 @@ export function ToolArticle({ slug }: { slug: string }) {
         ))}
       </ol>
       <div className="mt-10 space-y-4">
-        {seo.faqs.map((item) => (
+        {(tr ? seo.faqs : [{ question: "Is this tool free?", answer: "Yes. No account or daily limit is required." }]).map((item) => (
           <div key={item.question} className="rounded-2xl border border-border/70 bg-card p-5">
             <h2 className="text-base font-semibold">{item.question}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.answer}</p>
@@ -63,7 +67,7 @@ export function ToolArticle({ slug }: { slug: string }) {
       <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
         {seo.related.map((item) => (
           <Link key={item.href} href={item.href} className="text-primary underline underline-offset-4">
-            {item.label} →
+            {tr ? item.label : "Related tool"} →
           </Link>
         ))}
       </div>

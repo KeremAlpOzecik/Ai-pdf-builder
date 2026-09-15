@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { absoluteUrl } from "@/lib/seo";
+import { useDisplayLanguage } from "@/components/providers";
 
 const steps = [
   {
@@ -22,6 +25,13 @@ const steps = [
 ];
 
 export function StudioSeo() {
+  const tr = useDisplayLanguage() === "TR";
+  const displaySteps = tr ? steps : [
+    { title: "Upload a PDF, LinkedIn export, or start blank", body: "Import an existing resume or fill in the form without creating an account." },
+    { title: "Edit with live preview", body: "Review titles, dates, contact details, and bullet points." },
+    { title: "Review ATS suggestions", body: "Apply or dismiss every AI suggestion individually; nothing changes without your approval." },
+    { title: "Download PDF or Word", body: "Export a selectable, application-ready document." },
+  ];
   const howTo = {
     "@context": "https://schema.org",
     "@type": "HowTo",
@@ -38,20 +48,18 @@ export function StudioSeo() {
   return (
     <section className="border-t border-border/70 bg-background px-5 py-16 sm:px-8">
       <div className="mx-auto max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Ücretsiz yapay zekâ CV stüdyosu</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{tr ? "Ücretsiz yapay zekâ CV stüdyosu" : "Free AI CV studio"}</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-          LinkedIn CV PDF’ini yükle, ATS uyumlu Türkçe özgeçmiş indir
+          {tr ? "LinkedIn CV PDF’ini yükle, ATS uyumlu Türkçe özgeçmiş indir" : "Upload a LinkedIn resume PDF and download an ATS-ready CV"}
         </h2>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
-          Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için
-          PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin.
+          {tr ? "Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin." : "Create a clean, selectable resume for application systems such as LinkedIn. Use the PDF editor for small corrections or merge documents into an application package."}
         </p>
         <p className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-          Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Google Gemini
-          API’ye gönderilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.
+          {tr ? <>Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Google Gemini API’ye gönderilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Note: Import, ATS editing, and translation send CV content to the Google Gemini API. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}
         </p>
         <ol className="mt-8 space-y-5">
-          {steps.map((step, index) => (
+          {displaySteps.map((step, index) => (
             <li key={step.title}>
               <h3 className="text-lg font-semibold">
                 {index + 1}. {step.title}
@@ -62,13 +70,13 @@ export function StudioSeo() {
         </ol>
         <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
           <Link className="text-primary underline underline-offset-4" href="/guides/ats-uyumlu-cv-turkce-ucretsiz">
-            Türkçe ATS CV rehberi →
+            {tr ? "Türkçe ATS CV rehberi" : "ATS CV guide"} →
           </Link>
           <Link className="text-primary underline underline-offset-4" href="/guides/linkedin-cv-pdf-duzenleme">
-            LinkedIn PDF rehberi →
+            {tr ? "LinkedIn PDF rehberi" : "LinkedIn PDF guide"} →
           </Link>
           <Link className="text-primary underline underline-offset-4" href="/tools/edit-pdf">
-            PDF’te yazım düzelt →
+            {tr ? "PDF’te yazım düzelt" : "Fix text in a PDF"} →
           </Link>
         </div>
       </div>

@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Şeffaflık</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Gizlilik politikası</h1>
-          <p className="mt-4 text-sm text-muted-foreground">Son güncelleme: 9 Eylül 2026</p>
+          <p className="mt-4 text-sm text-muted-foreground">Son güncelleme: 8 Ekim 2026</p>
         </div>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Kısa özet</h2>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Analitik ve teknik veriler</h2>
-          <p className="leading-7 text-muted-foreground">Uygulamada Vercel Analytics devre dışıdır. Barındırma ve güvenlik hizmetleri siteyi sunmak ve istekleri karşılamak için teknik verileri işleyebilir.</p>
+          <p className="leading-7 text-muted-foreground">Ziyaretçi sayısını ve sayfa görüntülemelerini ölçmek için Vercel Web Analytics kullanılır. Analitik takibine PDF veya CV içerikleri gönderilmez. Barındırma ve güvenlik hizmetleri siteyi sunmak ve istekleri karşılamak için teknik verileri işleyebilir.</p>
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Haklar ve iletişim</h2>

@@ -4,6 +4,7 @@ import { embedUiFont } from "@/lib/pdf/ops";
 import type { UiFontVariant } from "@/lib/pdf/editor-fonts";
 import type { PdfCanvasElement } from "@/lib/pdf/canvas-types";
 import type { PdfTextBox } from "@/lib/pdf/text-layer";
+import { elementInPdfCoordinates } from "./page-coordinates";
 import { layoutTextLines } from "@/lib/pdf/text-layout";
 
 function hexToRgb(value: string) {
@@ -38,10 +39,11 @@ export async function exportCanvasPdf(
   }
   const pages = pdf.getPages();
 
-  for (const element of elements) {
-    const page = pages[element.pageIndex];
+  for (const displayElement of elements) {
+    const page = pages[displayElement.pageIndex];
     if (!page) continue;
     const pageSize = page.getSize();
+    const element = elementInPdfCoordinates(displayElement, pageSize.width, pageSize.height, page.getRotation().angle);
     const x = element.x * pageSize.width;
     const width = element.width * pageSize.width;
     const height = element.height * pageSize.height;

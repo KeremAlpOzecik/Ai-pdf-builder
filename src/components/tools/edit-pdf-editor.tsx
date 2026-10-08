@@ -1,1135 +1,1050 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  ChevronDown,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import {
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  Circle,
-  Copy,
-  FileDown,
-  FileUp,
+  Download,
   ImagePlus,
-  Italic,
-  Layers3,
   Minus,
+  Plus,
   Redo2,
-  RotateCcw,
   Square,
   Trash2,
   Type,
   Undo2,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PDFDocument } from "pdf-lib";
-import { formatBytes } from "@/components/tools/file-list";
-import { FileDrop } from "@/components/tools/file-drop";
 import { Button } from "@/components/ui/button";
-import { MAX_FILE_BYTES } from "@/lib/tools";
+import { FileDrop } from "@/components/tools/file-drop";
+import { useDisplayLanguage } from "@/components/providers";
 import { downloadBlob, stem } from "@/lib/download";
-import { exportCanvasPdf } from "@/lib/pdf/canvas-export";
-import type { CanvasShapeElement, CanvasTextElement, PdfCanvasElement } from "@/lib/pdf/canvas-types";
-import { analyzeEditorCapabilities, changesSourceAppearance, inspectPdfSecurity, isPersistedElement, type ExportMode } from "@/lib/pdf/editor-capabilities";
-import { exportFlattenedScenePdf } from "@/lib/pdf/konva-flatten-export";
-import { loadPdfjs, openPdf, renderPage } from "@/lib/pdf/pdfjs-client";
-import { extractTextBoxes, type PdfTextBox } from "@/lib/pdf/text-layer";
+import { MAX_FILE_BYTES } from "@/lib/tools";
+import { openPdf, renderPage } from "@/lib/pdf/pdfjs-client";
+import { ensureEditorFonts } from "@/lib/pdf/editor-fonts";
 import { layoutTextLines } from "@/lib/pdf/text-layout";
-import { listSourceGraphics, extractSourceGraphic, renderWithSourceGraphics, type SourceGraphic } from "@/lib/pdf/source-graphics";
-import { useDisplayLanguage, useLabels } from "@/components/providers";
+import { exportSimplePdf } from "@/lib/pdf/simple-export";
+import { decodeProject, encodeProject } from "@/lib/pdf/editor-project";
+import { readEditorDraft, writeEditorDraft } from "@/lib/pdf/editor-draft";
+import type {
+  CanvasTextElement,
+  PdfCanvasElement,
+} from "@/lib/pdf/canvas-types";
 
-type ActiveEdit = {
-  id: string;
-  text: string;
-  original: string;
-  left: number;
-  top: number;
+type PageSize = {
+  index: number;
   width: number;
   height: number;
-  fontSize: number;
-  fontFamily: string;
-  color: [number, number, number];
-  bg: [number, number, number];
+  rotation: number;
 };
-
-type EditorSnapshot = {
-  edits: Record<string, string>;
-  elements: PdfCanvasElement[];
-  bytes: Uint8Array | null;
-  pageCount: number;
-  pageSizes: Record<number, { width: number; height: number }>;
-  page: number;
-  boxesByPage: Record<number, PdfTextBox[]>;
-  documentRevision: number;
-  guidesByPage: Record<number, { x: number[]; y: number[] }>;
+type Drag = {
+  id: string;
+  pointer: number;
+  x: number;
+  y: number;
+  rect: DOMRect;
+  element: PdfCanvasElement;
+  resize: boolean;
+  before: PdfCanvasElement[];
 };
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
+const DRAFT = "simple-editor";
 
-const PdfSceneStage = dynamic(() => import("@/components/tools/pdf-scene-stage"), { ssr: false });
-
-function id() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function withTimeout<T>(promise: Promise<T>, milliseconds: number) {
-  return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("EXPORT_TIMEOUT")), milliseconds);
-    promise.then((value) => { window.clearTimeout(timer); resolve(value); }, (error) => { window.clearTimeout(timer); reject(error); });
-  });
-}
-
-function readAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error ?? new Error("Image could not be read"));
-    reader.readAsDataURL(file);
-  });
+function fitText(
+  element: CanvasTextElement,
+  dimensions: PageSize,
+): CanvasTextElement {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (ctx)
+    ctx.font = `${element.bold ? 700 : 400} ${element.fontSize}px 'Noto Sans'`;
+  const measure = (text: string) =>
+    ctx?.measureText(text).width ?? text.length * element.fontSize * 0.6;
+  const lines = layoutTextLines(
+    element.text,
+    element.width * dimensions.width,
+    Number.MAX_SAFE_INTEGER,
+    element.fontSize,
+    1.25,
+    measure,
+  );
+  return {
+    ...element,
+    height: Math.min(
+      1 - element.y,
+      Math.max(
+        0.025,
+        (lines.length * element.fontSize * 1.25 + 2) / dimensions.height,
+      ),
+    ),
+  };
 }
 
 export function EditPdfEditor() {
-  const labels = useLabels();
   const tr = useDisplayLanguage() === "TR";
-  const viewerRef = useRef<HTMLDivElement>(null);
-  const canvasHostRef = useRef<HTMLDivElement>(null);
-  const layerRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const projectInputRef = useRef<HTMLInputElement>(null);
-  const clipboardRef = useRef<PdfCanvasElement[]>([]);
-  const sourceBytesRef = useRef<Uint8Array | null>(null);
+  const t = (turkish: string, english: string) => (tr ? turkish : english);
+  const [file, setFile] = useState<File | null>(null);
+  const [bytes, setBytes] = useState<Uint8Array | null>(null);
+  const [pages, setPages] = useState<PageSize[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [elements, setElements] = useState<PdfCanvasElement[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [undo, setUndo] = useState<PdfCanvasElement[][]>([]);
+  const [redo, setRedo] = useState<PdfCanvasElement[][]>([]);
+  const [busy, setBusy] = useState(false);
+  const [rendering, setRendering] = useState(false);
   const [error, setError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [recoveryDraft, setRecoveryDraft] = useState<Blob | null>(null);
+  const [recovery, setRecovery] = useState<Blob | null>(null);
   const [draftFailed, setDraftFailed] = useState(false);
-  const [multiSelect, setMultiSelect] = useState(false);
-  const [documentValid, setDocumentValid] = useState(false);
-  const [pageSizes, setPageSizes] = useState<Record<number, { width: number; height: number }>>({});
-  const [mobileProperties, setMobileProperties] = useState(false);
-  const [mobilePages, setMobilePages] = useState(false);
-  const [renderVersion, setRenderVersion] = useState(0);
-  const [saved, setSaved] = useState<{ blob: Blob; name: string } | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [originalBytes, setOriginalBytes] = useState<Uint8Array | null>(null);
-  const [pageCount, setPageCount] = useState(1);
-  const [page, setPage] = useState(1);
-  const [scale, setScale] = useState(1.25);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const [boxes, setBoxes] = useState<PdfTextBox[]>([]);
-  const [boxesByPage, setBoxesByPage] = useState<Record<number, PdfTextBox[]>>({});
-  const [active, setActive] = useState<ActiveEdit | null>(null);
-  const [edits, setEdits] = useState<Record<string, string>>({});
-  const [elements, setElements] = useState<PdfCanvasElement[]>([]);
-  const [selectedId, setPrimarySelectedId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [exportMode, setExportMode] = useState<ExportMode>("standard");
-  const [undoStack, setUndoStack] = useState<EditorSnapshot[]>([]);
-  const [redoStack, setRedoStack] = useState<EditorSnapshot[]>([]);
-  const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
-  const [busy, setBusy] = useState(false);
-  const [loadingPage, setLoadingPage] = useState(false);
-  const [empty, setEmpty] = useState(false);
-  const [sourceGraphics, setSourceGraphics] = useState<SourceGraphic[]>([]);
-  const [documentRevision, setDocumentRevision] = useState(0);
-  const [guidesByPage, setGuidesByPage] = useState<Record<number, { x: number[]; y: number[] }>>({});
-  const sourceSignature = JSON.stringify(elements.filter(e => (e.sourceOp !== undefined || e.isPageBackground) && e.sourcePristine !== true));
-  const thumbnailSceneSignature = JSON.stringify(elements.filter((element) => element.pageIndex === page - 1 && isPersistedElement(element)));
-  const thumbnailEditSignature = JSON.stringify(edits);
-
-  function setSelectedId(next: string | null) {
-    setPrimarySelectedId(next);
-    setSelectedIds(next ? [next] : []);
-    if (next) { setMobileProperties(true); setMobilePages(false); }
-  }
-
-  const selected = elements.find((element) => element.id === selectedId) ?? null;
-  const pageElements = elements.filter((element) => element.pageIndex === page - 1);
-  const persistedElements = elements.filter(isPersistedElement);
-  const changeCount = documentRevision + persistedElements.length + Object.keys(edits).filter((boxId) => !persistedElements.some((element) => element.sourceBoxId === boxId)).length;
-  const security = useMemo(() => originalBytes ? inspectPdfSecurity(originalBytes) : { encrypted: false, signed: false }, [originalBytes]);
-  const capabilities = analyzeEditorCapabilities(edits, elements, security);
+  const [viewerWidth, setViewerWidth] = useState(600);
+  const [zoom, setZoom] = useState(1);
+  const canvasHost = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const drag = useRef<Drag | null>(null);
+  const selected = elements.find((element) => element.id === selectedId);
+  const currentPage = pages[pageIndex];
+  const scale = currentPage
+    ? Math.max(0.1, Math.min(1.15, (viewerWidth - 24) / currentPage.width)) *
+      zoom
+    : 1;
 
   useEffect(() => {
-    if (!changeCount) return;
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [changeCount]);
-
-  useEffect(() => {
-    void import("@/lib/pdf/editor-draft").then(module => module.readEditorDraft()).then(blob => setRecoveryDraft(blob ?? null)).catch(() => undefined);
+    void ensureEditorFonts().catch(() => undefined);
+    void readEditorDraft(DRAFT)
+      .then((blob) => setRecovery(blob ?? null))
+      .catch(() => undefined);
   }, []);
-
   useEffect(() => {
-    if (!originalBytes || !file || !documentValid || Object.keys(pageSizes).length !== pageCount) return;
-    const timer = window.setTimeout(() => {
-      void Promise.all([import("@/lib/pdf/editor-draft"), import("@/lib/pdf/editor-project")]).then(([draft, project]) => {
-        const pages = Object.entries(pageSizes).map(([index, dimensions]) => ({ index: Number(index), ...dimensions, rotation: 0 }));
-        return draft.writeEditorDraft(project.encodeProject({ fileName: file.name, bytes: originalBytes, elements, edits, boxesByPage, exportMode, pages, guidesByPage }));
-      }).then(() => setDraftFailed(false)).catch(() => setDraftFailed(true));
-    }, 600);
-    return () => window.clearTimeout(timer);
-  }, [originalBytes, file, documentValid, pageCount, pageSizes, elements, edits, boxesByPage, exportMode, guidesByPage]);
-
+    if (!viewerRef.current) return;
+    const observer = new ResizeObserver((entries) =>
+      setViewerWidth(entries[0].contentRect.width),
+    );
+    observer.observe(viewerRef.current);
+    return () => observer.disconnect();
+  }, [file]);
   useEffect(() => {
-    if (mobileProperties && window.innerWidth < 1024) pageRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-  }, [mobileProperties]);
-
-  function textLayoutMetrics(element: CanvasTextElement, fontSize = element.fontSize) {
-    const dimensions = pageSizes[element.pageIndex] ?? { width: size.width / scale, height: size.height / scale };
-    const pixelSize = Math.max(1, fontSize);
-    const context = document.createElement("canvas").getContext("2d");
-    if (context) context.font = `${element.italic ? "italic " : ""}${element.bold ? "700 " : "400 "}${pixelSize}px '${element.fontFamily}'`;
-    const measure = (value: string) => (context?.measureText(value).width ?? value.length * pixelSize * 0.55) + Math.max(0, value.length - 1) * (element.letterSpacing ?? 0);
-    const lines = layoutTextLines(element.text, Math.max(1, element.width * dimensions.width), Number.MAX_SAFE_INTEGER, pixelSize, element.lineHeight ?? 1.25, measure);
-    return { lines, requiredHeight: lines.length * pixelSize * (element.lineHeight ?? 1.25), availableHeight: element.height * dimensions.height };
-  }
-
-  function adjustTextLayout(element: CanvasTextElement, patch: Partial<PdfCanvasElement>) {
-    let next = { ...element, ...patch } as CanvasTextElement;
-    if (next.autoFit) {
-      const maximum = "fontSize" in patch && typeof patch.fontSize === "number" ? patch.fontSize : next.autoFitMaxSize ?? next.fontSize;
-      let fitted = Math.max(6, maximum);
-      while (fitted > 6 && textLayoutMetrics(next, fitted).requiredHeight > textLayoutMetrics(next, fitted).availableHeight) fitted -= 0.5;
-      next = { ...next, fontSize: fitted, autoFitMaxSize: maximum };
-    }
-    if (next.autoHeight) {
-      const needed = textLayoutMetrics(next).requiredHeight / Math.max(1, pageSizes[next.pageIndex]?.height ?? size.height / scale);
-      next = { ...next, height: next.allowOverflow ? Math.max(0.02, needed) : clamp(needed, 0.02, 1 - next.y) };
-    }
-    return next;
-  }
-
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !originalBytes) return;
+    if (!bytes || !canvasHost.current || !currentPage) return;
     let cancelled = false;
-    const fit = async () => {
-      const doc = await openPdf(originalBytes);
-      try {
-        const pdfPage = await doc.getPage(page);
-        const base = pdfPage.getViewport({ scale: 1 });
-        const padding = window.innerWidth >= 640 ? 64 : 32;
-        if (!cancelled) setScale(Math.max(0.2, Math.min(1.25, (viewer.clientWidth - padding) / base.width)));
-      } finally { await doc.loadingTask.destroy(); }
-    };
-    const observer = new ResizeObserver(() => { void fit().catch(() => undefined); });
-    observer.observe(viewer);
-    return () => { cancelled = true; observer.disconnect(); };
-  }, [originalBytes, page]);
-
-  useEffect(() => {
-    if (!originalBytes || !layerRef.current || !canvasHostRef.current) return;
-    let cancelled = false;
-    const container = layerRef.current;
-    const canvasHost = canvasHostRef.current;
-    let doc: Awaited<ReturnType<typeof openPdf>> | null = null;
-
+    const host = canvasHost.current;
+    let doc: Awaited<ReturnType<typeof openPdf>> | undefined;
+    setRendering(true);
     void (async () => {
       try {
-        const pdfjs = await loadPdfjs();
-        doc = await openPdf(originalBytes);
-        const pdfPage = await doc.getPage(page);
-        // Use screen resolution for the preview; export independently renders at 300 DPI.
-        // Keep the preview background sourced from the same scene used by
-        // flattened export, then scale it with CSS. This avoids a second, lower
-        // quality PDF.js rasterization path while text hit boxes stay in view units.
-        const viewport = pdfPage.getViewport({ scale });
-        const { canvas } = await renderWithSourceGraphics(pdfPage, Math.min(2, scale * (window.devicePixelRatio || 1)), JSON.parse(sourceSignature), false);
-        if (cancelled) return;
-        const nextBoxes = await extractTextBoxes(pdfPage, canvas, viewport);
-        const content = await pdfPage.getTextContent();
-        if (cancelled) return;
-        canvas.className = "pointer-events-none block select-none";
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
-        canvasHost.replaceChildren(canvas);
-        container.replaceChildren();
-        const layer = new pdfjs.TextLayer({ textContentSource: content, container, viewport });
-        await layer.render();
-        if (cancelled) return layer.cancel();
-        container.style.width = "100%";
-        container.style.height = "100%";
-        let boxCursor = 0;
-        layer.textDivs.forEach((node) => {
-          // PDF.js can omit empty text items; array indexes are not interchangeable.
-          const match = nextBoxes.findIndex((box, index) => index >= boxCursor && box.text === node.textContent);
-          const box = match < 0 ? undefined : nextBoxes[match];
-          if (match >= 0) boxCursor = match + 1;
-          if (box?.text.trim() && node instanceof HTMLElement) {
-            node.dataset.boxId = box.id;
-            node.tabIndex = 0;
-            node.setAttribute("role", "button");
-            node.setAttribute("aria-label", box.text);
-          }
-        });
-        setError("");
-        setPageCount(doc.numPages);
-        setPageSizes((current) => ({ ...current, [page - 1]: { width: viewport.width / scale, height: viewport.height / scale } }));
-        setDocumentValid(true);
-        setSize({ width: viewport.width, height: viewport.height });
-        setBoxes(nextBoxes);
-        setBoxesByPage((current) => ({ ...current, [page]: nextBoxes }));
-        setEmpty(nextBoxes.every((box) => !box.text.trim()));
-        setSourceGraphics(await listSourceGraphics(pdfPage));
-      } catch (error) {
-        if (!cancelled) { setDocumentValid(false); setSize({ width: 0, height: 0 }); setBoxes([]); setSourceGraphics([]); console.error("PDF editor failed", error); setError(tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry."); }
+        doc = await openPdf(bytes);
+        const { canvas } = await renderPage(
+          await doc.getPage(pageIndex + 1),
+          scale,
+        );
+        if (!cancelled) {
+          host.replaceChildren(canvas);
+          setError("");
+        }
+      } catch {
+        if (!cancelled)
+          setError(
+            t(
+              "Sayfa görüntülenemedi. PDF’yi yeniden açmayı dene.",
+              "Could not display this page. Try reopening the PDF.",
+            ),
+          );
       } finally {
-        if (doc) await doc.loadingTask.destroy().catch(() => undefined);
-        if (!cancelled) setLoadingPage(false);
+        if (!cancelled) setRendering(false);
+        await doc?.loadingTask.destroy().catch(() => undefined);
       }
     })();
-
     return () => {
       cancelled = true;
-      container.replaceChildren();
-      canvasHost.replaceChildren();
     };
-  }, [originalBytes, page, scale, labels.toolFailed, tr, renderVersion, sourceSignature]);
-
+    // Language does not change the rendered page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bytes, pageIndex, scale, currentPage]);
   useEffect(() => {
-    if (!originalBytes) return;
-    let cancelled = false;
-    let doc: Awaited<ReturnType<typeof openPdf>> | null = null;
-    void (async () => {
-      doc = await openPdf(originalBytes);
-      for (let number = 1; number <= doc.numPages; number += 1) {
-        const pdfPage = await doc.getPage(number);
-        const { canvas } = await renderPage(pdfPage, 0.16);
-        if (cancelled) return;
-        const url = canvas.toDataURL("image/jpeg", 0.72);
-        setThumbnails((current) => ({ ...current, [number]: url }));
-      }
-    })().catch(() => undefined).finally(() => doc?.loadingTask.destroy().catch(() => undefined));
-    return () => { cancelled = true; };
-  }, [originalBytes]);
-
-  useEffect(() => {
-    if (active) inputRef.current?.focus();
-  }, [active]);
-
-  useEffect(() => {
-    if (!originalBytes || !pageRef.current || !size.width || !size.height) return;
+    if (!bytes || !file || !pages.length) return;
     const timer = window.setTimeout(() => {
-      const root = pageRef.current;
-      const background = canvasHostRef.current?.querySelector("canvas");
-      const scene = root?.querySelector<HTMLCanvasElement>(".konvajs-content canvas");
-      if (!root || !background) return;
-      const width = 112;
-      const height = Math.max(1, Math.round(width * size.height / size.width));
-      const canvas = document.createElement("canvas");
-      canvas.width = width; canvas.height = height;
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      context.fillStyle = "white"; context.fillRect(0, 0, width, height);
-      context.drawImage(background, 0, 0, width, height);
-      const sx = width / size.width;
-      const sy = height / size.height;
-      for (const mask of root.querySelectorAll<HTMLElement>(".pdf-edited-text")) {
-        context.fillStyle = getComputedStyle(mask).backgroundColor;
-        context.fillRect(mask.offsetLeft * sx, mask.offsetTop * sy, mask.offsetWidth * sx, mask.offsetHeight * sy);
-      }
-      if (scene) context.drawImage(scene, 0, 0, width, height);
-      setThumbnails((current) => ({ ...current, [page]: canvas.toDataURL("image/jpeg", 0.76) }));
-    }, 180);
-    return () => window.clearTimeout(timer);
-  }, [originalBytes, page, size.width, size.height, thumbnailSceneSignature, thumbnailEditSignature]);
-
-  function snapshot(): EditorSnapshot {
-    return { edits, elements, bytes: originalBytes, pageCount, pageSizes, page, boxesByPage, documentRevision, guidesByPage };
-  }
-
-  function restoreSnapshot(value: EditorSnapshot) {
-    setElements(value.elements); setEdits(value.edits); setOriginalBytes(value.bytes); setPageCount(value.pageCount); setPageSizes(value.pageSizes); setPage(value.page); setBoxesByPage(value.boxesByPage); setDocumentRevision(value.documentRevision); setGuidesByPage(value.guidesByPage);
-    setActive(null); setSelectedId(null); setThumbnails({}); setLoadingPage(true);
-  }
-
-  function applyChange(nextElements: PdfCanvasElement[], nextEdits = edits) {
-    setUndoStack((stack) => [...stack.slice(-49), snapshot()]);
-    setRedoStack([]);
-    setElements(nextElements);
-    setEdits(nextEdits);
-  }
-
-  function openAnotherFile() {
-    setConfirmOpen(false); setFile(null); setDocumentValid(false); setPageCount(1); setSize({ width: 0, height: 0 });
-  }
-
-  async function onFiles(files: File[]) {
-    const next = files[0];
-    if (!next) return;
-    const bytes = new Uint8Array(await next.arrayBuffer());
-    try {
-      const document = await openPdf(bytes);
-      try {
-        const dimensions: Record<number, { width: number; height: number }> = {};
-        for (let index = 0; index < document.numPages; index++) {
-          const viewport = (await document.getPage(index + 1)).getViewport({ scale: 1 });
-          dimensions[index] = { width: viewport.width, height: viewport.height };
-        }
-        setPageSizes(dimensions); setPageCount(document.numPages);
-      } finally { await document.loadingTask.destroy(); }
-    } catch {
-      toast.error(tr ? "PDF açılamadı. Geçerli, parolasız bir PDF seçin." : "Could not open PDF. Choose a valid, unencrypted PDF.");
-      return;
-    }
-    setError(""); setSaved(null); setDocumentValid(true);
-    setFile(next); setPage(1); setActive(null); setEdits({}); setElements([]);
-    setSelectedId(null); setUndoStack([]); setRedoStack([]); setBoxesByPage({});
-    setDocumentRevision(0); setGuidesByPage({}); setThumbnails({}); setSize({ width: 0, height: 0 });
-    setLoadingPage(true); setMobileProperties(false); setExportMode("standard");
-    sourceBytesRef.current = bytes; setOriginalBytes(bytes);
-  }
-
-  function startEdit(box: PdfTextBox) {
-    const existing = elements.find(element => element.type === "text" && element.sourceBoxId === box.id);
-    if (existing) { setSelectedId(existing.id); return; }
-    const element: CanvasTextElement = {
-      id: id(), sourceBoxId: box.id, type: "text", pageIndex: box.pageIndex,
-      text: edits[box.id] ?? box.text,
-      x: box.viewLeft / size.width, y: box.viewTop / size.height,
-      width: Math.min(1 - box.viewLeft / size.width, Math.max(box.viewWidth + 12 * scale, 30 * scale) / size.width),
-      height: Math.max(box.viewHeight * 1.6, box.fontSize * scale * 1.6) / size.height,
-      fontSize: box.fontSize, fontFamily: "Noto Sans",
-      color: "#" + box.color.map(value => Math.round(value).toString(16).padStart(2, "0")).join(""),
-      align: "left", bold: false, italic: false, rotation: 0, opacity: 1,
-      sourcePristine: true, autoFit: true, autoFitMaxSize: box.fontSize, lineHeight: 1.1,
-    };
-    // Selection is not an edit. The source becomes dirty only after a property changes.
-    setElements([...elements, element]);
-    setActive(null);
-    setSelectedId(element.id);
-  }
-
-  function commitTextEdit() {
-    if (!active) return edits;
-    const previous = edits[active.id] ?? active.original;
-    if (active.text === previous) {
-      setActive(null);
-      return edits;
-    }
-    const next = { ...edits };
-    if (active.text === active.original) delete next[active.id];
-    else next[active.id] = active.text;
-    setUndoStack((stack) => [...stack.slice(-49), snapshot()]);
-    setRedoStack([]);
-    setEdits(next);
-    setActive(null);
-    return next;
-  }
-
-  function undo() {
-    const previous = undoStack.at(-1);
-    if (!previous) return;
-    setRedoStack((stack) => [...stack, snapshot()]);
-    setUndoStack((stack) => stack.slice(0, -1));
-    restoreSnapshot(previous);
-  }
-
-  function redo() {
-    const next = redoStack.at(-1);
-    if (!next) return;
-    setUndoStack((stack) => [...stack, snapshot()]);
-    setRedoStack((stack) => stack.slice(0, -1));
-    restoreSnapshot(next);
-  }
-
-  function addText() {
-    const element: CanvasTextElement = {
-      id: id(), type: "text", pageIndex: page - 1, x: 0.3, y: 0.42, width: 0.4, height: 0.08,
-      rotation: 0, opacity: 1, text: labels.newText, fontSize: 18, fontFamily: "Noto Sans", color: "#1c1917", align: "left", bold: false, italic: false,
-    };
-    applyChange([...elements, element]);
-    setSelectedId(element.id);
-  }
-
-  function addShape(shape: CanvasShapeElement["shape"]) {
-    const element: CanvasShapeElement = {
-      id: id(), type: "shape", shape, pageIndex: page - 1, x: 0.34, y: 0.4,
-      width: shape === "line" ? 0.32 : 0.24, height: shape === "line" ? 0.015 : 0.14,
-      rotation: 0, opacity: 1, fill: shape === "line" ? "#2563eb" : "#dbeafe", stroke: "#2563eb", strokeWidth: 2,
-    };
-    applyChange([...elements, element]);
-    setSelectedId(element.id);
-  }
-
-  async function addImage(file: File) {
-    if (file.size > MAX_FILE_BYTES || !["image/png", "image/jpeg"].includes(file.type)) {
-      toast.error(tr ? "En fazla 25 MB boyutunda bir PNG veya JPG seçin." : "Choose a PNG or JPG up to 25 MB.");
-      return;
-    }
-    try {
-    const dataUrl = await readAsDataUrl(file);
-    const bitmap = await createImageBitmap(file);
-    const width = 0.32;
-    const height = clamp(width * (size.width || 1) / (bitmap.width / bitmap.height) / (size.height || 1), 0.08, 0.5);
-    bitmap.close();
-    const element: PdfCanvasElement = { id: id(), type: "image", pageIndex: page - 1, x: 0.34, y: 0.32, width, height, rotation: 0, opacity: 1, dataUrl, name: file.name };
-    applyChange([...elements, element]);
-    setSelectedId(element.id);
-    } catch (error) {
-      console.error("Editor image import failed", error);
-      toast.error(tr ? "Görsel okunamadı. Başka bir PNG veya JPG seçin." : "The image could not be read. Choose another PNG or JPG.");
-    }
-  }
-
-  async function replaceImage(file: File) {
-    if (selected?.type !== "image") return;
-    if (file.size > MAX_FILE_BYTES || !["image/png", "image/jpeg"].includes(file.type)) {
-      toast.error(tr ? "PNG veya JPG seçin (en fazla 25 MB)." : "Choose PNG or JPG (up to 25 MB).");
-      return;
-    }
-    try { patchSelected({ dataUrl: await readAsDataUrl(file), name: file.name } as Partial<PdfCanvasElement>); }
-    catch { toast.error(labels.toolFailed); }
-  }
-
-  async function uploadFont(file: File) {
-    if (selected?.type !== "text") return;
-    const supported = /\.(ttf|otf|woff2?)$/i.test(file.name) || ["font/ttf", "font/otf", "font/woff", "font/woff2", "application/font-sfnt"].includes(file.type);
-    if (!supported || file.size > 10 * 1024 * 1024) {
-      toast.error(tr ? "En fazla 10 MB boyutunda TTF, OTF, WOFF veya WOFF2 seçin." : "Choose a TTF, OTF, WOFF or WOFF2 file up to 10 MB.");
-      return;
-    }
-    try {
-      const fontDataUrl = await readAsDataUrl(file);
-      const family = `UserFont-${id()}`;
-      if (typeof FontFace !== "undefined") document.fonts.add(await new FontFace(family, `url(${fontDataUrl})`).load());
-      patchSelected({ fontFamily: family, fontDataUrl } as Partial<CanvasTextElement>);
-    } catch (error) {
-      console.error("Editor font import failed", error);
-      toast.error(tr ? "Font okunamadı veya tarayıcı tarafından desteklenmiyor." : "The font could not be read or is not supported by this browser.");
-    }
-  }
-
-  function patchElement(elementId: string, patch: Partial<PdfCanvasElement>) {
-    const target = elements.find((element) => element.id === elementId);
-    if (!target) return;
-    if (target.locked && patch.locked !== false && patch.hidden === undefined) return;
-    const appearanceChanged = changesSourceAppearance(target, patch);
-    const sourceMutation = target.sourcePristine === true && appearanceChanged;
-    const nextEdits = sourceMutation && target.sourceBoxId ? { ...edits, [target.sourceBoxId]: "" } : edits;
-    applyChange(elements.map((element) => {
-      if (element.id !== elementId) return element;
-      const textPatch = sourceMutation && element.type === "text" && typeof (patch as Partial<CanvasTextElement>).text === "string"
-        ? { ...patch, autoHeight: false, autoFit: true, autoFitMaxSize: element.fontSize }
-        : patch;
-      const merged = element.type === "text" ? adjustTextLayout(element, textPatch) : { ...element, ...patch } as PdfCanvasElement;
-      return { ...merged, ...(sourceMutation ? { sourcePristine: false } : {}) } as PdfCanvasElement;
-    }), nextEdits);
-  }
-
-  function patchElements(patches: Array<{ id: string; patch: Partial<PdfCanvasElement> }>) {
-    if (!patches.length) return;
-    const byId = new Map(patches.map((entry) => [entry.id, entry.patch]));
-    let nextEdits = edits;
-    const next = elements.map((element) => {
-      const patch = byId.get(element.id);
-      if (!patch || element.locked) return element;
-      if (element.sourcePristine === true && changesSourceAppearance(element, patch) && element.sourceBoxId) nextEdits = { ...nextEdits, [element.sourceBoxId]: "" };
-      return { ...element, ...patch, ...(element.sourcePristine === true && changesSourceAppearance(element, patch) ? { sourcePristine: false } : {}) } as PdfCanvasElement;
-    });
-    applyChange(next, nextEdits);
-  }
-
-  function patchSelected(patch: Partial<PdfCanvasElement>) {
-    if (selected) patchElement(selected.id, patch);
-  }
-
-  function removeSelected() {
-    if (!selected || selected.locked) return;
-    if (selected.sourceOp !== undefined || selected.sourceBoxId !== undefined) {
-      patchElement(selected.id, { hidden: true });
-    } else {
-      applyChange(elements.filter((element) => element.id !== selected.id));
-    }
-    setSelectedId(null);
-  }
-
-  function duplicateSelected() {
-    if (!selected) return;
-    const copy = { ...selected, sourceOp: undefined, sourceBoxId: undefined, sourcePristine: false, locked: false, id: id(), x: clamp(selected.x + 0.025, 0, 1 - selected.width), y: clamp(selected.y + 0.025, 0, 1 - selected.height) };
-    applyChange([...elements, copy]);
-    setSelectedId(copy.id);
-  }
-
-  function moveLayer(direction: -1 | 1) {
-    if (!selected) return;
-    const index = elements.findIndex((element) => element.id === selected.id);
-    let target = index + direction;
-    while (target >= 0 && target < elements.length && elements[target].pageIndex !== selected.pageIndex) target += direction;
-    if (target < 0 || target >= elements.length) return;
-    const next = [...elements];
-    const [item] = next.splice(index, 1);
-    next.splice(target, 0, item);
-    applyChange(next);
-  }
-
-  function goToPage(nextPage: number) {
-    commitTextEdit();
-    setSelectedId(null);
-    setBoxes([]);
-    setLoadingPage(true);
-    setPage(clamp(nextPage, 1, pageCount));
-  }
-
-  function reorderLayer(draggedId: string, targetId: string) {
-    if (draggedId === targetId) return;
-    const dragged = elements.find((element) => element.id === draggedId);
-    const target = elements.find((element) => element.id === targetId);
-    if (!dragged || !target || dragged.pageIndex !== target.pageIndex) return;
-    const next = [...elements];
-    const from = next.findIndex((element) => element.id === draggedId);
-    const to = next.findIndex((element) => element.id === targetId);
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    applyChange(next);
-  }
-
-  async function mutatePages(action: "add" | "duplicate" | "delete" | "up" | "down") {
-    if (!originalBytes) return;
-    const currentIndex = page - 1;
-    const targetIndex = action === "up" ? currentIndex - 1 : action === "down" ? currentIndex + 1 : currentIndex;
-    if ((action === "delete" && pageCount <= 1) || ((action === "up" || action === "down") && (targetIndex < 0 || targetIndex >= pageCount))) return;
-    setBusy(true);
-    try {
-      const before = snapshot();
-      const pdf = await PDFDocument.load(originalBytes);
-      const current = pdf.getPage(currentIndex);
-      const pageSize = current.getSize();
-      let nextPage = page;
-      if (action === "add") {
-        pdf.insertPage(currentIndex + 1, [pageSize.width, pageSize.height]);
-        nextPage = page + 1;
-      } else if (action === "duplicate") {
-        const [copy] = await pdf.copyPages(pdf, [currentIndex]);
-        pdf.insertPage(currentIndex + 1, copy);
-        nextPage = page + 1;
-      } else if (action === "delete") {
-        pdf.removePage(currentIndex);
-        nextPage = Math.min(page, pageCount - 1);
-      } else {
-        pdf.removePage(currentIndex);
-        pdf.insertPage(targetIndex, current);
-        nextPage = targetIndex + 1;
-      }
-      const mapPage = (oldIndex: number): number | null => {
-        if (action === "delete") return oldIndex === currentIndex ? null : oldIndex > currentIndex ? oldIndex - 1 : oldIndex;
-        if (action === "add" || action === "duplicate") return oldIndex > currentIndex ? oldIndex + 1 : oldIndex;
-        if (oldIndex === currentIndex) return targetIndex;
-        if (oldIndex === targetIndex) return currentIndex;
-        return oldIndex;
-      };
-      const remapBox = (box: PdfTextBox, nextIndex: number) => ({ ...box, pageIndex: nextIndex, id: `${nextIndex}-${box.id.replace(/^\d+-/, "")}` });
-      const baseBoxIds = new Map<string, string>();
-      const duplicateBoxIds = new Map<string, string>();
-      const nextBoxesByPage: Record<number, PdfTextBox[]> = {};
-      for (const pageBoxes of Object.values(boxesByPage)) for (const box of pageBoxes) {
-        const mapped = mapPage(box.pageIndex);
-        if (mapped !== null) {
-          const nextBox = remapBox(box, mapped);
-          (nextBoxesByPage[mapped + 1] ??= []).push(nextBox);
-          baseBoxIds.set(box.id, nextBox.id);
-        }
-        if (action === "duplicate" && box.pageIndex === currentIndex) {
-          const nextBox = remapBox(box, currentIndex + 1);
-          (nextBoxesByPage[currentIndex + 2] ??= []).push(nextBox);
-          duplicateBoxIds.set(box.id, nextBox.id);
-        }
-      }
-      const nextEdits: Record<string, string> = {};
-      for (const [boxId, value] of Object.entries(edits)) {
-        const baseId = baseBoxIds.get(boxId);
-        if (baseId) nextEdits[baseId] = value;
-        const duplicateId = duplicateBoxIds.get(boxId);
-        if (duplicateId) nextEdits[duplicateId] = value;
-      }
-      const cloneGroups = new Map<string, string>();
-      const nextElements = elements.flatMap((element) => {
-        const mapped = mapPage(element.pageIndex);
-        const base = mapped === null ? [] : [{ ...element, pageIndex: mapped, sourceBoxId: element.sourceBoxId ? baseBoxIds.get(element.sourceBoxId) ?? element.sourceBoxId : undefined } as PdfCanvasElement];
-        if (action !== "duplicate" || element.pageIndex !== currentIndex) return base;
-        if (element.groupId && !cloneGroups.has(element.groupId)) cloneGroups.set(element.groupId, id());
-        return [...base, { ...element, id: id(), groupId: element.groupId ? cloneGroups.get(element.groupId) : undefined, pageIndex: currentIndex + 1, sourceBoxId: element.sourceBoxId ? duplicateBoxIds.get(element.sourceBoxId) : undefined } as PdfCanvasElement];
+      const blob = encodeProject({
+        fileName: file.name,
+        bytes,
+        elements,
+        edits: {},
+        boxesByPage: {},
+        exportMode: "standard",
+        pages,
+        guidesByPage: {},
       });
-      const nextGuidesByPage: Record<number, { x: number[]; y: number[] }> = {};
-      for (const [oldPage, guide] of Object.entries(guidesByPage)) {
-        const mapped = mapPage(Number(oldPage));
-        if (mapped !== null) nextGuidesByPage[mapped] = guide;
-        if (action === "duplicate" && Number(oldPage) === currentIndex) nextGuidesByPage[currentIndex + 1] = { x: [...guide.x], y: [...guide.y] };
-      }
-      const bytes = await pdf.save();
-      setUndoStack((stack) => [...stack.slice(-49), before]); setRedoStack([]);
-      setPageSizes(Object.fromEntries(pdf.getPages().map((entry, index) => [index, entry.getSize()])));
-      setOriginalBytes(bytes); setElements(nextElements); setEdits(nextEdits); setBoxesByPage(nextBoxesByPage); setGuidesByPage(nextGuidesByPage); setPageCount(pdf.getPageCount()); setPage(nextPage); setDocumentRevision((value) => value + 1);
-      setSelectedId(null); setThumbnails({}); setLoadingPage(true);
-    } catch (error) {
-      console.error("PDF page operation failed", error); toast.error(labels.toolFailed);
-    } finally { setBusy(false); }
-  }
+      void writeEditorDraft(blob, DRAFT)
+        .then(() => setDraftFailed(false))
+        .catch(() => setDraftFailed(true));
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [bytes, file, pages, elements]);
+  useEffect(() => {
+    if (!elements.length) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [elements.length]);
 
-  async function resizeCurrentPage(width: number, height: number) {
-    if (!originalBytes || !Number.isFinite(width) || !Number.isFinite(height)) return;
+  function change(next: PdfCanvasElement[]) {
+    setUndo((history) => [...history.slice(-49), elements]);
+    setRedo([]);
+    setElements(next);
+  }
+  function patch(patchValue: Partial<PdfCanvasElement>) {
+    if (!selected || !currentPage) return;
+    change(
+      elements.map((element) => {
+        if (element.id !== selected.id) return element;
+        const next = { ...element, ...patchValue } as PdfCanvasElement;
+        return next.type === "text" ? fitText(next, currentPage) : next;
+      }),
+    );
+  }
+  async function load(fileValue: File, restored: PdfCanvasElement[] = []) {
     setBusy(true);
+    setError("");
+    let doc: Awaited<ReturnType<typeof openPdf>> | undefined;
     try {
-      const before = snapshot();
-      const pdf = await PDFDocument.load(originalBytes);
-      pdf.getPage(page - 1).setSize(width, height);
-      setPageSizes(current => ({ ...current, [page - 1]: { width, height } }));
-      const bytes = await pdf.save();
-      setUndoStack((stack) => [...stack.slice(-49), before]); setRedoStack([]);
-      setOriginalBytes(bytes); setBoxesByPage((current) => { const next = { ...current }; delete next[page]; return next; }); setThumbnails({}); setDocumentRevision((value) => value + 1); setLoadingPage(true);
-    } catch (error) {
-      console.error("PDF page resize failed", error); toast.error(labels.toolFailed);
-    } finally { setBusy(false); }
-  }
-
-  function setPageBackground(fill: string) {
-    const existing = elements.find((element) => element.pageIndex === page - 1 && element.type === "shape" && element.isPageBackground);
-    if (existing) {
-      applyChange(elements.map((element) => element.id === existing.id ? { ...element, fill, stroke: fill } as PdfCanvasElement : element));
-      return;
-    }
-    const background: CanvasShapeElement = { id: id(), name: tr ? "Sayfa arka planı" : "Page background", isPageBackground: true, type: "shape", shape: "rectangle", pageIndex: page - 1, x: 0, y: 0, width: 1, height: 1, rotation: 0, opacity: 1, fill, stroke: fill, strokeWidth: 0, locked: true };
-    const firstOnPage = elements.findIndex((element) => element.pageIndex === page - 1);
-    const next = [...elements];
-    next.splice(firstOnPage < 0 ? next.length : firstOnPage, 0, background);
-    applyChange(next);
-  }
-
-  function clearPageBackground() {
-    const next = elements.filter((element) => !(element.pageIndex === page - 1 && element.isPageBackground));
-    if (next.length !== elements.length) applyChange(next);
-  }
-
-  async function save() {
-    if (!originalBytes || !file || !documentValid) return;
-    const finalEdits = commitTextEdit();
-    const report = analyzeEditorCapabilities(finalEdits, elements, security);
-    if (exportMode === "standard" && !report.standardAllowed) {
-      toast.error(tr ? "Bu değişiklik orijinal PDF yapısı korunarak güvenle dışa aktarılamıyor. Piksel eşlemeli modu seçin." : "This change cannot be exported safely while preserving the original PDF structure. Choose pixel-perfect mode.");
-      return;
-    }
-    const invalidText = persistedElements.find((element) => {
-      if (element.hidden || element.type !== "text") return false;
-      const metrics = textLayoutMetrics(element);
-      const clipped = metrics.requiredHeight > metrics.availableHeight + 0.5;
-      const outsidePage = element.x < 0 || element.y < 0 || element.x + element.width > 1 || element.y + element.height > 1;
-      return clipped || (outsidePage && !element.allowOverflow);
-    });
-    if (invalidText) {
-      setSelectedId(invalidText.id);
-      toast.error(tr ? "Metin sayfaya veya kutuya sığmıyor. İndirmeden önce kutuyu büyütün ya da otomatik sığdırmayı açın." : "Text does not fit inside its box or page. Resize it or enable auto fit before downloading.");
-      return;
-    }
-    setBusy(true);
-    try {
-      let out: Uint8Array;
-      if (!changeCount) {
-        out = originalBytes.slice();
-      } else if (exportMode === "standard") {
-        out = await exportCanvasPdf(originalBytes, [], {}, persistedElements.filter(e => e.sourceOp === undefined && e.sourceBoxId === undefined && !e.hidden));
-      } else {
-        out = await withTimeout(exportFlattenedScenePdf(originalBytes, Object.values(boxesByPage).flat(), finalEdits, persistedElements), 45_000);
+      const value = new Uint8Array(await fileValue.arrayBuffer());
+      doc = await openPdf(value);
+      const sizes: PageSize[] = [];
+      for (let index = 0; index < doc.numPages; index++) {
+        const viewport = (await doc.getPage(index + 1)).getViewport({
+          scale: 1,
+        });
+        sizes.push({
+          index,
+          width: viewport.width,
+          height: viewport.height,
+          rotation: viewport.rotation,
+        });
       }
-      const suffix = exportMode === "flattened" ? "pixel-perfect" : "edited";
-      const result = { blob: new Blob([out as BlobPart], { type: "application/pdf" }), name: `${stem(file.name)}-${suffix}.pdf` };
-      setSaved(result); setError("");
-      downloadBlob(result.blob, result.name);
-      toast.success(labels.toolDone);
-    } catch (error) {
-      console.error("PDF editor failed", error);
-      const timedOut = error instanceof Error && error.message === "EXPORT_TIMEOUT";
-      toast.error(timedOut ? (tr ? "PDF dışa aktarma zaman aşımına uğradı. Yeniden deneyin." : "PDF export timed out. Please retry.") : (tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry."));
+      if (restored.some((element) => element.pageIndex >= sizes.length))
+        throw new Error("Invalid page");
+      setFile(fileValue);
+      setBytes(value);
+      setPages(sizes);
+      setElements(restored);
+      setPageIndex(0);
+      setSelectedId(null);
+      setUndo([]);
+      setRedo([]);
+      setZoom(1);
+      setRecovery(null);
+    } catch {
+      setError(
+        t(
+          "PDF açılamadı. Geçerli, parolasız bir PDF seç.",
+          "Could not open PDF. Choose a valid PDF without a password.",
+        ),
+      );
     } finally {
+      await doc?.loadingTask.destroy().catch(() => undefined);
+      setBusy(false);
+    }
+  }
+  async function restore() {
+    if (!recovery) return;
+    try {
+      const project = await decodeProject(recovery);
+      await load(
+        new File([project.bytes as BlobPart], project.fileName, {
+          type: "application/pdf",
+        }),
+        project.elements,
+      );
+    } catch {
+      setError(
+        t(
+          "Taslak açılamadı. Yeni bir PDF seçebilirsin.",
+          "Could not restore the draft. Choose a new PDF.",
+        ),
+      );
+    }
+  }
+  function openAnother() {
+    setConfirmOpen(false);
+    setFile(null);
+    setBytes(null);
+    setPages([]);
+    setElements([]);
+    setSelectedId(null);
+    setError("");
+  }
+  function addText() {
+    if (!currentPage) return;
+    const element = fitText(
+      {
+        id: crypto.randomUUID(),
+        pageIndex,
+        type: "text",
+        text: t("Yeni yazı", "New text"),
+        x: 0.12,
+        y: 0.35,
+        width: 0.65,
+        height: 0.05,
+        rotation: 0,
+        opacity: 1,
+        fontSize: 18,
+        fontFamily: "Noto Sans",
+        color: "#202020",
+        bold: false,
+        italic: false,
+        align: "left",
+        lineHeight: 1.25,
+      },
+      currentPage,
+    );
+    change([...elements, element]);
+    setSelectedId(element.id);
+  }
+  function addCover() {
+    const element: PdfCanvasElement = {
+      id: crypto.randomUUID(),
+      pageIndex,
+      type: "shape",
+      shape: "rectangle",
+      name: "cover",
+      x: 0.1,
+      y: 0.12,
+      width: 0.5,
+      height: 0.07,
+      rotation: 0,
+      opacity: 1,
+      fill: "#ffffff",
+      stroke: "#ffffff",
+      strokeWidth: 0,
+    };
+    change([...elements, element]);
+    setSelectedId(element.id);
+  }
+  async function addImage(fileValue?: File) {
+    if (!fileValue || !currentPage) return;
+    if (
+      fileValue.size > MAX_FILE_BYTES ||
+      !["image/png", "image/jpeg"].includes(fileValue.type)
+    ) {
+      toast.error(
+        t(
+          "25 MB altında PNG veya JPG seç.",
+          "Choose a PNG or JPG under 25 MB.",
+        ),
+      );
+      return;
+    }
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(fileValue);
+      });
+      const image = new Image();
+      image.src = dataUrl;
+      await image.decode();
+      const width = Math.min(
+        0.4,
+        (((0.4 * image.naturalWidth) / image.naturalHeight) *
+          currentPage.height) /
+          currentPage.width,
+      );
+      const height =
+        (width * currentPage.width) /
+        (image.naturalWidth / image.naturalHeight) /
+        currentPage.height;
+      const element: PdfCanvasElement = {
+        id: crypto.randomUUID(),
+        pageIndex,
+        type: "image",
+        dataUrl,
+        name: fileValue.name,
+        x: 0.15,
+        y: 0.25,
+        width,
+        height,
+        rotation: 0,
+        opacity: 1,
+      };
+      change([...elements, element]);
+      setSelectedId(element.id);
+    } catch {
+      toast.error(t("Görsel açılamadı.", "Could not open the image."));
+    }
+  }
+  function startDrag(
+    event: ReactPointerEvent,
+    element: PdfCanvasElement,
+    resize = false,
+  ) {
+    if (busy || !pageRef.current || event.button !== 0) return;
+    event.stopPropagation();
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setSelectedId(element.id);
+    drag.current = {
+      id: element.id,
+      pointer: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      rect: pageRef.current.getBoundingClientRect(),
+      element,
+      resize,
+      before: elements,
+    };
+  }
+  function moveDrag(event: ReactPointerEvent) {
+    const active = drag.current;
+    if (!active || active.pointer !== event.pointerId) return;
+    const dx = (event.clientX - active.x) / active.rect.width,
+      dy = (event.clientY - active.y) / active.rect.height;
+    const element = active.element;
+    let patchValue: Partial<PdfCanvasElement>;
+    if (active.resize && element.type === "image") {
+      const width = clamp(
+        element.width + dx,
+        0.04,
+        Math.min(
+          1 - element.x,
+          ((1 - element.y) * element.width) / element.height,
+        ),
+      );
+      patchValue = { width, height: (width * element.height) / element.width };
+    } else
+      patchValue = active.resize
+        ? {
+            width: clamp(element.width + dx, 0.04, 1 - element.x),
+            height: clamp(element.height + dy, 0.02, 1 - element.y),
+          }
+        : {
+            x: clamp(element.x + dx, 0, 1 - element.width),
+            y: clamp(element.y + dy, 0, 1 - element.height),
+          };
+    setElements((values) =>
+      values.map((value) => {
+        if (value.id !== active.id) return value;
+        const next = { ...value, ...patchValue } as PdfCanvasElement;
+        return next.type === "text"
+          ? fitText(next, pages[next.pageIndex])
+          : next;
+      }),
+    );
+  }
+  function endDrag(event: ReactPointerEvent, cancelled = false) {
+    const active = drag.current;
+    if (!active || active.pointer !== event.pointerId) return;
+    if (cancelled) setElements(active.before);
+    else if (event.clientX !== active.x || event.clientY !== active.y) {
+      setUndo((history) => [...history.slice(-49), active.before]);
+      setRedo([]);
+    }
+    drag.current = null;
+  }
+  async function save() {
+    if (!bytes || !file || busy || rendering || error) return;
+    setBusy(true);
+    setSelectedId(null);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const result = await Promise.race([
+        exportSimplePdf(bytes, elements),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error("EXPORT_TIMEOUT")),
+            60_000,
+          );
+        }),
+      ]);
+      downloadBlob(
+        new Blob([result as BlobPart], { type: "application/pdf" }),
+        `${stem(file.name)}-edited.pdf`,
+      );
+      toast.success(
+        t("PDF hazır, indirildi.", "Your PDF has been downloaded."),
+      );
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "";
+      toast.error(
+        message === "TEXT_OVERFLOW"
+          ? t(
+              "Yazı sayfaya sığmıyor. Yazıyı kısalt, genişlet veya puntoyu küçült.",
+              "Text does not fit. Shorten it, widen the box or reduce the font size.",
+            )
+          : message === "EXPORT_TIMEOUT"
+            ? t(
+                "PDF hazırlanması uzun sürdü. Tekrar dene.",
+                "PDF export timed out. Please retry.",
+              )
+            : t(
+                "PDF indirilemedi. Tekrar dene.",
+                "Could not download the PDF. Please retry.",
+              ),
+      );
+    } finally {
+      if (timeout) clearTimeout(timeout);
       setBusy(false);
     }
   }
 
-  async function resetAll() {
-    if (!changeCount) return;
-    setUndoStack((stack) => [...stack.slice(-49), snapshot()]); setRedoStack([]);
-    setElements([]); setEdits({}); setDocumentRevision(0); setSaved(null);
-    setGuidesByPage({});
-    if (sourceBytesRef.current) {
-      const pdf = await openPdf(sourceBytesRef.current);
-      try {
-        const dimensions: Record<number, { width: number; height: number }> = {};
-        for (let index = 0; index < pdf.numPages; index++) { const viewport = (await pdf.getPage(index + 1)).getViewport({ scale: 1 }); dimensions[index] = { width: viewport.width, height: viewport.height }; }
-        setPageCount(pdf.numPages); setPageSizes(dimensions); setOriginalBytes(sourceBytesRef.current);
-      } finally { await pdf.loadingTask.destroy(); }
-    }
-    setBoxesByPage({}); setThumbnails({}); setPage(1); setLoadingPage(true);
-    setSelectedId(null);
-    setActive(null);
-  }
-
-  async function selectGraphic(operation: number) {
-    const existing = elements.find(e => e.sourceOp === operation && e.pageIndex === page - 1);
-    if (existing) { setSelectedId(existing.id); return; }
-    if (!originalBytes) return;
-    setBusy(true);
-    const doc = await openPdf(originalBytes);
-    try {
-      const element = await extractSourceGraphic(await doc.getPage(page), operation);
-      setElements([...elements, { ...element, sourcePristine: true }]); setSelectedId(element.id);
-    } catch { toast.error(tr ? "Bu grafik ayrı bir nesne olarak çıkarılamadı." : "This graphic could not be extracted as an independent object."); }
-    finally { await doc.loadingTask.destroy(); setBusy(false); }
-  }
-
-  async function saveProject() {
-    if (!originalBytes || !file) return;
-    const { encodeProject } = await import("@/lib/pdf/editor-project");
-    const doc = await openPdf(originalBytes);
-    try {
-      const pages = [];
-      for (let index = 0; index < doc.numPages; index += 1) {
-        const pdfPage = await doc.getPage(index + 1);
-        const viewport = pdfPage.getViewport({ scale: 1 });
-        pages.push({ index, width: viewport.width, height: viewport.height, rotation: viewport.rotation });
-      }
-      downloadBlob(encodeProject({ fileName: file.name, bytes: originalBytes, elements, edits, boxesByPage, exportMode, pages, guidesByPage }), `${stem(file.name)}.cvproject`);
-    } finally {
-      await doc.loadingTask.destroy().catch(() => undefined);
-    }
-  }
-
-  function selectedElements() {
-    return elements.filter((element) => selectedIds.includes(element.id));
-  }
-
-  function groupSelection() {
-    const targets = selectedElements();
-    if (targets.length < 2) return;
-    const groupId = id();
-    applyChange(elements.map((element) => selectedIds.includes(element.id) ? { ...element, groupId } : element));
-  }
-
-  function ungroupSelection() {
-    const groupIds = new Set(selectedElements().map((element) => element.groupId).filter(Boolean));
-    if (!groupIds.size) return;
-    applyChange(elements.map((element) => element.groupId && groupIds.has(element.groupId) ? { ...element, groupId: undefined } : element));
-  }
-
-  function alignSelection(axis: "left" | "center" | "right" | "top" | "middle" | "bottom") {
-    const targets = selectedElements().filter((element) => !element.locked);
-    if (targets.length < 2) return;
-    const left = Math.min(...targets.map((element) => element.x));
-    const right = Math.max(...targets.map((element) => element.x + element.width));
-    const top = Math.min(...targets.map((element) => element.y));
-    const bottom = Math.max(...targets.map((element) => element.y + element.height));
-    applyChange(elements.map((element) => {
-      if (!targets.some((target) => target.id === element.id)) return element;
-      if (axis === "left") return { ...element, x: left };
-      if (axis === "center") return { ...element, x: (left + right - element.width) / 2 };
-      if (axis === "right") return { ...element, x: right - element.width };
-      if (axis === "top") return { ...element, y: top };
-      if (axis === "middle") return { ...element, y: (top + bottom - element.height) / 2 };
-      return { ...element, y: bottom - element.height };
-    }));
-  }
-
-  function distributeSelection(direction: "horizontal" | "vertical") {
-    const targets = selectedElements().filter((element) => !element.locked).sort((a, b) => direction === "horizontal" ? a.x - b.x : a.y - b.y);
-    if (targets.length < 3) return;
-    const first = targets[0];
-    const last = targets.at(-1)!;
-    const start = direction === "horizontal" ? first.x : first.y;
-    const end = direction === "horizontal" ? last.x : last.y;
-    const positions = new Map(targets.map((element, index) => [element.id, start + (end - start) * index / (targets.length - 1)]));
-    applyChange(elements.map((element) => !positions.has(element.id) ? element : direction === "horizontal" ? { ...element, x: positions.get(element.id)! } : { ...element, y: positions.get(element.id)! }));
-  }
-
-  function copySelection() {
-    clipboardRef.current = selectedElements().map((element) => ({ ...element, sourceOp: undefined, sourceBoxId: undefined, sourcePristine: false, groupId: undefined }));
-  }
-
-  function pasteSelection() {
-    if (!clipboardRef.current.length) return;
-    const next = clipboardRef.current.map((element) => ({ ...element, id: id(), pageIndex: page - 1, x: clamp(element.x + 0.025, 0, 1 - element.width), y: clamp(element.y + 0.025, 0, 1 - element.height) }));
-    applyChange([...elements, ...next]);
-    setSelectedIds(next.map((element) => element.id));
-    setPrimarySelectedId(next.at(-1)?.id ?? null);
-  }
-
-  async function openProject(file: Blob) {
-    try {
-      const { decodeProject } = await import("@/lib/pdf/editor-project");
-      const project = await decodeProject(file);
-      const pdf = await openPdf(project.bytes);
-      const dimensions: Record<number, { width: number; height: number }> = {};
-      try {
-        for (let index = 0; index < pdf.numPages; index++) { const viewport = (await pdf.getPage(index + 1)).getViewport({ scale: 1 }); dimensions[index] = { width: viewport.width, height: viewport.height }; }
-        if (project.elements.some(element => element.pageIndex >= pdf.numPages)) throw new Error("Invalid page index");
-        setPageCount(pdf.numPages);
-      } finally { await pdf.loadingTask.destroy(); }
-      sourceBytesRef.current = project.bytes;
-      setFile(new File([project.bytes as BlobPart], project.fileName, { type: "application/pdf" }));
-      setOriginalBytes(project.bytes); setElements(project.elements); setEdits(project.edits); setBoxesByPage(project.boxesByPage);
-      setExportMode(project.exportMode);
-      setGuidesByPage(project.guidesByPage);
-      setDocumentRevision(0);
-      setPageSizes(dimensions); setSize({ width: 0, height: 0 }); setDocumentValid(true); setLoadingPage(true);
-      setPage(1); setSelectedId(null); setUndoStack([]); setRedoStack([]); setSaved(null); setThumbnails({}); setError("");
-    } catch { toast.error(tr ? "Proje dosyası geçersiz veya desteklenmiyor." : "The project file is invalid or unsupported."); }
-  }
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (busy || target?.matches("input, textarea, select, [contenteditable='true']")) return;
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        if (event.shiftKey) redo(); else undo();
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
-        event.preventDefault(); redo(); return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d" && selected) {
-        event.preventDefault(); duplicateSelected(); return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c" && selectedIds.length) {
-        event.preventDefault(); copySelection(); return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v" && clipboardRef.current.length) {
-        event.preventDefault(); pasteSelection(); return;
-      }
-      if (event.key === "Escape") { setSelectedId(null); return; }
-      if ((event.key === "Delete" || event.key === "Backspace") && selected) {
-        event.preventDefault(); removeSelected(); return;
-      }
-      if (selected && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-        event.preventDefault();
-        const step = event.shiftKey ? 0.01 : 0.002;
-        const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
-        const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
-        patchSelected({ x: selected.allowOverflow ? selected.x + dx : clamp(selected.x + dx, 0, 1 - selected.width), y: selected.allowOverflow ? selected.y + dy : clamp(selected.y + dy, 0, 1 - selected.height) });
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  });
-
-  if (!file) {
-    return <div className="space-y-3">{recoveryDraft ? <div role="status" className="rounded-lg border p-3 text-sm"><p>{tr ? "Bu tarayıcıda kaydedilmiş bir düzenleme bulundu." : "A saved editing session was found in this browser."}</p><Button variant="outline" onClick={() => { void openProject(recoveryDraft); setRecoveryDraft(null); }}>{tr ? "Düzenlemeye devam et" : "Restore editing session"}</Button><Button variant="ghost" onClick={() => { setRecoveryDraft(null); void import("@/lib/pdf/editor-draft").then(module => module.writeEditorDraft(null)).catch(() => undefined); }}>{tr ? "Taslağı sil" : "Delete draft"}</Button></div> : null}<p className="text-sm text-muted-foreground">{labels.editPdfGuide}</p><FileDrop accept="application/pdf,.pdf" onFiles={onFiles} /><label className="block cursor-pointer text-sm text-primary">{tr ? "Kaydedilmiş proje aç" : "Open saved project"}<input className="block mt-2" type="file" accept=".cvproject" onChange={e => { const f = e.target.files?.[0]; if (f) void openProject(f); }} /></label></div>;
-  }
+  const errorNotice = error ? (
+    <p
+      role="alert"
+      className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive"
+    >
+      {error}
+    </p>
+  ) : null;
+  if (!file)
+    return (
+      <div className="space-y-4">
+        {errorNotice}
+        {recovery && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border p-3">
+            <p className="mr-auto text-sm">
+              {t(
+                "Yarım kalan düzenlemen var.",
+                "You have a saved editing session.",
+              )}
+            </p>
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => void restore()}
+            >
+              {t("Devam et", "Continue")}
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => {
+                setRecovery(null);
+                void writeEditorDraft(null, DRAFT).catch(() => undefined);
+              }}
+            >
+              {t("Taslağı sil", "Delete draft")}
+            </Button>
+          </div>
+        )}
+        <FileDrop
+          disabled={busy}
+          accept="application/pdf,.pdf"
+          onFiles={(files) => {
+            if (files[0]) void load(files[0]);
+          }}
+        />
+        {busy && <p role="status">{t("PDF açılıyor…", "Opening PDF…")}</p>}
+        <p className="text-sm text-muted-foreground">
+          {t(
+            "PDF’ye yazı veya görsel ekle. Taşımak için sürükle, boyutunu değiştirmek için köşesinden çek.",
+            "Add text or an image to your PDF. Drag to move it, or drag its corner to resize.",
+          )}
+        </p>
+      </div>
+    );
 
   return (
-    <div aria-busy={busy} className="pdf-editor overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      {confirmOpen && <div role="dialog" aria-label={tr ? "Başka PDF aç" : "Open another PDF"} className="border-b bg-muted p-4 text-sm"><p>{tr ? "Değişikliklerini dosya olarak kaydetmeden başka PDF açmak istiyor musun?" : "Open another PDF without saving your changes as a file?"}</p><div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setConfirmOpen(false)}>{tr ? "Vazgeç" : "Cancel"}</Button><Button onClick={openAnotherFile}>{tr ? "Başka dosya seç" : "Choose another file"}</Button></div></div>}
-      {draftFailed && <p role="status" className="p-3 text-sm">{tr ? "Otomatik kayıt yapılamadı. Projeni dosya olarak kaydet." : "Autosave is unavailable. Save your project as a file."}</p>}
-      {error && <div role="alert" className="flex flex-wrap items-center gap-3 border-b bg-destructive/5 p-4 text-sm text-destructive"><p>{error}</p><Button variant="outline" onClick={() => { setLoadingPage(true); setRenderVersion(v => v + 1); }}>{tr ? "Yeniden dene" : "Retry"}</Button></div>}
-      {saved && <div role="status" className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary/5 p-3 text-sm"><span className="break-all">{tr ? "Son indirilen dosya" : "Last downloaded file"}: {saved.name} · {formatBytes(saved.blob.size)}</span><Button size="sm" variant="outline" onClick={() => downloadBlob(saved.blob, saved.name)}>{tr ? "Tekrar indir" : "Download again"}</Button></div>}
-      {busy && <p role="status" className="p-3 text-sm text-primary">{labels.processing}</p>}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2.5">
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => { if (changeCount) setConfirmOpen(true); else openAnotherFile(); }}><FileUp data-icon="inline-start" />{labels.openAnotherPdf}</Button>
-        <div className="hidden min-w-0 flex-1 sm:block"><p className="truncate text-sm font-medium">{file.name}</p><p className="text-xs text-muted-foreground">{labels.editPdfChanges.replace("{count}", String(changeCount))}</p></div>
-        <Button size="icon-sm" variant="ghost" disabled={!undoStack.length} onClick={undo} aria-label={labels.undo}><Undo2 /></Button>
-        <Button size="icon-sm" variant="ghost" disabled={!redoStack.length} onClick={redo} aria-label={labels.redo}><Redo2 /></Button>
-        <Button size="icon-sm" variant="ghost" disabled={!changeCount} onClick={resetAll} aria-label={labels.resetEdits}><RotateCcw /></Button>
-        {selectedIds.length > 1 ? <><Button size="sm" variant="outline" onClick={groupSelection}>{tr ? "Grupla" : "Group"}</Button><Button size="sm" variant="outline" onClick={() => alignSelection("center")}>{tr ? "Ortala" : "Align center"}</Button><Button size="sm" variant="outline" onClick={() => distributeSelection("horizontal")}>{tr ? "Yatay dağıt" : "Distribute"}</Button></> : null}
-        {selectedElements().some((element) => element.groupId) ? <Button size="sm" variant="outline" onClick={ungroupSelection}>{tr ? "Grubu çöz" : "Ungroup"}</Button> : null}
-        <span className="mx-1 h-6 w-px bg-border" />
-        <Button size="icon-sm" variant="ghost" onClick={() => { setBoxes([]); setLoadingPage(true); setScale((value) => Math.max(0.2, value - 0.1)); }} aria-label={labels.zoomOut}><ZoomOut /></Button>
-        <span className="w-11 text-center text-xs tabular-nums text-muted-foreground">{Math.round(scale * 100)}%</span>
-        <Button size="icon-sm" variant="ghost" onClick={() => { setBoxes([]); setLoadingPage(true); setScale((value) => Math.min(2.4, value + 0.1)); }} aria-label={labels.zoomIn}><ZoomIn /></Button>
-        <label className="sr-only" htmlFor="pdf-export-mode">{tr ? "PDF çıktı modu" : "PDF export mode"}</label>
-        <select id="pdf-export-mode" className="h-8 rounded-md border border-input bg-background px-2 text-xs" value={exportMode} onChange={(event) => setExportMode(event.target.value as ExportMode)}>
-          <option value="standard">{tr ? "Standart · seçilebilir" : "Standard · searchable"}</option>
-          <option value="flattened">{tr ? "Piksel eşlemeli · 300 DPI" : "Pixel-perfect · 300 DPI"}</option>
-        </select>
-        <Button size="sm" onClick={() => void save()} disabled={busy || loadingPage || !documentValid || (exportMode === "standard" && !capabilities.standardAllowed)}><FileDown data-icon="inline-start" />{labels.downloadReady}</Button>
-        <Button size="sm" variant="outline" onClick={() => void saveProject()} disabled={busy}>{tr ? "Projeyi kaydet" : "Save project"}</Button>
-        <Button size="sm" variant="outline" onClick={() => projectInputRef.current?.click()} disabled={busy}>{tr ? "Proje aç" : "Open project"}</Button>
-        <input ref={projectInputRef} hidden type="file" accept=".cvproject" onChange={e => { const f = e.target.files?.[0]; if (f) void openProject(f); e.currentTarget.value = ""; }} />
+    <div
+      className="simple-pdf-editor overflow-hidden rounded-2xl border bg-card"
+      aria-busy={busy}
+    >
+      <div className="flex flex-wrap items-center gap-2 border-b p-3">
+        <p className="min-w-0 flex-1 truncate text-sm font-medium">
+          {file.name}
+        </p>
+        <Button
+          variant="ghost"
+          disabled={busy}
+          onClick={() =>
+            elements.length ? setConfirmOpen(true) : openAnother()
+          }
+        >
+          {t("Başka PDF", "Open another")}
+        </Button>
+        <Button
+          disabled={busy || rendering || Boolean(error)}
+          onClick={() => void save()}
+        >
+          <Download className="size-4" />
+          {busy
+            ? t("Hazırlanıyor…", "Preparing…")
+            : t("PDF indir", "Download PDF")}
+        </Button>
       </div>
-      {exportMode === "standard" && !capabilities.standardAllowed ? <div role="alert" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"><strong>{tr ? "Standart çıktı güvenle üretilemez." : "Standard export is not safe."}</strong> {tr ? "Görüntü modunu seçin. Değişen sayfalarda seçilebilir metin ve etkileşimli alanlar kaldırılır; diğer sayfalar korunur." : "Choose image mode. Edited pages lose selectable text and interactive fields; other pages are preserved."}<ul className="mt-1 list-disc pl-5 text-xs">{capabilities.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
-      {exportMode === "flattened" ? <div role="note" className="border-b bg-muted/70 px-4 py-2 text-xs text-muted-foreground">{tr ? "Görüntü modu değişen sayfaları görüntüye çevirir. Bu sayfalarda seçilebilir metin, bağlantılar ve formlar korunmaz. Dijital imzalar geçersizleşebilir." : "Image mode rasterizes edited pages. Those pages lose selectable text, links and forms. Digital signatures may be invalidated."}</div> : null}
-
-      <div inert={busy} className="grid min-h-[680px] grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)_240px]">
-        <aside className={`${mobilePages ? "fixed inset-x-0 bottom-0 z-40 max-h-[70dvh] overflow-y-auto rounded-t-2xl shadow-2xl" : "hidden"} border-r border-border bg-card lg:static lg:block lg:max-h-none lg:rounded-none lg:shadow-none`}>
-          <Button className="m-2 lg:hidden" variant="outline" onClick={() => setMobilePages(false)}>{tr ? "Kapat" : "Close"}</Button>
-          <div className="grid grid-cols-2 gap-1 border-b border-border p-2">
-            <ToolButton icon={<Type />} label={labels.addText} onClick={addText} />
-            <ToolButton icon={<ImagePlus />} label={labels.addImage} onClick={() => imageInputRef.current?.click()} />
-            <ToolButton icon={<Square />} label={labels.addRectangle} onClick={() => addShape("rectangle")} />
-            <ToolButton icon={<Circle />} label={labels.addCircle} onClick={() => addShape("ellipse")} />
-            <ToolButton icon={<Minus />} label={labels.addLine} onClick={() => addShape("line")} />
-          </div>
-          <input ref={imageInputRef} className="hidden" type="file" accept="image/png,image/jpeg" onChange={(event) => { const next = event.target.files?.[0]; if (next) void addImage(next); event.currentTarget.value = ""; }} />
-          <p className="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{labels.pages}</p>
-          <div className="grid grid-cols-3 gap-1 px-3 pb-3"><Button size="sm" variant="outline" onClick={() => void mutatePages("add")}>{tr ? "Ekle" : "Add"}</Button><Button size="sm" variant="outline" onClick={() => void mutatePages("duplicate")}>{tr ? "Çoğalt" : "Duplicate"}</Button><Button size="sm" variant="outline" disabled={pageCount <= 1} onClick={() => void mutatePages("delete")}>{tr ? "Sil" : "Delete"}</Button><Button size="sm" variant="outline" disabled={page <= 1} onClick={() => void mutatePages("up")} aria-label={tr ? "Sayfayı yukarı taşı" : "Move page up"}>↑</Button><Button size="sm" variant="outline" disabled={page >= pageCount} onClick={() => void mutatePages("down")} aria-label={tr ? "Sayfayı aşağı taşı" : "Move page down"}>↓</Button></div>
-          <label className="mx-3 mb-3 block text-xs font-medium">{tr ? "Sayfa boyutu" : "Page size"}<select aria-label={tr ? "Sayfa boyutu" : "Page size"} defaultValue="" className="mt-1 h-8 w-full rounded-md border border-input bg-background px-2" onChange={event => { const [width, height] = event.target.value.split("x").map(Number); if (width && height) void resizeCurrentPage(width, height); event.currentTarget.value = ""; }}><option value="" disabled>{tr ? "Boyut seç…" : "Choose size…"}</option><option value="595.28x841.89">A4 · Portrait</option><option value="841.89x595.28">A4 · Landscape</option><option value="612x792">Letter · Portrait</option><option value="792x612">Letter · Landscape</option></select></label>
-          <label className="mx-3 mb-3 flex items-center justify-between gap-2 text-xs font-medium">{tr ? "Sayfa arka planı" : "Page background"}<input aria-label={tr ? "Sayfa arka planı" : "Page background"} type="color" defaultValue="#ffffff" onChange={event => setPageBackground(event.target.value)} /></label>
-          <Button className="mx-3 mb-3" size="sm" variant="ghost" onClick={clearPageBackground}>{tr ? "Arka planı kaldır" : "Remove background"}</Button>
-          <div className="mx-3 mb-3 grid grid-cols-1 gap-1"><Button size="sm" variant="outline" onClick={() => setGuidesByPage((current) => ({ ...current, [page - 1]: { x: [...(current[page - 1]?.x ?? []), 0.5], y: current[page - 1]?.y ?? [] } }))}>{tr ? "Dikey kılavuz" : "V guide"}</Button><Button size="sm" variant="outline" onClick={() => setGuidesByPage((current) => ({ ...current, [page - 1]: { x: current[page - 1]?.x ?? [], y: [...(current[page - 1]?.y ?? []), 0.5] } }))}>{tr ? "Yatay kılavuz" : "H guide"}</Button><Button size="sm" variant="ghost" onClick={() => setGuidesByPage((current) => ({ ...current, [page - 1]: { x: [], y: [] } }))}>{tr ? "Temizle" : "Clear"}</Button></div>
-          <div className="scrollbar-none max-h-[580px] space-y-3 overflow-y-auto px-3 pb-3">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
-              <button key={number} type="button" aria-label={`${tr ? "Sayfa" : "Page"} ${number}`} onClick={() => goToPage(number)} className="group block w-full">
-                <span className={`relative block aspect-[0.707] overflow-hidden rounded-md border bg-white shadow-sm transition ${page === number ? "border-primary ring-2 ring-primary/20" : "border-border group-hover:border-primary/50"}`}>
-                  {thumbnails[number] ? <span className="block size-full bg-cover bg-top" style={{ backgroundImage: `url(${thumbnails[number]})` }} /> : <span className="absolute inset-0 grid place-items-center text-sm font-semibold">{number}</span>}
-                </span>
-                <span className="mt-1 block text-center text-xs text-muted-foreground">{number}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        <section aria-label={tr ? "PDF belgesi" : "PDF document"} className="min-w-0 bg-muted">
-          <div className="flex flex-wrap items-center justify-center gap-2 border-b border-border bg-card/90 px-3 py-2 lg:hidden">
-            <Button size="sm" variant={multiSelect ? "default" : "outline"} aria-pressed={multiSelect} onClick={() => setMultiSelect(value => !value)}>{tr ? "Çoklu seçim" : "Multi-select"}</Button>
-            <Button size="sm" variant="outline" onClick={() => { setMobilePages(!mobilePages); setMobileProperties(false); }}>{tr ? "Sayfalar ve araçlar" : "Pages and tools"}</Button>
-            <Button size="sm" variant="outline" onClick={() => { setMobileProperties(!mobileProperties); setMobilePages(false); }}>{tr ? "Özellikler" : "Properties"}</Button>
-            <Button size="icon-sm" variant="ghost" aria-label={labels.addText} onClick={addText}><Type /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addImage} onClick={() => imageInputRef.current?.click()}><ImagePlus /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addRectangle} onClick={() => addShape("rectangle")}><Square /></Button>
-            <Button size="icon-sm" variant="ghost" aria-label={labels.addCircle} onClick={() => addShape("ellipse")}><Circle /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addLine} onClick={() => addShape("line")}><Minus /></Button>
-            <span className="mx-2 h-5 w-px bg-border" />
-            <Button size="icon-sm" variant="ghost" aria-label={labels.prevPage} disabled={page <= 1} onClick={() => goToPage(page - 1)}><ChevronLeft /></Button>
-            <span className="text-xs">{page}/{pageCount}</span>
-            <Button size="icon-sm" variant="ghost" aria-label={labels.nextPage} disabled={page >= pageCount} onClick={() => goToPage(page + 1)}><ChevronRight /></Button>
-          </div>
-          {empty ? <p className="border-b border-border bg-card px-4 py-2 text-sm text-muted-foreground">{labels.noClickableText} {labels.addLayerHint}</p> : null}
-          <div ref={viewerRef} className="relative max-h-[65dvh] overflow-auto p-4 sm:p-8">
-            {loadingPage ? <div className="absolute inset-x-0 top-3 z-20 mx-auto w-fit rounded-full bg-foreground px-3 py-1 text-xs text-background">{labels.processing}</div> : null}
-            <div ref={pageRef} className="pdf-page relative mx-auto bg-white shadow-[0_24px_60px_rgb(15_23_42/0.18)]" style={{ width: size.width, height: size.height, backgroundColor: "#fff", ["--scale-factor" as string]: String(scale) }}>
-              <div ref={canvasHostRef} className="absolute inset-0" />
-              <div ref={layerRef} className="pdf-text-layer" onKeyDown={event => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                const target = (event.target as Element).closest("[data-box-id]");
-                if (!(target instanceof HTMLElement)) return;
-                const box = boxes.find(item => item.id === target.dataset.boxId);
-                if (box) { event.preventDefault(); event.stopPropagation(); startEdit(box); }
-              }} onPointerDown={(event) => {
-                const target = (event.target as Element).closest("[data-box-id]");
-                if (!(target instanceof HTMLElement)) return;
-                const box = boxes.find((item) => item.id === target.dataset.boxId);
-                if (!box) return;
-                event.stopPropagation(); event.preventDefault(); startEdit(box);
-              }} />
-              {boxes.map((box) => {
-                const value = edits[box.id];
-                if (value === undefined || value === box.text || active?.id === box.id) return null;
-                return <button key={box.id} type="button" className="pdf-edited-text" style={{ left: box.viewLeft, top: box.viewTop, minWidth: box.viewWidth, height: Math.max(box.viewHeight, 12), fontSize: Math.max(8, box.fontSize * scale), fontFamily: box.fontFamily, color: `rgb(${box.color.join(" ")})`, backgroundColor: `rgb(${box.bg.join(" ")})` }} onPointerDown={(event) => event.stopPropagation()} onClick={() => startEdit(box)}>{value || "\u00a0"}</button>;
-              })}
-              <div className="absolute inset-0 z-[3]">
-                <PdfSceneStage
-                  width={size.width}
-                  height={size.height}
-                  scale={scale}
-                  onZoom={next => setScale(Math.max(0.2, Math.min(2, next)))} multiSelect={multiSelect} elements={pageElements.filter(element => !element.isPageBackground)}
-                  selectedIds={selectedIds}
-                  userGuides={guidesByPage[page - 1] ?? { x: [], y: [] }}
-                  onSelect={(elementId, additive) => {
-                    if (!elementId) { setSelectedId(null); return; }
-                    const target = elements.find((element) => element.id === elementId);
-                    const groupedIds = target?.groupId ? elements.filter((element) => element.pageIndex === target.pageIndex && element.groupId === target.groupId).map((element) => element.id) : [elementId];
-                    if (!additive) { setSelectedIds(groupedIds); setPrimarySelectedId(elementId); setMobileProperties(true); setMobilePages(false); return; }
-                    setSelectedIds((current) => {
-                      const removing = groupedIds.every((id) => current.includes(id));
-                      const next = removing ? current.filter((id) => !groupedIds.includes(id)) : [...new Set([...current, ...groupedIds])];
-                      setPrimarySelectedId(next.at(-1) ?? null);
-                      return next;
-                    });
-                  }}
-                  onSelectMany={(ids) => { setSelectedIds(ids); setPrimarySelectedId(ids.at(-1) ?? null); }}
-                  onPatch={(elementId, patch) => patchElement(elementId, patch)}
-                  onPatchMany={patchElements}
+      {confirmOpen && (
+        <div
+          role="dialog"
+          aria-label={t("Başka PDF aç", "Open another PDF")}
+          className="space-y-3 border-b p-3"
+        >
+          <p className="text-sm">
+            {t(
+              "Önce PDF’ni indirebilirsin. Başka dosya açmak istiyor musun?",
+              "You can download your PDF first. Open another file?",
+            )}
+          </p>
+          <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            {t("Vazgeç", "Cancel")}
+          </Button>{" "}
+          <Button onClick={openAnother}>
+            {t("Başka dosya seç", "Choose another file")}
+          </Button>
+        </div>
+      )}
+      {errorNotice}
+      <div
+        className="flex flex-wrap items-center gap-2 border-b p-3"
+        inert={busy}
+      >
+        <Button variant="outline" onClick={addText}>
+          <Type className="size-4" />
+          {t("Yazı ekle", "Add text")}
+        </Button>
+        <Button variant="outline" onClick={() => imageInput.current?.click()}>
+          <ImagePlus className="size-4" />
+          {t("Görsel ekle", "Add image")}
+        </Button>
+        <Button variant="outline" onClick={addCover}>
+          <Square className="size-4" />
+          {t("Alanı kapat", "Cover area")}
+        </Button>
+        <div className="ml-auto flex gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("Geri al", "Undo")}
+            disabled={!undo.length}
+            onClick={() => {
+              setRedo((history) => [...history, elements]);
+              setElements(undo[undo.length - 1]);
+              setUndo(undo.slice(0, -1));
+              setSelectedId(null);
+            }}
+          >
+            <Undo2 className="size-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("İleri al", "Redo")}
+            disabled={!redo.length}
+            onClick={() => {
+              setUndo((history) => [...history, elements]);
+              setElements(redo[redo.length - 1]);
+              setRedo(redo.slice(0, -1));
+              setSelectedId(null);
+            }}
+          >
+            <Redo2 className="size-4" />
+          </Button>
+        </div>
+        <input
+          aria-label={t("Görsel dosyası", "Image file")}
+          ref={imageInput}
+          className="sr-only"
+          type="file"
+          accept="image/png,image/jpeg"
+          onChange={(event) => {
+            void addImage(event.target.files?.[0]);
+            event.currentTarget.value = "";
+          }}
+        />
+      </div>
+      <div
+        className="min-h-[160px] border-b bg-muted/40 p-3 sm:min-h-[96px]"
+        inert={busy}
+      >
+        {selected ? (
+          <div className="flex flex-wrap items-end gap-2">
+            {selected.type === "text" ? (
+              <>
+                <label className="w-full text-xs sm:min-w-[180px] sm:flex-1">
+                  {t("Yazı", "Text")}
+                  <textarea
+                    aria-label={t("Yazı", "Text")}
+                    className="mt-1 block h-12 min-h-12 w-full rounded-lg border bg-background p-2 text-base"
+                    value={selected.text}
+                    onChange={(event) =>
+                      patch({
+                        text: event.target.value,
+                      } as Partial<CanvasTextElement>)
+                    }
+                  />
+                </label>
+                <label className="text-xs">
+                  {t("Punto", "Font size")}
+                  <input
+                    aria-label={t("Punto", "Font size")}
+                    className="mt-1 block h-11 w-16 rounded-lg border bg-background px-2 text-base"
+                    type="number"
+                    min={6}
+                    max={96}
+                    value={selected.fontSize}
+                    onChange={(event) => {
+                      const value = Number(event.target.value);
+                      if (value >= 6 && value <= 96)
+                        patch({
+                          fontSize: value,
+                        } as Partial<CanvasTextElement>);
+                    }}
+                  />
+                </label>
+                <Button
+                  variant={selected.bold ? "default" : "outline"}
+                  aria-pressed={selected.bold}
+                  onClick={() =>
+                    patch({
+                      bold: !selected.bold,
+                    } as Partial<CanvasTextElement>)
+                  }
+                >
+                  {t("Kalın", "Bold")}
+                </Button>
+              </>
+            ) : (
+              <p className="mr-auto text-sm">
+                {selected.type === "image"
+                  ? t(
+                      "Görseli sürükle veya köşesinden boyutlandır.",
+                      "Drag the image or resize from its corner.",
+                    )
+                  : t(
+                      "Kutuyu kapatacağın alanın üzerine sürükle.",
+                      "Drag the box onto the area you want to cover.",
+                    )}
+              </p>
+            )}
+            {selected.type !== "image" && (
+              <label className="text-xs">
+                {t("Renk", "Color")}
+                <input
+                  aria-label={t("Renk", "Color")}
+                  type="color"
+                  className="mt-1 block h-11 w-12 rounded-lg border"
+                  value={
+                    selected.type === "text" ? selected.color : selected.fill
+                  }
+                  onChange={(event) =>
+                    patch(
+                      selected.type === "text"
+                        ? ({
+                            color: event.target.value,
+                          } as Partial<CanvasTextElement>)
+                        : ({
+                            fill: event.target.value,
+                            stroke: event.target.value,
+                          } as Partial<PdfCanvasElement>),
+                    )
+                  }
                 />
-              </div>
-              <div className="sr-only" aria-label={tr ? "Sayfadaki düzenlenebilir nesneler" : "Editable objects on page"}>{pageElements.filter(e => !e.hidden).map((element) => <button type="button" key={element.id} onClick={() => setSelectedId(element.id)}>{element.type === "text" ? element.text : element.type === "image" ? element.name : element.shape}</button>)}</div>
-              {active ? <input aria-label={labels.text} ref={inputRef} value={active.text} className="pdf-text-editor" style={{ left: active.left, top: active.top, width: Math.max(active.width, active.text.length * active.fontSize * 0.54 + 10), height: active.height + 3, fontSize: active.fontSize, fontFamily: active.fontFamily, color: `rgb(${active.color.join(" ")})`, backgroundColor: `rgb(${active.bg.join(" ")})` }} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => setActive({ ...active, text: event.target.value })} onBlur={commitTextEdit} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitTextEdit(); } if (event.key === "Escape") setActive(null); }} /> : null}
-            </div>
+              </label>
+            )}
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={t("Sil", "Delete")}
+              onClick={() => {
+                change(
+                  elements.filter((element) => element.id !== selected.id),
+                );
+                setSelectedId(null);
+              }}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+            <Button variant="ghost" onClick={() => setSelectedId(null)}>
+              {t("Tamam", "Done")}
+            </Button>
           </div>
-        </section>
-
-        <aside className={`${mobileProperties ? "fixed inset-x-0 bottom-0 z-40 max-h-[48dvh] overflow-y-auto rounded-t-2xl shadow-2xl" : "hidden"} border-t border-border bg-card p-4 lg:static lg:block lg:max-h-none lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none`}>
-          <Button className="mb-2 lg:hidden" variant="outline" onClick={() => setMobileProperties(false)}>{tr ? "Kapat" : "Close"}</Button>
-          <div className="flex items-center gap-2"><Layers3 className="size-4" /><p className="text-sm font-semibold">{labels.properties}</p></div>
-          {selected ? <PropertiesPanel element={selected} textOverflowing={selected.type === "text" && textLayoutMetrics(selected).requiredHeight > textLayoutMetrics(selected).availableHeight + 0.5} labels={labels} patch={patchSelected} duplicate={duplicateSelected} remove={removeSelected} moveLayer={moveLayer} replaceImage={replaceImage} uploadFont={uploadFont} /> : <div className="mt-10 text-center text-sm leading-relaxed text-muted-foreground"><Layers3 className="mx-auto mb-3 size-8 opacity-40" />{labels.selectLayerHint}</div>}
-          <div className="mt-5 border-t pt-4"><h3 className="text-sm font-semibold">{tr ? "Katmanlar" : "Layers"}</h3><div className="mt-2 max-h-64 space-y-1 overflow-auto">
-            {[...pageElements].reverse().map(e => <button key={e.id} type="button" draggable={!e.locked} aria-pressed={selectedId === e.id} onDragStart={event => event.dataTransfer.setData("application/x-pdf-layer", e.id)} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); reorderLayer(event.dataTransfer.getData("application/x-pdf-layer"), e.id); }} onClick={() => setSelectedId(e.id)} className={`block w-full truncate rounded p-2 text-left text-xs ${selectedId === e.id ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>{e.locked ? "🔒 " : ""}{e.hidden ? "◌ " : ""}{e.name || (e.type === "text" ? e.text || labels.newText : e.type === "image" ? e.name : e.shape)}</button>)}
-          </div></div>
-          <details className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-semibold">{tr ? "PDF içindeki nesneler" : "Original PDF objects"}</summary><div className="max-h-72 space-y-1 overflow-auto pt-2">
-            {boxes.filter(b => b.text.trim()).map(b => <button type="button" key={b.id} onClick={() => startEdit(b)} className="block w-full truncate rounded p-2 text-left text-xs hover:bg-muted">T · {b.text}</button>)}
-            {sourceGraphics.map((g, i) => <button type="button" key={g.operation} onClick={() => void selectGraphic(g.operation)} className="block w-full rounded p-2 text-left text-xs hover:bg-muted">◇ · {g.name} {i + 1}</button>)}
-          </div></details>
-        </aside>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "Bir araç seçip ekle. Eklediğin öğeye dokunarak düzenle.",
+              "Choose a tool to add an item. Tap an added item to edit it.",
+            )}
+          </p>
+        )}
+      </div>
+      {elements.some((element) => element.type === "shape") && (
+        <p className="border-b px-3 py-2 text-xs text-muted-foreground">
+          {t(
+            "Alan kapatılan sayfalar görüntü olarak kaydedilir; o sayfalarda yazı seçilemez ve form alanları çalışmaz.",
+            "Covered pages are saved as images; text selection and form fields are unavailable on those pages.",
+          )}
+        </p>
+      )}
+      {draftFailed && (
+        <p role="status" className="px-3 py-2 text-sm">
+          {t(
+            "Otomatik kayıt yapılamadı. PDF’ni indirerek kaydet.",
+            "Autosave is unavailable. Download your PDF to save it.",
+          )}
+        </p>
+      )}
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("Önceki sayfa", "Previous page")}
+            disabled={busy || pageIndex === 0}
+            onClick={() => {
+              setPageIndex(pageIndex - 1);
+              setSelectedId(null);
+            }}
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <span className="text-sm tabular-nums">
+            {pageIndex + 1} / {pages.length}
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("Sonraki sayfa", "Next page")}
+            disabled={busy || pageIndex === pages.length - 1}
+            onClick={() => {
+              setPageIndex(pageIndex + 1);
+              setSelectedId(null);
+            }}
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("Uzaklaştır", "Zoom out")}
+            disabled={busy || zoom <= 0.5}
+            onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
+          >
+            <Minus className="size-4" />
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => setZoom(1)}>
+            {Math.round(zoom * 100)}%
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("Yakınlaştır", "Zoom in")}
+            disabled={busy || zoom >= 2}
+            onClick={() => setZoom((value) => Math.min(2, value + 0.25))}
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+      </div>
+      <div
+        ref={viewerRef}
+        className="relative max-h-[70dvh] overflow-auto bg-neutral-100 p-3 dark:bg-neutral-900"
+        aria-label={t("PDF önizleme", "PDF preview")}
+      >
+        {rendering && (
+          <p
+            role="status"
+            className="sticky top-0 z-20 mx-auto w-fit rounded-lg bg-background px-3 py-2 text-sm"
+          >
+            {t("Sayfa yükleniyor…", "Loading page…")}
+          </p>
+        )}
+        {currentPage && (
+          <div
+            ref={pageRef}
+            className="relative mx-auto bg-white shadow-md"
+            style={{
+              width: currentPage.width * scale,
+              height: currentPage.height * scale,
+            }}
+            onPointerDown={() => setSelectedId(null)}
+          >
+            <div
+              ref={canvasHost}
+              className="pointer-events-none absolute inset-0"
+            />
+            {elements
+              .filter((element) => element.pageIndex === pageIndex)
+              .map((element) => (
+                <div
+                  key={element.id}
+                  role="button"
+                  tabIndex={busy ? -1 : 0}
+                  aria-label={
+                    element.type === "text"
+                      ? element.text || t("Boş yazı", "Empty text")
+                      : element.type === "image"
+                        ? element.name
+                        : t("Kapatma kutusu", "Cover box")
+                  }
+                  aria-pressed={selectedId === element.id}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedId(element.id);
+                    }
+                    if (
+                      [
+                        "ArrowLeft",
+                        "ArrowRight",
+                        "ArrowUp",
+                        "ArrowDown",
+                      ].includes(event.key)
+                    ) {
+                      event.preventDefault();
+                      const x = clamp(
+                        element.x +
+                          (event.key === "ArrowRight"
+                            ? 0.01
+                            : event.key === "ArrowLeft"
+                              ? -0.01
+                              : 0),
+                        0,
+                        1 - element.width,
+                      );
+                      const y = clamp(
+                        element.y +
+                          (event.key === "ArrowDown"
+                            ? 0.01
+                            : event.key === "ArrowUp"
+                              ? -0.01
+                              : 0),
+                        0,
+                        1 - element.height,
+                      );
+                      change(
+                        elements.map((value) =>
+                          value.id === element.id ? { ...value, x, y } : value,
+                        ),
+                      );
+                    }
+                    if (event.key === "Delete" || event.key === "Backspace") {
+                      event.preventDefault();
+                      change(
+                        elements.filter((value) => value.id !== element.id),
+                      );
+                      setSelectedId(null);
+                    }
+                  }}
+                  onPointerDown={(event) => startDrag(event, element)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={(event) => endDrag(event)}
+                  onPointerCancel={(event) => endDrag(event, true)}
+                  className="absolute cursor-move touch-none outline-none"
+                  style={{
+                    left: `${element.x * 100}%`,
+                    top: `${element.y * 100}%`,
+                    width: `${element.width * 100}%`,
+                    height: `${element.height * 100}%`,
+                    outline:
+                      selectedId === element.id
+                        ? "2px solid #2563eb"
+                        : undefined,
+                  }}
+                >
+                  {element.type === "text" ? (
+                    <div
+                      className="pointer-events-none size-full overflow-hidden whitespace-pre-wrap break-words"
+                      style={{
+                        fontFamily: "Noto Sans",
+                        fontSize: element.fontSize * scale,
+                        fontWeight: element.bold ? 700 : 400,
+                        lineHeight: 1.25,
+                        color: element.color,
+                      }}
+                    >
+                      {element.text}
+                    </div>
+                  ) : element.type ===
+                    "image" /* eslint-disable-next-line @next/next/no-img-element */ ? (
+                    <img
+                      draggable={false}
+                      src={element.dataUrl}
+                      alt=""
+                      className="pointer-events-none size-full"
+                    />
+                  ) : (
+                    <div
+                      className="pointer-events-none size-full"
+                      style={{ background: element.fill }}
+                    />
+                  )}
+                  {selectedId === element.id && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={t("Boyutlandır", "Resize")}
+                      onKeyDown={(event) => {
+                        if (
+                          ![
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "ArrowUp",
+                            "ArrowDown",
+                          ].includes(event.key)
+                        )
+                          return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const width = clamp(
+                          element.width +
+                            (event.key === "ArrowRight"
+                              ? 0.01
+                              : event.key === "ArrowLeft"
+                                ? -0.01
+                                : 0),
+                          0.04,
+                          1 - element.x,
+                        );
+                        const height = clamp(
+                          element.height +
+                            (event.key === "ArrowDown"
+                              ? 0.01
+                              : event.key === "ArrowUp"
+                                ? -0.01
+                                : 0),
+                          0.02,
+                          1 - element.y,
+                        );
+                        if (element.type === "image") {
+                          const ratio = element.height / element.width;
+                          const requestedWidth =
+                            event.key === "ArrowUp" || event.key === "ArrowDown"
+                              ? height / ratio
+                              : width;
+                          const imageWidth = clamp(
+                            requestedWidth,
+                            0.04,
+                            Math.min(1 - element.x, (1 - element.y) / ratio),
+                          );
+                          patch({
+                            width: imageWidth,
+                            height: imageWidth * ratio,
+                          });
+                        } else {
+                          patch({ width, height });
+                        }
+                      }}
+                      onPointerDown={(event) => startDrag(event, element, true)}
+                      onPointerMove={moveDrag}
+                      onPointerUp={(event) => endDrag(event)}
+                      onPointerCancel={(event) => endDrag(event, true)}
+                      className="absolute -bottom-3 -right-3 flex size-8 cursor-nwse-resize touch-none items-center justify-center rounded-full bg-blue-600 text-white shadow"
+                    >
+                      <span aria-hidden="true">↘</span>
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
-}
-
-function ToolButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground [&_svg]:size-5">{icon}{label}</button>;
-}
-
-function PropertiesPanel({ element, textOverflowing, labels, patch, duplicate, remove, moveLayer, replaceImage, uploadFont }: {
-  element: PdfCanvasElement;
-  textOverflowing: boolean;
-  labels: ReturnType<typeof useLabels>;
-  patch: (patch: Partial<PdfCanvasElement>) => void;
-  duplicate: () => void;
-  remove: () => void;
-  moveLayer: (direction: -1 | 1) => void;
-  replaceImage: (file: File) => Promise<void>;
-  uploadFont: (file: File) => Promise<void>;
-}) {
-  const tr = useDisplayLanguage() === "TR";
-  const field = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
-  return <div className="mt-4 space-y-4">
-    <label className="block text-xs font-medium">{tr ? "Katman adı" : "Layer name"}<input className={`mt-1 ${field}`} value={element.name ?? ""} placeholder={element.type === "text" ? element.text.slice(0, 32) : element.type === "image" ? element.name : element.shape} onChange={event => patch({ name: event.target.value || undefined })} /></label>
-    <div className="flex flex-wrap gap-2"><Button size="sm" variant={element.locked ? "default" : "outline"} onClick={() => patch({ locked: !element.locked })}>{element.locked ? (tr ? "Kilidi aç" : "Unlock") : (tr ? "Kilitle" : "Lock")}</Button><Button size="sm" variant="outline" onClick={() => patch({ hidden: !element.hidden })}>{element.hidden ? (tr ? "Göster" : "Show") : (tr ? "Gizle" : "Hide")}</Button></div>
-    <Button size="sm" variant={element.allowOverflow ? "default" : "outline"} onClick={() => patch({ allowOverflow: !element.allowOverflow })}>{tr ? "Sayfa dışına taşmaya izin ver" : "Allow outside page"}</Button>
-    <div className="grid grid-cols-2 gap-2">{(["x", "y"] as const).map(axis => <NumberField key={axis} label={`${axis.toUpperCase()} (%)`} className={field} value={Number((element[axis] * 100).toFixed(1))} min={0} max={100} step={0.1} onCommit={value => patch({ [axis]: clamp(value / 100, 0, 1 - element[axis === "x" ? "width" : "height"]) })} />)}</div>
-    <div className="flex flex-wrap gap-1">{(["left", "center", "right"] as const).map((align, i) => <Button key={align} size="sm" variant="outline" onClick={() => patch({ x: i * (1 - element.width) / 2 })}>{(tr ? ["Sol", "Orta", "Sağ"] : ["Left", "Center", "Right"])[i]}</Button>)}</div>
-    <div className="grid grid-cols-2 gap-2">{(["width", "height"] as const).map((dimension, i) => <NumberField key={dimension} label={(tr ? ["Genişlik (%)", "Yükseklik (%)"] : ["Width (%)", "Height (%)"])[i]} className={field} value={Number((element[dimension] * 100).toFixed(1))} min={2} max={(1 - element[dimension === "width" ? "x" : "y"]) * 100} step={1} onCommit={value => patch({ [dimension]: clamp(value / 100, 0.02, 1 - element[dimension === "width" ? "x" : "y"]) })} />)}</div>
-
-    {element.type === "text" ? <>
-      <label className="block text-xs font-medium">{labels.text}<textarea className="mt-1 min-h-24 w-full resize-y rounded-md border border-input bg-background p-2 text-sm" value={element.text} onChange={(event) => patch({ text: event.target.value } as Partial<CanvasTextElement>)} /></label>
-      <label className="block text-xs font-medium">{labels.font}<select className={`mt-1 ${field}`} value={element.fontDataUrl ? element.fontFamily : "Noto Sans"} onChange={(event) => patch({ fontFamily: event.target.value, fontDataUrl: undefined } as Partial<CanvasTextElement>)}><option>Noto Sans</option>{element.fontDataUrl ? <option value={element.fontFamily}>{tr ? "Yüklenen font" : "Uploaded font"}</option> : null}</select></label>
-      <label className="block cursor-pointer text-xs font-medium text-primary">{tr ? "Font yükle (TTF/OTF/WOFF)" : "Upload font (TTF/OTF/WOFF)"}<input className="mt-1 block w-full text-xs" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" onChange={event => { const next = event.target.files?.[0]; if (next) void uploadFont(next); event.currentTarget.value = ""; }} /></label>
-      <div className="grid grid-cols-2 gap-2"><NumberField label={labels.fontSize} className={field} value={element.fontSize} min={6} max={120} step={1} onCommit={value => patch({ fontSize: value } as Partial<CanvasTextElement>)} /><ColorField label={labels.color} value={element.color} onChange={(color) => patch({ color } as Partial<CanvasTextElement>)} /></div>
-      <div className="grid grid-cols-2 gap-2"><NumberField label={tr ? "Satır yüksekliği" : "Line height"} className={field} value={element.lineHeight ?? 1.25} min={0.8} max={3} step={0.05} onCommit={value => patch({ lineHeight: value } as Partial<CanvasTextElement>)} /><NumberField label={tr ? "Harf aralığı" : "Letter spacing"} className={field} value={element.letterSpacing ?? 0} min={-5} max={30} step={0.1} onCommit={value => patch({ letterSpacing: value } as Partial<CanvasTextElement>)} /></div>
-      <div className="flex gap-2"><Button size="sm" variant={element.autoHeight ? "default" : "outline"} onClick={() => patch({ autoHeight: !element.autoHeight, autoFit: false } as Partial<CanvasTextElement>)}>{tr ? "Otomatik yükseklik" : "Auto height"}</Button><Button size="sm" variant={element.autoFit ? "default" : "outline"} onClick={() => patch({ autoFit: !element.autoFit, autoHeight: false, autoFitMaxSize: element.fontSize } as Partial<CanvasTextElement>)}>{tr ? "Otomatik sığdır" : "Auto fit"}</Button></div>
-      {textOverflowing && !element.autoFit && !element.autoHeight ? <p role="alert" className="rounded-md bg-amber-50 p-2 text-xs text-amber-900">{tr ? "Metin kutuya sığmıyor. Kutuyu büyütün veya otomatik sığdırmayı açın." : "Text overflows the box. Resize it or enable auto fit."}</p> : null}
-      <div className="flex gap-1"><Button aria-label="Kalın / Bold" size="icon-sm" variant={element.bold ? "default" : "outline"} onClick={() => patch({ bold: !element.bold } as Partial<CanvasTextElement>)}><Bold /></Button><Button aria-label="İtalik / Italic" size="icon-sm" variant={element.italic ? "default" : "outline"} onClick={() => patch({ italic: !element.italic } as Partial<CanvasTextElement>)}><Italic /></Button>{(["left", "center", "right"] as const).map((align) => <Button key={align} aria-label={align === "left" ? "Sola hizala / Align left" : align === "center" ? "Ortala / Align center" : "Sağa hizala / Align right"} size="icon-sm" variant={element.align === align ? "default" : "outline"} onClick={() => patch({ align } as Partial<CanvasTextElement>)}>{align === "left" ? <AlignLeft /> : align === "center" ? <AlignCenter /> : <AlignRight />}</Button>)}</div>
-    </> : null}
-    {element.type === "shape" ? <div className="grid grid-cols-2 gap-2"><ColorField label={labels.fillColor} value={element.fill} onChange={(fill) => patch({ fill } as Partial<CanvasShapeElement>)} /><ColorField label={labels.borderColor} value={element.stroke} onChange={(stroke) => patch({ stroke } as Partial<CanvasShapeElement>)} /><NumberField label={labels.borderWidth} className={field} value={element.strokeWidth} min={0} max={20} step={0.5} onCommit={value => patch({ strokeWidth: value } as Partial<CanvasShapeElement>)} /><NumberField label={tr ? "Kesik çizgi" : "Dash length"} className={field} value={element.dash?.[0] ?? 0} min={0} max={100} step={1} onCommit={value => patch({ dash: value ? [value, value] : undefined } as Partial<CanvasShapeElement>)} />{element.shape === "rectangle" ? <NumberField label={tr ? "Köşe yarıçapı" : "Corner radius"} className={field} value={element.cornerRadius ?? 0} min={0} max={100} step={1} onCommit={value => patch({ cornerRadius: value } as Partial<CanvasShapeElement>)} /> : null}</div> : null}
-    {element.type === "image" ? <><p className="truncate rounded-md bg-muted p-2 text-xs text-muted-foreground">{element.name}</p><label className="block cursor-pointer text-xs font-medium text-primary">{tr ? "Görseli değiştir" : "Replace image"}<input className="mt-1 block w-full text-xs" type="file" accept="image/png,image/jpeg" onChange={e => { const f = e.target.files?.[0]; if (f) void replaceImage(f); e.currentTarget.value = ""; }} /></label><div className="grid grid-cols-2 gap-2"><NumberField label={tr ? "Kırpma X (%)" : "Crop X (%)"} className={field} value={(element.crop?.x ?? 0) * 100} min={0} max={95} step={1} onCommit={value => patch({ crop: { x: value / 100, y: element.crop?.y ?? 0, width: Math.min(element.crop?.width ?? 1, 1 - value / 100), height: element.crop?.height ?? 1 } })} /><NumberField label={tr ? "Kırpma Y (%)" : "Crop Y (%)"} className={field} value={(element.crop?.y ?? 0) * 100} min={0} max={95} step={1} onCommit={value => patch({ crop: { x: element.crop?.x ?? 0, y: value / 100, width: element.crop?.width ?? 1, height: Math.min(element.crop?.height ?? 1, 1 - value / 100) } })} /><NumberField label={tr ? "Kırpma genişliği (%)" : "Crop width (%)"} className={field} value={(element.crop?.width ?? 1) * 100} min={5} max={(1 - (element.crop?.x ?? 0)) * 100} step={1} onCommit={value => patch({ crop: { x: element.crop?.x ?? 0, y: element.crop?.y ?? 0, width: value / 100, height: element.crop?.height ?? 1 } })} /><NumberField label={tr ? "Kırpma yüksekliği (%)" : "Crop height (%)"} className={field} value={(element.crop?.height ?? 1) * 100} min={5} max={(1 - (element.crop?.y ?? 0)) * 100} step={1} onCommit={value => patch({ crop: { x: element.crop?.x ?? 0, y: element.crop?.y ?? 0, width: element.crop?.width ?? 1, height: value / 100 } })} /><NumberField label={tr ? "Parlaklık" : "Brightness"} className={field} value={element.filters?.brightness ?? 0} min={-1} max={1} step={0.05} onCommit={value => patch({ filters: { brightness: value, contrast: element.filters?.contrast ?? 0, saturation: element.filters?.saturation ?? 0 } })} /><NumberField label={tr ? "Kontrast" : "Contrast"} className={field} value={element.filters?.contrast ?? 0} min={-100} max={100} step={1} onCommit={value => patch({ filters: { brightness: element.filters?.brightness ?? 0, contrast: value, saturation: element.filters?.saturation ?? 0 } })} /><NumberField label={tr ? "Doygunluk" : "Saturation"} className={field} value={element.filters?.saturation ?? 0} min={-1} max={1} step={0.05} onCommit={value => patch({ filters: { brightness: element.filters?.brightness ?? 0, contrast: element.filters?.contrast ?? 0, saturation: value } })} /></div></> : null}
-    <div className="grid grid-cols-2 gap-2"><NumberField label={labels.rotation} className={field} value={element.rotation} min={-180} max={180} step={1} onCommit={value => patch({ rotation: value })} /><label className="text-xs font-medium">{labels.opacity}<input className="mt-3 w-full" type="range" min="0.1" max="1" step="0.05" value={element.opacity} onChange={(event) => patch({ opacity: Number(event.target.value) })} /></label></div>
-    <div className="flex gap-2"><Button size="sm" variant={element.flipX ? "default" : "outline"} onClick={() => patch({ flipX: !element.flipX })}>{tr ? "Yatay çevir" : "Flip horizontal"}</Button><Button size="sm" variant={element.flipY ? "default" : "outline"} onClick={() => patch({ flipY: !element.flipY })}>{tr ? "Dikey çevir" : "Flip vertical"}</Button></div>
-    <div className="border-t border-border pt-3"><p className="mb-2 text-xs font-medium">{labels.layerOrder}</p><div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => moveLayer(1)}><ChevronUp />{labels.forward}</Button><Button size="sm" variant="outline" onClick={() => moveLayer(-1)}><ChevronDown />{labels.backward}</Button></div></div>
-    <div className="flex gap-2 border-t border-border pt-3"><Button className="flex-1" size="sm" variant="outline" onClick={duplicate}><Copy />{labels.duplicate}</Button><Button size="icon-sm" variant="destructive" onClick={remove} aria-label={labels.delete}><Trash2 /></Button></div>
-  </div>;
-}
-
-function NumberField({ label, value, min, max, step, className, onCommit }: { label: string; value: number; min: number; max: number; step: number; className: string; onCommit: (value: number) => void }) {
-  const [draft, setDraft] = useState(String(value));
-  const [previousValue, setPreviousValue] = useState(value);
-  if (value !== previousValue) {
-    setPreviousValue(value);
-    setDraft(String(value));
-  }
-  function commit() {
-    const parsed = Number(draft.replace(",", "."));
-    if (!Number.isFinite(parsed)) { setDraft(String(value)); return; }
-    const next = clamp(parsed, min, max);
-    setDraft(String(next));
-    onCommit(next);
-  }
-  return <label className="text-xs font-medium">{label}<input className={`mt-1 ${className}`} type="text" inputMode="decimal" value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") { setDraft(String(value)); event.currentTarget.blur(); } }} aria-label={label} data-step={step} /></label>;
-}
-
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="text-xs font-medium">{label}<span className="mt-1 flex h-9 items-center gap-2 rounded-md border border-input bg-background px-2"><input type="color" className="size-5 cursor-pointer border-0 bg-transparent p-0" value={value} onChange={(event) => onChange(event.target.value)} /><span className="text-xs uppercase text-muted-foreground">{value}</span></span></label>;
 }

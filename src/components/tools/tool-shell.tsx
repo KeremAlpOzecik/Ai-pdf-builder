@@ -22,7 +22,7 @@ export function ToolShell({
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <AppHeader />
       <main
-        className={`mx-auto flex w-full flex-1 flex-col px-4 py-8 sm:px-8 ${wide ? "max-w-[1440px]" : "max-w-5xl"}`}
+        className={`tool-workspace mx-auto flex w-full flex-1 flex-col px-4 py-8 sm:px-8 ${wide ? "max-w-[1440px]" : "max-w-5xl"}`}
       >
         <nav aria-label={tr ? "İçerik yolu" : "Breadcrumb"}><Link
           href="/#tools"

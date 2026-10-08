@@ -235,7 +235,14 @@
 }
 
 @media (max-width: 1023px) {
-  .pdf-editor button { min-width: 44px; min-height: 44px; }
-  .pdf-editor input, .pdf-editor select { min-height: 40px; }
-  .pdf-editor input, .pdf-editor select, .pdf-editor textarea { font-size: 16px; }
+  .simple-pdf-editor button { min-width: 44px; min-height: 44px; }
+  .simple-pdf-editor input, .simple-pdf-editor select { min-height: 40px; }
+  .simple-pdf-editor input, .simple-pdf-editor select, .simple-pdf-editor textarea { font-size: 16px; }
 }
+
+/* Keep the document in view once a PDF has been opened. */
+.tool-workspace:has(.simple-pdf-editor) { padding-top: 1rem; }
+.tool-workspace:has(.simple-pdf-editor) > nav,
+.tool-workspace:has(.simple-pdf-editor) > p,
+.tool-workspace:has(.simple-pdf-editor) > div:not(:last-child) { display: none; }
+.tool-workspace:has(.simple-pdf-editor) > div:last-child { margin-top: 0; }

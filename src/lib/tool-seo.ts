@@ -15,48 +15,21 @@ export type ToolSeo = {
 export const toolSeo: Record<ToolSlug, ToolSeo> = {
   "edit-pdf": {
     slug: "edit-pdf",
-    title: "Ücretsiz PDF düzenleyici | Yazım hatasını tarayıcıda düzelt",
-    h1: "Ücretsiz PDF düzenle: metne tıkla, değiştir, indir",
-    description:
-      "CV PDF yazım hatasını tarayıcıda düzelt. LinkedIn özgeçmişinde tarihi veya e-postayı değiştir, hesap açmadan yeni PDF indir.",
-    keywords: [
-      "ücretsiz PDF düzenleyici",
-      "CV PDF düzenle",
-      "pdf yazım hatası düzelt",
-      "linkedin cv pdf düzenle ücretsiz",
-    ],
-    summary:
-      "Dijital PDF’teki satıra tıklayıp metni yerinde değiştirirsin. CV, dilekçe ve kısa formlar için sıfırdan dosya üretmeden düzeltme yapar. Taranmış (yalnızca görüntü) PDF’lerde tıklanacak metin yoktur; o zaman CV stüdyosuna ekran görüntüsü yükle.",
+    title: "Ücretsiz PDF düzenleyici | PDF’ye yazı ve görsel ekle",
+    h1: "PDF’ye yazı ve görsel ekle",
+    description: "PDF’ye ücretsiz yazı veya görsel ekle, bir alanı kapat ve güncel PDF’ni indir. Basit, mobil uyumlu ve tarayıcıda çalışan PDF düzenleyici.",
+    keywords: ["ücretsiz PDF düzenleyici", "PDF yazı ekleme", "PDF görsel ekleme"],
+    summary: "PDF’ni aç, yazı veya görsel ekle ve sürükleyerek yerleştir. Alanı kapat aracı bir bölgenin üstünü örter. Mevcut PDF yazısını doğrudan değiştirmez. Alan kapatılan sayfalar görüntü olarak kaydedilir; diğer sayfaların metni ve formları korunur.",
     steps: [
-      {
-        title: "PDF’i seç",
-        body: "Word’den veya LinkedIn’den alınmış, metni seçilebilir dosyayı yükle. Her dosya 25 MB altında olmalı.",
-      },
-      {
-        title: "Satıra tıkla ve düzelt",
-        body: "Yazım hatası, tarih, telefon veya unvan satırını değiştir. Uzun metin taşarsa cümleyi kısalt; puntoyu şişirme.",
-      },
-      {
-        title: "Yeni PDF indir",
-        body: "Çıktıyı kendi tarayıcında aç, Türkçe karakterleri ve hizayı kontrol et. Başvuru portalına yeni adla yükle.",
-      },
+      { title: "PDF’ni aç", body: "25 MB altında, parolasız bir PDF seç. Dijital ve taranmış PDF’lere yeni öğeler ekleyebilirsin." },
+      { title: "Ekle ve yerleştir", body: "Yazı ekle, Görsel ekle veya Alanı kapat aracını seç. Öğeyi sürükleyerek taşı; seçili öğenin köşesinden çekerek boyutlandır." },
+      { title: "PDF’ni indir", body: "PDF indir düğmesine bas. İndirdiğin dosyayı açarak yerleşimi kontrol et." },
     ],
     faqs: [
-      {
-        question: "CV PDF yazım hatasını ücretsiz düzeltebilir miyim?",
-        answer:
-          "Evet. Seçilebilir metinli özgeçmişte satıra tıklayıp düzeltir, hesap açmadan indirirsin. Dosya tarayıcıda işlenir.",
-      },
-      {
-        question: "LinkedIn CV PDF’ini de düzenler mi?",
-        answer:
-          "Evet. LinkedIn’den indirdiğin dijital PDF’de metin genellikle tıklanır. Büyük revizyon için stüdyoya aktarmak daha temizdir.",
-      },
+      { question: "PDF’nin içindeki eski yazıyı doğrudan değiştirir mi?", answer: "Hayır. Bu araç PDF’ye yeni öğeler ekler. Bir yazının yerine yenisini koymak için alanı kapatıp üzerine yazı ekleyebilirsin. Kapatılan sayfa görüntüye dönüşür ve o sayfada metin seçimi, bağlantılar ve form alanları korunmaz." },
+      { question: "Dosyalarım bir sunucuya yükleniyor mu?", answer: "Hayır. Bu editördeki dosya işlemleri tarayıcında yapılır. Yarım kalan düzenleme aynı tarayıcıda yerel taslak olarak tutulur." },
     ],
-    related: [
-      { label: "CV PDF yazım hatası rehberi", href: "/guides/cv-pdf-yazim-hatasi-duzeltme" },
-      { label: "LinkedIn CV PDF rehberi", href: "/guides/linkedin-cv-pdf-duzenleme" },
-    ],
+    related: [{ label: "PDF birleştir", href: "/tools/merge" }, { label: "PDF’e imza ekle", href: "/tools/sign" }],
   },
   "word-to-pdf": {
     slug: "word-to-pdf",

@@ -7,23 +7,23 @@ function database(): Promise<IDBDatabase> {
     request.onerror = () => reject(request.error);
   });
 }
-export async function readEditorDraft(): Promise<Blob | undefined> {
+export async function readEditorDraft(key = "latest"): Promise<Blob | undefined> {
   const db = await database();
   try {
     return await new Promise((resolve, reject) => {
-      const request = db.transaction("drafts").objectStore("drafts").get("latest");
+      const request = db.transaction("drafts").objectStore("drafts").get(key);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
   } finally { db.close(); }
 }
-export async function writeEditorDraft(blob: Blob | null) {
+export async function writeEditorDraft(blob: Blob | null, key = "latest") {
   const db = await database();
   try {
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction("drafts", "readwrite");
       const store = transaction.objectStore("drafts");
-      if (blob) store.put(blob, "latest"); else store.delete("latest");
+      if (blob) store.put(blob, key); else store.delete(key);
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () => reject(transaction.error);

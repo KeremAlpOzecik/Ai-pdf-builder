@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Tarayıcı depolaması</h2>
-          <p className="leading-7 text-muted-foreground">Düzenlediğin CV, kaldığın yerden devam edebilmen için tarayıcının yerel depolamasında tutulabilir. Bu veri sunucumuza gönderilmez; ortak veya herkese açık bir cihaz kullanıyorsan işlem bitince veriyi ve indirilen dosyaları temizle.</p>
+          <p className="leading-7 text-muted-foreground">Düzenlediğin CV ve PDF editörünün son taslağı, kaldığın yerden devam edebilmen için tarayıcının yerel depolamasında tutulabilir. PDF taslağı aynı tarayıcıda “Düzenlemeye devam et” ile açılabilir, “Taslağı sil” ile kaldırılabilir. Bu veri sunucumuza gönderilmez; ortak veya herkese açık bir cihaz kullanıyorsan işlem bitince veriyi ve indirilen dosyaları temizle.</p>
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Analitik ve teknik veriler</h2>

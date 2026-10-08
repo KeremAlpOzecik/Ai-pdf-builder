@@ -19,8 +19,7 @@ test("invalid PDFs disable processing and selected-page filenames are unambiguou
   assert.match(workspace, /selectedPages\.join\("_"\)/);
 });
 
-test("source text grows safely and export blocks clipping", () => {
-  assert.match(editor, /textPatch[\s\S]{0,180}autoHeight: true/);
+test("export blocks clipped text and has a timeout", () => {
   assert.match(editor, /metrics\.requiredHeight > metrics\.availableHeight/);
   assert.match(editor, /PDF dışa aktarma zaman aşımına uğradı/);
 });

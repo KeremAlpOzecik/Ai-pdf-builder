@@ -37,7 +37,7 @@ import { MAX_FILE_BYTES } from "@/lib/tools";
 import { downloadBlob, stem } from "@/lib/download";
 import { exportCanvasPdf } from "@/lib/pdf/canvas-export";
 import type { CanvasShapeElement, CanvasTextElement, PdfCanvasElement } from "@/lib/pdf/canvas-types";
-import { analyzeEditorCapabilities, inspectPdfSecurity, isPersistedElement, type ExportMode } from "@/lib/pdf/editor-capabilities";
+import { analyzeEditorCapabilities, changesSourceAppearance, inspectPdfSecurity, isPersistedElement, type ExportMode } from "@/lib/pdf/editor-capabilities";
 import { exportFlattenedScenePdf } from "@/lib/pdf/konva-flatten-export";
 import { loadPdfjs, openPdf, renderPage } from "@/lib/pdf/pdfjs-client";
 import { extractTextBoxes, type PdfTextBox } from "@/lib/pdf/text-layer";
@@ -64,6 +64,7 @@ type EditorSnapshot = {
   elements: PdfCanvasElement[];
   bytes: Uint8Array | null;
   pageCount: number;
+  pageSizes: Record<number, { width: number; height: number }>;
   page: number;
   boxesByPage: Record<number, PdfTextBox[]>;
   documentRevision: number;
@@ -109,6 +110,14 @@ export function EditPdfEditor() {
   const clipboardRef = useRef<PdfCanvasElement[]>([]);
   const sourceBytesRef = useRef<Uint8Array | null>(null);
   const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [recoveryDraft, setRecoveryDraft] = useState<Blob | null>(null);
+  const [draftFailed, setDraftFailed] = useState(false);
+  const [multiSelect, setMultiSelect] = useState(false);
+  const [documentValid, setDocumentValid] = useState(false);
+  const [pageSizes, setPageSizes] = useState<Record<number, { width: number; height: number }>>({});
+  const [mobileProperties, setMobileProperties] = useState(false);
+  const [mobilePages, setMobilePages] = useState(false);
   const [renderVersion, setRenderVersion] = useState(0);
   const [saved, setSaved] = useState<{ blob: Blob; name: string } | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -134,13 +143,14 @@ export function EditPdfEditor() {
   const [sourceGraphics, setSourceGraphics] = useState<SourceGraphic[]>([]);
   const [documentRevision, setDocumentRevision] = useState(0);
   const [guidesByPage, setGuidesByPage] = useState<Record<number, { x: number[]; y: number[] }>>({});
-  const sourceSignature = JSON.stringify(elements.filter(e => e.sourceOp !== undefined && e.sourcePristine !== true));
+  const sourceSignature = JSON.stringify(elements.filter(e => (e.sourceOp !== undefined || e.isPageBackground) && e.sourcePristine !== true));
   const thumbnailSceneSignature = JSON.stringify(elements.filter((element) => element.pageIndex === page - 1 && isPersistedElement(element)));
   const thumbnailEditSignature = JSON.stringify(edits);
 
   function setSelectedId(next: string | null) {
     setPrimarySelectedId(next);
     setSelectedIds(next ? [next] : []);
+    if (next) { setMobileProperties(true); setMobilePages(false); }
   }
 
   const selected = elements.find((element) => element.id === selectedId) ?? null;
@@ -150,13 +160,40 @@ export function EditPdfEditor() {
   const security = useMemo(() => originalBytes ? inspectPdfSecurity(originalBytes) : { encrypted: false, signed: false }, [originalBytes]);
   const capabilities = analyzeEditorCapabilities(edits, elements, security);
 
+  useEffect(() => {
+    if (!changeCount) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [changeCount]);
+
+  useEffect(() => {
+    void import("@/lib/pdf/editor-draft").then(module => module.readEditorDraft()).then(blob => setRecoveryDraft(blob ?? null)).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!originalBytes || !file || !documentValid || Object.keys(pageSizes).length !== pageCount) return;
+    const timer = window.setTimeout(() => {
+      void Promise.all([import("@/lib/pdf/editor-draft"), import("@/lib/pdf/editor-project")]).then(([draft, project]) => {
+        const pages = Object.entries(pageSizes).map(([index, dimensions]) => ({ index: Number(index), ...dimensions, rotation: 0 }));
+        return draft.writeEditorDraft(project.encodeProject({ fileName: file.name, bytes: originalBytes, elements, edits, boxesByPage, exportMode, pages, guidesByPage }));
+      }).then(() => setDraftFailed(false)).catch(() => setDraftFailed(true));
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [originalBytes, file, documentValid, pageCount, pageSizes, elements, edits, boxesByPage, exportMode, guidesByPage]);
+
+  useEffect(() => {
+    if (mobileProperties && window.innerWidth < 1024) pageRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [mobileProperties]);
+
   function textLayoutMetrics(element: CanvasTextElement, fontSize = element.fontSize) {
-    const pixelSize = Math.max(1, fontSize * scale);
+    const dimensions = pageSizes[element.pageIndex] ?? { width: size.width / scale, height: size.height / scale };
+    const pixelSize = Math.max(1, fontSize);
     const context = document.createElement("canvas").getContext("2d");
     if (context) context.font = `${element.italic ? "italic " : ""}${element.bold ? "700 " : "400 "}${pixelSize}px '${element.fontFamily}'`;
-    const measure = (value: string) => (context?.measureText(value).width ?? value.length * pixelSize * 0.55) + Math.max(0, value.length - 1) * (element.letterSpacing ?? 0) * scale;
-    const lines = layoutTextLines(element.text, Math.max(1, element.width * size.width), Number.MAX_SAFE_INTEGER, pixelSize, element.lineHeight ?? 1.25, measure);
-    return { lines, requiredHeight: lines.length * pixelSize * (element.lineHeight ?? 1.25), availableHeight: element.height * size.height };
+    const measure = (value: string) => (context?.measureText(value).width ?? value.length * pixelSize * 0.55) + Math.max(0, value.length - 1) * (element.letterSpacing ?? 0);
+    const lines = layoutTextLines(element.text, Math.max(1, element.width * dimensions.width), Number.MAX_SAFE_INTEGER, pixelSize, element.lineHeight ?? 1.25, measure);
+    return { lines, requiredHeight: lines.length * pixelSize * (element.lineHeight ?? 1.25), availableHeight: element.height * dimensions.height };
   }
 
   function adjustTextLayout(element: CanvasTextElement, patch: Partial<PdfCanvasElement>) {
@@ -164,11 +201,11 @@ export function EditPdfEditor() {
     if (next.autoFit) {
       const maximum = "fontSize" in patch && typeof patch.fontSize === "number" ? patch.fontSize : next.autoFitMaxSize ?? next.fontSize;
       let fitted = Math.max(6, maximum);
-      while (fitted > 6 && textLayoutMetrics(next, fitted).requiredHeight > next.height * size.height) fitted -= 0.5;
+      while (fitted > 6 && textLayoutMetrics(next, fitted).requiredHeight > textLayoutMetrics(next, fitted).availableHeight) fitted -= 0.5;
       next = { ...next, fontSize: fitted, autoFitMaxSize: maximum };
     }
     if (next.autoHeight) {
-      const needed = textLayoutMetrics(next).requiredHeight / Math.max(1, size.height);
+      const needed = textLayoutMetrics(next).requiredHeight / Math.max(1, pageSizes[next.pageIndex]?.height ?? size.height / scale);
       next = { ...next, height: next.allowOverflow ? Math.max(0.02, needed) : clamp(needed, 0.02, 1 - next.y) };
     }
     return next;
@@ -204,11 +241,12 @@ export function EditPdfEditor() {
         const pdfjs = await loadPdfjs();
         doc = await openPdf(originalBytes);
         const pdfPage = await doc.getPage(page);
-        // Keep the preview background sourced from the same 300 DPI render used by
+        // Use screen resolution for the preview; export independently renders at 300 DPI.
+        // Keep the preview background sourced from the same scene used by
         // flattened export, then scale it with CSS. This avoids a second, lower
         // quality PDF.js rasterization path while text hit boxes stay in view units.
         const viewport = pdfPage.getViewport({ scale });
-        const { canvas } = await renderWithSourceGraphics(pdfPage, 300 / 72, JSON.parse(sourceSignature), false);
+        const { canvas } = await renderWithSourceGraphics(pdfPage, Math.min(2, scale * (window.devicePixelRatio || 1)), JSON.parse(sourceSignature), false);
         if (cancelled) return;
         const nextBoxes = await extractTextBoxes(pdfPage, canvas, viewport);
         const content = await pdfPage.getTextContent();
@@ -238,13 +276,15 @@ export function EditPdfEditor() {
         });
         setError("");
         setPageCount(doc.numPages);
+        setPageSizes((current) => ({ ...current, [page - 1]: { width: viewport.width / scale, height: viewport.height / scale } }));
+        setDocumentValid(true);
         setSize({ width: viewport.width, height: viewport.height });
         setBoxes(nextBoxes);
         setBoxesByPage((current) => ({ ...current, [page]: nextBoxes }));
         setEmpty(nextBoxes.every((box) => !box.text.trim()));
         setSourceGraphics(await listSourceGraphics(pdfPage));
       } catch (error) {
-        if (!cancelled) { console.error("PDF editor failed", error); setError(tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry."); }
+        if (!cancelled) { setDocumentValid(false); setSize({ width: 0, height: 0 }); setBoxes([]); setSourceGraphics([]); console.error("PDF editor failed", error); setError(tr ? "PDF işlenemedi. Dosya bozuk veya parola korumalı olabilir. Yeniden deneyin." : "The PDF could not be processed. It may be damaged or password protected. Please retry."); }
       } finally {
         if (doc) await doc.loadingTask.destroy().catch(() => undefined);
         if (!cancelled) setLoadingPage(false);
@@ -307,11 +347,11 @@ export function EditPdfEditor() {
   }, [originalBytes, page, size.width, size.height, thumbnailSceneSignature, thumbnailEditSignature]);
 
   function snapshot(): EditorSnapshot {
-    return { edits, elements, bytes: originalBytes, pageCount, page, boxesByPage, documentRevision, guidesByPage };
+    return { edits, elements, bytes: originalBytes, pageCount, pageSizes, page, boxesByPage, documentRevision, guidesByPage };
   }
 
   function restoreSnapshot(value: EditorSnapshot) {
-    setElements(value.elements); setEdits(value.edits); setOriginalBytes(value.bytes); setPageCount(value.pageCount); setPage(value.page); setBoxesByPage(value.boxesByPage); setDocumentRevision(value.documentRevision); setGuidesByPage(value.guidesByPage);
+    setElements(value.elements); setEdits(value.edits); setOriginalBytes(value.bytes); setPageCount(value.pageCount); setPageSizes(value.pageSizes); setPage(value.page); setBoxesByPage(value.boxesByPage); setDocumentRevision(value.documentRevision); setGuidesByPage(value.guidesByPage);
     setActive(null); setSelectedId(null); setThumbnails({}); setLoadingPage(true);
   }
 
@@ -322,26 +362,34 @@ export function EditPdfEditor() {
     setEdits(nextEdits);
   }
 
+  function openAnotherFile() {
+    setConfirmOpen(false); setFile(null); setDocumentValid(false); setPageCount(1); setSize({ width: 0, height: 0 });
+  }
+
   async function onFiles(files: File[]) {
     const next = files[0];
     if (!next) return;
-    setError(""); setSaved(null);
-    setFile(next);
-    setPage(1);
-    setActive(null);
-    setEdits({});
-    setElements([]);
-    setSelectedId(null);
-    setUndoStack([]);
-    setRedoStack([]);
-    setBoxesByPage({});
-    setDocumentRevision(0);
-    setGuidesByPage({});
-    setThumbnails({});
-    setLoadingPage(true);
     const bytes = new Uint8Array(await next.arrayBuffer());
-    sourceBytesRef.current = bytes;
-    setOriginalBytes(bytes);
+    try {
+      const document = await openPdf(bytes);
+      try {
+        const dimensions: Record<number, { width: number; height: number }> = {};
+        for (let index = 0; index < document.numPages; index++) {
+          const viewport = (await document.getPage(index + 1)).getViewport({ scale: 1 });
+          dimensions[index] = { width: viewport.width, height: viewport.height };
+        }
+        setPageSizes(dimensions); setPageCount(document.numPages);
+      } finally { await document.loadingTask.destroy(); }
+    } catch {
+      toast.error(tr ? "PDF açılamadı. Geçerli, parolasız bir PDF seçin." : "Could not open PDF. Choose a valid, unencrypted PDF.");
+      return;
+    }
+    setError(""); setSaved(null); setDocumentValid(true);
+    setFile(next); setPage(1); setActive(null); setEdits({}); setElements([]);
+    setSelectedId(null); setUndoStack([]); setRedoStack([]); setBoxesByPage({});
+    setDocumentRevision(0); setGuidesByPage({}); setThumbnails({}); setSize({ width: 0, height: 0 });
+    setLoadingPage(true); setMobileProperties(false); setExportMode("standard");
+    sourceBytesRef.current = bytes; setOriginalBytes(bytes);
   }
 
   function startEdit(box: PdfTextBox) {
@@ -356,7 +404,7 @@ export function EditPdfEditor() {
       fontSize: box.fontSize, fontFamily: "Noto Sans",
       color: "#" + box.color.map(value => Math.round(value).toString(16).padStart(2, "0")).join(""),
       align: "left", bold: false, italic: false, rotation: 0, opacity: 1,
-      sourcePristine: true,
+      sourcePristine: true, autoFit: true, autoFitMaxSize: box.fontSize, lineHeight: 1.1,
     };
     // Selection is not an edit. The source becomes dirty only after a property changes.
     setElements([...elements, element]);
@@ -468,12 +516,13 @@ export function EditPdfEditor() {
     const target = elements.find((element) => element.id === elementId);
     if (!target) return;
     if (target.locked && patch.locked !== false && patch.hidden === undefined) return;
-    const sourceMutation = target.sourcePristine === true;
+    const appearanceChanged = changesSourceAppearance(target, patch);
+    const sourceMutation = target.sourcePristine === true && appearanceChanged;
     const nextEdits = sourceMutation && target.sourceBoxId ? { ...edits, [target.sourceBoxId]: "" } : edits;
     applyChange(elements.map((element) => {
       if (element.id !== elementId) return element;
       const textPatch = sourceMutation && element.type === "text" && typeof (patch as Partial<CanvasTextElement>).text === "string"
-        ? { ...patch, autoHeight: true }
+        ? { ...patch, autoHeight: false, autoFit: true, autoFitMaxSize: element.fontSize }
         : patch;
       const merged = element.type === "text" ? adjustTextLayout(element, textPatch) : { ...element, ...patch } as PdfCanvasElement;
       return { ...merged, ...(sourceMutation ? { sourcePristine: false } : {}) } as PdfCanvasElement;
@@ -487,8 +536,8 @@ export function EditPdfEditor() {
     const next = elements.map((element) => {
       const patch = byId.get(element.id);
       if (!patch || element.locked) return element;
-      if (element.sourcePristine === true && element.sourceBoxId) nextEdits = { ...nextEdits, [element.sourceBoxId]: "" };
-      return { ...element, ...patch, ...(element.sourcePristine === true ? { sourcePristine: false } : {}) } as PdfCanvasElement;
+      if (element.sourcePristine === true && changesSourceAppearance(element, patch) && element.sourceBoxId) nextEdits = { ...nextEdits, [element.sourceBoxId]: "" };
+      return { ...element, ...patch, ...(element.sourcePristine === true && changesSourceAppearance(element, patch) ? { sourcePristine: false } : {}) } as PdfCanvasElement;
     });
     applyChange(next, nextEdits);
   }
@@ -621,6 +670,7 @@ export function EditPdfEditor() {
       }
       const bytes = await pdf.save();
       setUndoStack((stack) => [...stack.slice(-49), before]); setRedoStack([]);
+      setPageSizes(Object.fromEntries(pdf.getPages().map((entry, index) => [index, entry.getSize()])));
       setOriginalBytes(bytes); setElements(nextElements); setEdits(nextEdits); setBoxesByPage(nextBoxesByPage); setGuidesByPage(nextGuidesByPage); setPageCount(pdf.getPageCount()); setPage(nextPage); setDocumentRevision((value) => value + 1);
       setSelectedId(null); setThumbnails({}); setLoadingPage(true);
     } catch (error) {
@@ -635,6 +685,7 @@ export function EditPdfEditor() {
       const before = snapshot();
       const pdf = await PDFDocument.load(originalBytes);
       pdf.getPage(page - 1).setSize(width, height);
+      setPageSizes(current => ({ ...current, [page - 1]: { width, height } }));
       const bytes = await pdf.save();
       setUndoStack((stack) => [...stack.slice(-49), before]); setRedoStack([]);
       setOriginalBytes(bytes); setBoxesByPage((current) => { const next = { ...current }; delete next[page]; return next; }); setThumbnails({}); setDocumentRevision((value) => value + 1); setLoadingPage(true);
@@ -662,7 +713,7 @@ export function EditPdfEditor() {
   }
 
   async function save() {
-    if (!originalBytes || !file) return;
+    if (!originalBytes || !file || !documentValid) return;
     const finalEdits = commitTextEdit();
     const report = analyzeEditorCapabilities(finalEdits, elements, security);
     if (exportMode === "standard" && !report.standardAllowed) {
@@ -705,12 +756,19 @@ export function EditPdfEditor() {
     }
   }
 
-  function resetAll() {
+  async function resetAll() {
     if (!changeCount) return;
     setUndoStack((stack) => [...stack.slice(-49), snapshot()]); setRedoStack([]);
-    setElements([]); setEdits({}); setDocumentRevision(0);
+    setElements([]); setEdits({}); setDocumentRevision(0); setSaved(null);
     setGuidesByPage({});
-    if (sourceBytesRef.current) setOriginalBytes(sourceBytesRef.current);
+    if (sourceBytesRef.current) {
+      const pdf = await openPdf(sourceBytesRef.current);
+      try {
+        const dimensions: Record<number, { width: number; height: number }> = {};
+        for (let index = 0; index < pdf.numPages; index++) { const viewport = (await pdf.getPage(index + 1)).getViewport({ scale: 1 }); dimensions[index] = { width: viewport.width, height: viewport.height }; }
+        setPageCount(pdf.numPages); setPageSizes(dimensions); setOriginalBytes(sourceBytesRef.current);
+      } finally { await pdf.loadingTask.destroy(); }
+    }
     setBoxesByPage({}); setThumbnails({}); setPage(1); setLoadingPage(true);
     setSelectedId(null);
     setActive(null);
@@ -740,7 +798,7 @@ export function EditPdfEditor() {
         const viewport = pdfPage.getViewport({ scale: 1 });
         pages.push({ index, width: viewport.width, height: viewport.height, rotation: viewport.rotation });
       }
-      downloadBlob(encodeProject({ fileName: file.name, bytes: originalBytes, elements: persistedElements, edits, boxesByPage, exportMode, pages, guidesByPage }), `${stem(file.name)}.cvproject`);
+      downloadBlob(encodeProject({ fileName: file.name, bytes: originalBytes, elements, edits, boxesByPage, exportMode, pages, guidesByPage }), `${stem(file.name)}.cvproject`);
     } finally {
       await doc.loadingTask.destroy().catch(() => undefined);
     }
@@ -804,16 +862,24 @@ export function EditPdfEditor() {
     setPrimarySelectedId(next.at(-1)?.id ?? null);
   }
 
-  async function openProject(file: File) {
+  async function openProject(file: Blob) {
     try {
       const { decodeProject } = await import("@/lib/pdf/editor-project");
       const project = await decodeProject(file);
+      const pdf = await openPdf(project.bytes);
+      const dimensions: Record<number, { width: number; height: number }> = {};
+      try {
+        for (let index = 0; index < pdf.numPages; index++) { const viewport = (await pdf.getPage(index + 1)).getViewport({ scale: 1 }); dimensions[index] = { width: viewport.width, height: viewport.height }; }
+        if (project.elements.some(element => element.pageIndex >= pdf.numPages)) throw new Error("Invalid page index");
+        setPageCount(pdf.numPages);
+      } finally { await pdf.loadingTask.destroy(); }
       sourceBytesRef.current = project.bytes;
       setFile(new File([project.bytes as BlobPart], project.fileName, { type: "application/pdf" }));
       setOriginalBytes(project.bytes); setElements(project.elements); setEdits(project.edits); setBoxesByPage(project.boxesByPage);
       setExportMode(project.exportMode);
       setGuidesByPage(project.guidesByPage);
       setDocumentRevision(0);
+      setPageSizes(dimensions); setSize({ width: 0, height: 0 }); setDocumentValid(true); setLoadingPage(true);
       setPage(1); setSelectedId(null); setUndoStack([]); setRedoStack([]); setSaved(null); setThumbnails({}); setError("");
     } catch { toast.error(tr ? "Proje dosyası geçersiz veya desteklenmiyor." : "The project file is invalid or unsupported."); }
   }
@@ -856,16 +922,18 @@ export function EditPdfEditor() {
   });
 
   if (!file) {
-    return <div className="space-y-3"><p className="text-sm text-muted-foreground">{labels.editPdfGuide}</p><FileDrop accept="application/pdf,.pdf" onFiles={onFiles} /><label className="block cursor-pointer text-sm text-primary">{tr ? "Kaydedilmiş proje aç" : "Open saved project"}<input className="block mt-2" type="file" accept=".cvproject" onChange={e => { const f = e.target.files?.[0]; if (f) void openProject(f); }} /></label></div>;
+    return <div className="space-y-3">{recoveryDraft ? <div role="status" className="rounded-lg border p-3 text-sm"><p>{tr ? "Bu tarayıcıda kaydedilmiş bir düzenleme bulundu." : "A saved editing session was found in this browser."}</p><Button variant="outline" onClick={() => { void openProject(recoveryDraft); setRecoveryDraft(null); }}>{tr ? "Düzenlemeye devam et" : "Restore editing session"}</Button><Button variant="ghost" onClick={() => { setRecoveryDraft(null); void import("@/lib/pdf/editor-draft").then(module => module.writeEditorDraft(null)).catch(() => undefined); }}>{tr ? "Taslağı sil" : "Delete draft"}</Button></div> : null}<p className="text-sm text-muted-foreground">{labels.editPdfGuide}</p><FileDrop accept="application/pdf,.pdf" onFiles={onFiles} /><label className="block cursor-pointer text-sm text-primary">{tr ? "Kaydedilmiş proje aç" : "Open saved project"}<input className="block mt-2" type="file" accept=".cvproject" onChange={e => { const f = e.target.files?.[0]; if (f) void openProject(f); }} /></label></div>;
   }
 
   return (
-    <div aria-busy={busy} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <div aria-busy={busy} className="pdf-editor overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      {confirmOpen && <div role="dialog" aria-label={tr ? "Başka PDF aç" : "Open another PDF"} className="border-b bg-muted p-4 text-sm"><p>{tr ? "Değişikliklerini dosya olarak kaydetmeden başka PDF açmak istiyor musun?" : "Open another PDF without saving your changes as a file?"}</p><div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setConfirmOpen(false)}>{tr ? "Vazgeç" : "Cancel"}</Button><Button onClick={openAnotherFile}>{tr ? "Başka dosya seç" : "Choose another file"}</Button></div></div>}
+      {draftFailed && <p role="status" className="p-3 text-sm">{tr ? "Otomatik kayıt yapılamadı. Projeni dosya olarak kaydet." : "Autosave is unavailable. Save your project as a file."}</p>}
       {error && <div role="alert" className="flex flex-wrap items-center gap-3 border-b bg-destructive/5 p-4 text-sm text-destructive"><p>{error}</p><Button variant="outline" onClick={() => { setLoadingPage(true); setRenderVersion(v => v + 1); }}>{tr ? "Yeniden dene" : "Retry"}</Button></div>}
       {saved && <div role="status" className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary/5 p-3 text-sm"><span className="break-all">{tr ? "Son indirilen dosya" : "Last downloaded file"}: {saved.name} · {formatBytes(saved.blob.size)}</span><Button size="sm" variant="outline" onClick={() => downloadBlob(saved.blob, saved.name)}>{tr ? "Tekrar indir" : "Download again"}</Button></div>}
       {busy && <p role="status" className="p-3 text-sm text-primary">{labels.processing}</p>}
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2.5">
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => setFile(null)}><FileUp data-icon="inline-start" />{labels.openAnotherPdf}</Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => { if (changeCount) setConfirmOpen(true); else openAnotherFile(); }}><FileUp data-icon="inline-start" />{labels.openAnotherPdf}</Button>
         <div className="hidden min-w-0 flex-1 sm:block"><p className="truncate text-sm font-medium">{file.name}</p><p className="text-xs text-muted-foreground">{labels.editPdfChanges.replace("{count}", String(changeCount))}</p></div>
         <Button size="icon-sm" variant="ghost" disabled={!undoStack.length} onClick={undo} aria-label={labels.undo}><Undo2 /></Button>
         <Button size="icon-sm" variant="ghost" disabled={!redoStack.length} onClick={redo} aria-label={labels.redo}><Redo2 /></Button>
@@ -881,16 +949,17 @@ export function EditPdfEditor() {
           <option value="standard">{tr ? "Standart · seçilebilir" : "Standard · searchable"}</option>
           <option value="flattened">{tr ? "Piksel eşlemeli · 300 DPI" : "Pixel-perfect · 300 DPI"}</option>
         </select>
-        <Button size="sm" onClick={() => void save()} disabled={busy || loadingPage || (exportMode === "standard" && !capabilities.standardAllowed)}><FileDown data-icon="inline-start" />{labels.downloadReady}</Button>
+        <Button size="sm" onClick={() => void save()} disabled={busy || loadingPage || !documentValid || (exportMode === "standard" && !capabilities.standardAllowed)}><FileDown data-icon="inline-start" />{labels.downloadReady}</Button>
         <Button size="sm" variant="outline" onClick={() => void saveProject()} disabled={busy}>{tr ? "Projeyi kaydet" : "Save project"}</Button>
         <Button size="sm" variant="outline" onClick={() => projectInputRef.current?.click()} disabled={busy}>{tr ? "Proje aç" : "Open project"}</Button>
         <input ref={projectInputRef} hidden type="file" accept=".cvproject" onChange={e => { const f = e.target.files?.[0]; if (f) void openProject(f); e.currentTarget.value = ""; }} />
       </div>
-      {exportMode === "standard" && !capabilities.standardAllowed ? <div role="alert" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"><strong>{tr ? "Standart çıktı güvenle üretilemez." : "Standard export is not safe."}</strong> {tr ? "Piksel eşlemeli modu seçin; bu mod metin seçilebilirliğini, form ve bağlantıları kaldırır." : "Choose pixel-perfect mode; it removes selectable text, forms, and links."}<ul className="mt-1 list-disc pl-5 text-xs">{capabilities.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
-      {exportMode === "flattened" ? <div role="note" className="border-b bg-muted/70 px-4 py-2 text-xs text-muted-foreground">{tr ? "Piksel eşlemeli çıktı görünümü korur; metin seçilebilirliği, bağlantılar, formlar ve dijital imzalar korunmaz." : "Pixel-perfect export preserves appearance; selectable text, links, forms, and digital signatures are not preserved."}</div> : null}
+      {exportMode === "standard" && !capabilities.standardAllowed ? <div role="alert" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"><strong>{tr ? "Standart çıktı güvenle üretilemez." : "Standard export is not safe."}</strong> {tr ? "Görüntü modunu seçin. Değişen sayfalarda seçilebilir metin ve etkileşimli alanlar kaldırılır; diğer sayfalar korunur." : "Choose image mode. Edited pages lose selectable text and interactive fields; other pages are preserved."}<ul className="mt-1 list-disc pl-5 text-xs">{capabilities.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
+      {exportMode === "flattened" ? <div role="note" className="border-b bg-muted/70 px-4 py-2 text-xs text-muted-foreground">{tr ? "Görüntü modu değişen sayfaları görüntüye çevirir. Bu sayfalarda seçilebilir metin, bağlantılar ve formlar korunmaz. Dijital imzalar geçersizleşebilir." : "Image mode rasterizes edited pages. Those pages lose selectable text, links and forms. Digital signatures may be invalidated."}</div> : null}
 
       <div inert={busy} className="grid min-h-[680px] grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)_240px]">
-        <aside className="hidden border-r border-border bg-card lg:block">
+        <aside className={`${mobilePages ? "fixed inset-x-0 bottom-0 z-40 max-h-[70dvh] overflow-y-auto rounded-t-2xl shadow-2xl" : "hidden"} border-r border-border bg-card lg:static lg:block lg:max-h-none lg:rounded-none lg:shadow-none`}>
+          <Button className="m-2 lg:hidden" variant="outline" onClick={() => setMobilePages(false)}>{tr ? "Kapat" : "Close"}</Button>
           <div className="grid grid-cols-2 gap-1 border-b border-border p-2">
             <ToolButton icon={<Type />} label={labels.addText} onClick={addText} />
             <ToolButton icon={<ImagePlus />} label={labels.addImage} onClick={() => imageInputRef.current?.click()} />
@@ -919,6 +988,9 @@ export function EditPdfEditor() {
 
         <section aria-label={tr ? "PDF belgesi" : "PDF document"} className="min-w-0 bg-muted">
           <div className="flex flex-wrap items-center justify-center gap-2 border-b border-border bg-card/90 px-3 py-2 lg:hidden">
+            <Button size="sm" variant={multiSelect ? "default" : "outline"} aria-pressed={multiSelect} onClick={() => setMultiSelect(value => !value)}>{tr ? "Çoklu seçim" : "Multi-select"}</Button>
+            <Button size="sm" variant="outline" onClick={() => { setMobilePages(!mobilePages); setMobileProperties(false); }}>{tr ? "Sayfalar ve araçlar" : "Pages and tools"}</Button>
+            <Button size="sm" variant="outline" onClick={() => { setMobileProperties(!mobileProperties); setMobilePages(false); }}>{tr ? "Özellikler" : "Properties"}</Button>
             <Button size="icon-sm" variant="ghost" aria-label={labels.addText} onClick={addText}><Type /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addImage} onClick={() => imageInputRef.current?.click()}><ImagePlus /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addRectangle} onClick={() => addShape("rectangle")}><Square /></Button>
             <Button size="icon-sm" variant="ghost" aria-label={labels.addCircle} onClick={() => addShape("ellipse")}><Circle /></Button><Button size="icon-sm" variant="ghost" aria-label={labels.addLine} onClick={() => addShape("line")}><Minus /></Button>
             <span className="mx-2 h-5 w-px bg-border" />
@@ -954,14 +1026,14 @@ export function EditPdfEditor() {
                   width={size.width}
                   height={size.height}
                   scale={scale}
-                  elements={pageElements}
+                  onZoom={next => setScale(Math.max(0.2, Math.min(2, next)))} multiSelect={multiSelect} elements={pageElements.filter(element => !element.isPageBackground)}
                   selectedIds={selectedIds}
                   userGuides={guidesByPage[page - 1] ?? { x: [], y: [] }}
                   onSelect={(elementId, additive) => {
                     if (!elementId) { setSelectedId(null); return; }
                     const target = elements.find((element) => element.id === elementId);
                     const groupedIds = target?.groupId ? elements.filter((element) => element.pageIndex === target.pageIndex && element.groupId === target.groupId).map((element) => element.id) : [elementId];
-                    if (!additive) { setSelectedIds(groupedIds); setPrimarySelectedId(elementId); return; }
+                    if (!additive) { setSelectedIds(groupedIds); setPrimarySelectedId(elementId); setMobileProperties(true); setMobilePages(false); return; }
                     setSelectedIds((current) => {
                       const removing = groupedIds.every((id) => current.includes(id));
                       const next = removing ? current.filter((id) => !groupedIds.includes(id)) : [...new Set([...current, ...groupedIds])];
@@ -980,7 +1052,8 @@ export function EditPdfEditor() {
           </div>
         </section>
 
-        <aside className="border-t border-border bg-card p-4 lg:border-l lg:border-t-0">
+        <aside className={`${mobileProperties ? "fixed inset-x-0 bottom-0 z-40 max-h-[48dvh] overflow-y-auto rounded-t-2xl shadow-2xl" : "hidden"} border-t border-border bg-card p-4 lg:static lg:block lg:max-h-none lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none`}>
+          <Button className="mb-2 lg:hidden" variant="outline" onClick={() => setMobileProperties(false)}>{tr ? "Kapat" : "Close"}</Button>
           <div className="flex items-center gap-2"><Layers3 className="size-4" /><p className="text-sm font-semibold">{labels.properties}</p></div>
           {selected ? <PropertiesPanel element={selected} textOverflowing={selected.type === "text" && textLayoutMetrics(selected).requiredHeight > textLayoutMetrics(selected).availableHeight + 0.5} labels={labels} patch={patchSelected} duplicate={duplicateSelected} remove={removeSelected} moveLayer={moveLayer} replaceImage={replaceImage} uploadFont={uploadFont} /> : <div className="mt-10 text-center text-sm leading-relaxed text-muted-foreground"><Layers3 className="mx-auto mb-3 size-8 opacity-40" />{labels.selectLayerHint}</div>}
           <div className="mt-5 border-t pt-4"><h3 className="text-sm font-semibold">{tr ? "Katmanlar" : "Layers"}</h3><div className="mt-2 max-h-64 space-y-1 overflow-auto">

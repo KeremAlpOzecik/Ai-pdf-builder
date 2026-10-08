@@ -7,11 +7,16 @@ const requests = new Map<string, { count: number; resetAt: number }>();
 export function guardAiRequest(request: Request) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (origin && host && new URL(origin).host !== host) {
+  let originHost: string | undefined;
+  try { originHost = origin ? new URL(origin).host : undefined; } catch { return NextResponse.json({ error: "Invalid origin." }, { status: 403 }); }
+  if (originHost && host && originHost !== host) {
     return NextResponse.json({ error: "Cross-origin requests are not allowed." }, { status: 403 });
   }
   const key = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "anonymous";
   const now = Date.now();
+  // Expired entries must not accumulate for the lifetime of a warm server.
+  for (const [client, entry] of requests) if (entry.resetAt <= now) requests.delete(client);
+  if (requests.size >= 10_000 && !requests.has(key)) return NextResponse.json({ error: "Too many requests. Try again shortly." }, { status: 429 });
   const current = requests.get(key);
   if (!current || current.resetAt <= now) {
     requests.set(key, { count: 1, resetAt: now + WINDOW_MS });

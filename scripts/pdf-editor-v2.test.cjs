@@ -6,11 +6,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
-function loadTs(relativePath, dependencies = {}) {
+function loadTs(relativePath, dependencies = {}, browserGlobals = {}) {
   const result = { exports: {} };
   const source = fs.readFileSync(path.join(__dirname, "..", relativePath), "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  vm.runInNewContext(compiled, { exports: result.exports, module: result, require: (name) => dependencies[name] ?? require(name), Blob, TextDecoder, Uint8Array, atob, btoa });
+  vm.runInNewContext(compiled, { exports: result.exports, module: result, require: (name) => dependencies[name] ?? require(name), Blob, TextDecoder, Uint8Array, atob, btoa, ...browserGlobals });
   return result.exports;
 }
 
@@ -69,4 +69,77 @@ test("shared text layout wraps long words and respects box height", () => {
   const { layoutTextLines } = loadTs("src/lib/pdf/text-layout.ts");
   const lines = layoutTextLines("supercalifragilistic test", 5, 20, 10, 1, value => value.length);
   assert.deepEqual(JSON.parse(JSON.stringify(lines)), [{ text: "super", width: 5 }, { text: "calif", width: 5 }]);
+});
+
+test("locking and naming source objects preserve original content", () => {
+  const { changesSourceAppearance, analyzeEditorCapabilities } = loadTs("src/lib/pdf/editor-capabilities.ts");
+  const element = { id: "source", type: "text", pageIndex: 0, sourceBoxId: "box", sourcePristine: true, text: "Name", locked: false, name: "", fontSize: 12 };
+  for (const patch of [{ locked: true }, { name: "Label" }, { groupId: "group" }, { text: "Name" }]) {
+    assert.equal(changesSourceAppearance(element, patch), false);
+    assert.equal(analyzeEditorCapabilities({}, [{ ...element, ...patch }]).standardAllowed, true);
+  }
+  assert.equal(changesSourceAppearance(element, { text: "Changed" }), true);
+  assert.equal(changesSourceAppearance(element, { hidden: true }), true);
+});
+
+test("all bundled font variants include Turkish glyphs and embed in a real PDF", async () => {
+  const { PDFDocument } = require("pdf-lib");
+  const fontkit = require("@pdf-lib/fontkit");
+  const pdf = await PDFDocument.create();
+  pdf.registerFontkit(fontkit);
+  const page = pdf.addPage();
+  let y = 700;
+  for (const variant of ["Regular", "Bold", "Italic", "BoldItalic"]) {
+    const bytes = fs.readFileSync(path.join(__dirname, `../public/fonts/NotoSans-${variant}.ttf`));
+    const face = fontkit.create(bytes);
+    for (const letter of "İıŞşĞğÇçÖöÜü") assert.ok(face.glyphForCodePoint(letter.codePointAt(0)).id > 0, `${variant}: ${letter}`);
+    const font = await pdf.embedFont(bytes, { subset: true });
+    page.drawText("İstanbul Şişli öğrenci", { x: 40, y, font, size: 16 });
+    y -= 25;
+  }
+  const output = await pdf.save();
+  assert.equal((await PDFDocument.load(output)).getPageCount(), 1);
+});
+
+test("image export preserves untouched pages and widgets of shared fields", async () => {
+  const { PDFDocument } = require("pdf-lib");
+  const original = await PDFDocument.create();
+  const pages = [original.addPage([300, 400]), original.addPage([500, 600]), original.addPage([200, 300])];
+  pages.forEach((page, index) => page.drawText(`Original page ${index + 1}`));
+  const form = original.getForm();
+  const shared = form.createTextField("shared");
+  shared.setText("Keep me");
+  shared.addToPage(pages[0]); shared.addToPage(pages[1]);
+  const untouched = form.createTextField("untouched");
+  untouched.setText("Still editable"); untouched.addToPage(pages[2]);
+  const bytes = await original.save();
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9v8AAAAASUVORK5CYII=", "base64");
+  class Layer { add() {} draw() {} }
+  class Stage { add() {} destroy() {} toCanvas() { return { toBlob: callback => callback(new Blob([png])) }; } }
+  const { exportFlattenedScenePdf } = loadTs("src/lib/pdf/konva-flatten-export.ts", {
+    konva: { default: { Stage, Layer, Image: class {}, Text: class {} } },
+    "pdf-lib": { ...require("pdf-lib"), PDFDocument: { load: async input => {
+      const pdf = await PDFDocument.load(input);
+      // pdf-lib validates arrays by realm; normalize the VM harness boundary.
+      const insertPage = pdf.insertPage.bind(pdf);
+      pdf.insertPage = (index, dimensions) => insertPage(index, Array.from(dimensions));
+      return pdf;
+    } } },
+    "./apply-edits": { applyTextEdits: async value => value },
+    "./editor-fonts": { ensureEditorFonts: async () => {} },
+    "./konva-geometry": { konvaFrame: () => ({ width: 30, height: 30 }) },
+    "./pdfjs-client": { openPdf: async () => ({ numPages: 3, getPage: async index => ({ pageNumber: index }), loadingTask: { destroy: async () => {} } }) },
+    "./source-graphics": { renderWithSourceGraphics: async () => ({ canvas: {}, viewport: { width: 300, height: 400 } }) },
+    "./text-layout": { layoutTextLines: () => [] },
+  }, { document: { fonts: { load: async () => {} }, createElement: () => ({ getContext: () => null }) } });
+  const output = await exportFlattenedScenePdf(bytes, [], {}, [{ id: "new", pageIndex: 0, type: "text", text: "Change", fontSize: 12 }], 72);
+  const pdf = await PDFDocument.load(output);
+  assert.deepEqual(pdf.getPages().map(page => page.getSize()), [{ width: 300, height: 400 }, { width: 500, height: 600 }, { width: 200, height: 300 }]);
+  const restored = pdf.getForm();
+  assert.equal(restored.getTextField("untouched").getText(), "Still editable");
+  assert.equal(restored.getTextField("shared").getText(), "Keep me");
+  assert.equal(restored.getTextField("shared").acroField.getWidgets().length, 1);
+  assert.equal(restored.getTextField("shared").acroField.getWidgets()[0].P().toString(), pdf.getPage(1).ref.toString());
+  assert.equal(pdf.getPage(1).ref.toString(), pages[1].ref.toString());
+  assert.equal(pdf.context.lookup(pages[0].ref), undefined, "Removed page objects must not remain hidden in the file");
 });

@@ -76,7 +76,8 @@ export async function renderWithSourceGraphics(page: PDFPageProxy, scale: number
     if (e.type !== "image") return;
     const image = new Image(); image.src = e.dataUrl; await image.decode(); images.set(e.id, image);
   }));
-  await page.render({ canvas, canvasContext: ctx, viewport, operationsFilter: index => {
+  const background = elements.find(e => e.isPageBackground && e.type === "shape" && !e.hidden && e.pageIndex === page.pageNumber - 1);
+  await page.render({ canvas, canvasContext: ctx, viewport, background: background?.type === "shape" ? background.fill : "#ffffff", operationsFilter: index => {
     const e = sources.get(index);
     if (!e) return true;
     if (e.hidden || !drawReplacements) return false;

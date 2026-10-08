@@ -9,6 +9,8 @@ import { konvaFrame } from "@/lib/pdf/konva-geometry";
 import { layoutTextLines } from "@/lib/pdf/text-layout";
 
 type Props = {
+  onZoom?: (scale: number) => void;
+  multiSelect?: boolean;
   width: number;
   height: number;
   scale: number;
@@ -88,10 +90,11 @@ function LoadedText({ element, common, scale }: { element: Extract<PdfCanvasElem
   return <Text {...common} text={text} fontFamily={element.fontFamily} fontSize={fontSize} fontStyle={`${element.bold ? "bold" : ""} ${element.italic ? "italic" : ""}`.trim() || "normal"} fill={element.color} align={element.align} lineHeight={element.lineHeight ?? 1.25} letterSpacing={(element.letterSpacing ?? 0) * scale} wrap="none" />;
 }
 
-export default function PdfSceneStage({ width, height, scale, elements, selectedIds, userGuides, onSelect, onSelectMany, onPatch, onPatchMany }: Props) {
+export default function PdfSceneStage({ onZoom, multiSelect = false, width, height, scale, elements, selectedIds, userGuides, onSelect, onSelectMany, onPatch, onPatchMany }: Props) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const nodes = useRef(new Map<string, Konva.Node>());
   const transformCommit = useRef(false);
+  const pinch = useRef<{ distance: number; scale: number; next: number } | null>(null);
   const marqueeStart = useRef<{ x: number; y: number } | null>(null);
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [guides, setGuides] = useState<{ vertical: boolean; horizontal: boolean }>({ vertical: false, horizontal: false });
@@ -112,8 +115,8 @@ export default function PdfSceneStage({ width, height, scale, elements, selected
       ref: (node: Konva.Node | null) => { if (node) nodes.current.set(element.id, node); else nodes.current.delete(element.id); },
       draggable: !element.locked,
       listening: true,
-      onClick: (event: Konva.KonvaEventObject<MouseEvent>) => { event.cancelBubble = true; onSelect(element.id, event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey); },
-      onTap: (event: Konva.KonvaEventObject<TouchEvent>) => { event.cancelBubble = true; onSelect(element.id); },
+      onClick: (event: Konva.KonvaEventObject<MouseEvent>) => { event.cancelBubble = true; onSelect(element.id, multiSelect || event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey); },
+      onTap: (event: Konva.KonvaEventObject<TouchEvent>) => { event.cancelBubble = true; onSelect(element.id, multiSelect); },
       onDragMove: (event: Konva.KonvaEventObject<DragEvent>) => {
         const node = event.target;
         setGuides({ vertical: Math.abs(node.x() - width / 2) <= 8, horizontal: Math.abs(node.y() - height / 2) <= 8 });
@@ -197,7 +200,21 @@ export default function PdfSceneStage({ width, height, scale, elements, selected
         marqueeStart.current = null;
         setSelectionBox(null);
       }}
-      onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
+      onTouchStart={(event) => {
+        if (event.evt.touches.length === 2) {
+          const [a, b] = Array.from(event.evt.touches);
+          pinch.current = { distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), scale, next: scale };
+          event.evt.preventDefault();
+        } else if (event.target === event.target.getStage()) onSelect(null);
+      }}
+      onTouchMove={(event) => {
+        if (!pinch.current || event.evt.touches.length !== 2) return;
+        const [a, b] = Array.from(event.evt.touches);
+        pinch.current.next = pinch.current.scale * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / Math.max(1, pinch.current.distance);
+        event.evt.preventDefault();
+      }}
+      onTouchEnd={() => { if (pinch.current) { onZoom?.(pinch.current.next); pinch.current = null; } }}
+      onTouchCancel={() => { pinch.current = null; }}>
       <Layer>
         {userGuides.x.map((position, index) => <Line key={`user-x-${index}`} points={[position * width, 0, position * width, height]} stroke="#0ea5e9" strokeWidth={1} dash={[6, 4]} listening={false} />)}
         {userGuides.y.map((position, index) => <Line key={`user-y-${index}`} points={[0, position * height, width, position * height]} stroke="#0ea5e9" strokeWidth={1} dash={[6, 4]} listening={false} />)}

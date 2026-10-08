@@ -233,3 +233,9 @@
  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
  }
 }
+
+@media (max-width: 1023px) {
+  .pdf-editor button { min-width: 44px; min-height: 44px; }
+  .pdf-editor input, .pdf-editor select { min-height: 40px; }
+  .pdf-editor input, .pdf-editor select, .pdf-editor textarea { font-size: 16px; }
+}

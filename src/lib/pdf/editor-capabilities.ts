@@ -22,6 +22,11 @@ export function inspectPdfSecurity(bytes: Uint8Array): PdfSecurityFlags {
   };
 }
 
+/** Editor metadata changes must never erase original PDF content. */
+export function changesSourceAppearance(element: PdfCanvasElement, patch: Partial<PdfCanvasElement>) {
+  return Object.entries(patch).some(([key, value]) => !["name", "locked", "groupId", "allowOverflow"].includes(key) && value !== element[key as keyof PdfCanvasElement]);
+}
+
 export function isSourceElementDirty(element: PdfCanvasElement) {
   return element.sourcePristine !== true && (element.sourceOp !== undefined || element.sourceBoxId !== undefined);
 }
@@ -38,9 +43,9 @@ export function analyzeEditorCapabilities(
   const hasSourceTextChanges = Object.keys(edits).length > 0 || elements.some((element) => element.sourceBoxId && isSourceElementDirty(element));
   const hasSourceGraphicChanges = elements.some((element) => element.sourceOp !== undefined && isSourceElementDirty(element));
   const reasons: string[] = [];
+  if (elements.some(element => element.isPageBackground)) reasons.push("Page background colors require image export to preserve original content above the background.");
   if (hasSourceTextChanges) reasons.push("Existing PDF text was changed. Open-source standard export cannot safely remove the original text stream.");
   if (hasSourceGraphicChanges) reasons.push("An original PDF graphic was changed. Standard export is blocked to prevent silent page rasterization.");
-  if (elements.some((element) => element.type === "text" && (element.bold || element.italic) && /[^\u0000-\u00ff]/.test(element.text))) reasons.push("Styled text contains glyphs outside the embedded font variant. Pixel-perfect export is required to avoid corrupt text extraction.");
   if (elements.some((element) => element.flipX || element.flipY)) reasons.push("Flipped objects currently require pixel-perfect export.");
   if (elements.some((element) => element.type === "text" && (element.letterSpacing ?? 0) !== 0)) reasons.push("Custom letter spacing currently requires pixel-perfect export.");
   if (elements.some((element) => element.type === "text" && Boolean(element.fontDataUrl))) reasons.push("User-uploaded fonts currently require pixel-perfect export.");
@@ -52,7 +57,7 @@ export function analyzeEditorCapabilities(
   const objects = elements.map((element) => {
     const requiresFlatten = isSourceElementDirty(element)
       || Boolean(element.flipX || element.flipY)
-      || (element.type === "text" && (Boolean(element.fontDataUrl) || (element.letterSpacing ?? 0) !== 0 || ((element.bold || element.italic) && /[^\u0000-\u00ff]/.test(element.text))))
+      || (element.type === "text" && (Boolean(element.fontDataUrl) || (element.letterSpacing ?? 0) !== 0))
       || (element.type === "image" && Boolean(element.crop || element.filters))
       || (element.type === "shape" && ((element.cornerRadius ?? 0) > 0 || Boolean(element.dash?.length) || (element.shape === "ellipse" && element.rotation % 180 !== 0)));
     return { id: element.id, pageIndex: element.pageIndex, level: (element.sourcePristine === true ? "native" : requiresFlatten ? "flatten-only" : "overlay-only") as CapabilityLevel };

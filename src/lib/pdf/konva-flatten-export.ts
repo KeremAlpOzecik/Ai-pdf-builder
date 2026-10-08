@@ -1,5 +1,5 @@
 import Konva from "konva";
-import { PDFDocument } from "pdf-lib";
+import { PDFArray, PDFDict, PDFDocument, PDFRef, PDFStream } from "pdf-lib";
 import { applyTextEdits } from "./apply-edits";
 import type { PdfCanvasElement } from "./canvas-types";
 import { ensureEditorFonts } from "./editor-fonts";
@@ -58,10 +58,12 @@ async function addElement(layer: Konva.Layer, element: PdfCanvasElement, width: 
 export async function exportFlattenedScenePdf(original: Uint8Array, boxes: PdfTextBox[], edits: Record<string, string>, elements: PdfCanvasElement[], dpi = 300) {
   const scale = dpi / 72;
   const edited = await applyTextEdits(original, boxes, edits);
-  const sourceElements = elements.filter((element) => element.sourceOp !== undefined);
-  const overlays = elements.filter((element) => element.sourceOp === undefined && !element.hidden && element.sourcePristine !== true);
+  const sourceElements = elements.filter((element) => element.sourceOp !== undefined || element.isPageBackground);
+  const overlays = elements.filter((element) => !element.isPageBackground && !element.hidden && element.sourcePristine !== true);
   const source = await openPdf(edited);
-  const output = await PDFDocument.create();
+  const output = await PDFDocument.load(original);
+  const changedPages = new Set(elements.filter(element => element.sourcePristine !== true).map(element => element.pageIndex));
+  for (const box of boxes) if (Object.hasOwn(edits, box.id)) changedPages.add(box.pageIndex);
   try {
     await ensureEditorFonts();
     await Promise.all([
@@ -71,6 +73,20 @@ export async function exportFlattenedScenePdf(original: Uint8Array, boxes: PdfTe
       document.fonts.load("italic 700 16px 'Noto Sans'"),
     ]);
     for (let pageIndex = 0; pageIndex < source.numPages; pageIndex += 1) {
+      if (!changedPages.has(pageIndex)) continue;
+      const originalPage = output.getPage(pageIndex);
+      // Remove widgets from pages whose contents become an image, preserving fields elsewhere.
+      const form = output.getForm();
+      for (const field of form.getFields()) {
+        const widgets = field.acroField.getWidgets();
+        const affected = widgets.flatMap((widget, index) => {
+          const ref = output.context.getObjectRef(widget.dict);
+          const onPage = widget.P()?.toString() === originalPage.ref.toString() || (ref && originalPage.node.Annots()?.asArray().some(annotation => annotation.toString() === ref.toString()));
+          return onPage ? [index] : [];
+        });
+        if (affected.length === widgets.length && affected.length) form.removeField(field);
+        else for (const index of affected.reverse()) field.acroField.removeWidget(index);
+      }
       const page = await source.getPage(pageIndex + 1);
       const pageSourceElements = sourceElements.filter((element) => element.pageIndex === pageIndex);
       const { canvas: background, viewport } = await renderWithSourceGraphics(page, scale, pageSourceElements, false);
@@ -82,12 +98,32 @@ export async function exportFlattenedScenePdf(original: Uint8Array, boxes: PdfTe
       for (const element of overlays.filter((candidate) => candidate.pageIndex === pageIndex)) await addElement(layer, element, viewport.width, viewport.height, scale);
       layer.draw();
       const png = await output.embedPng(await canvasPng(stage.toCanvas({ pixelRatio: 1 })));
-      const pdfPage = output.addPage([viewport.width / scale, viewport.height / scale]);
+      output.removePage(pageIndex);
+      const pdfPage = output.insertPage(pageIndex, [viewport.width / scale, viewport.height / scale]);
       pdfPage.drawImage(png, { x: 0, y: 0, width: pdfPage.getWidth(), height: pdfPage.getHeight() });
       stage.destroy();
     }
   } finally {
     await source.loadingTask.destroy().catch(() => undefined);
   }
-  return output.save();
+  await output.flush();
+  // pdf-lib otherwise serializes detached page streams too. Keep only objects
+  // reachable from the new document so removed text is not left as orphan data.
+  const reachable = new Set<string>();
+  const visited = new Set<object>();
+  function visit(value: unknown) {
+    if (value instanceof PDFRef) {
+      const key = value.toString();
+      if (reachable.has(key)) return;
+      reachable.add(key); visit(output.context.lookup(value));
+    } else if (value && typeof value === "object" && !visited.has(value)) {
+      visited.add(value);
+      if (value instanceof PDFArray) value.asArray().forEach(visit);
+      else if (value instanceof PDFDict) value.values().forEach(visit);
+      else if (value instanceof PDFStream) visit(value.dict);
+    }
+  }
+  Object.values(output.context.trailerInfo).forEach(visit);
+  for (const [ref] of output.context.enumerateIndirectObjects()) if (!reachable.has(ref.toString())) output.context.delete(ref);
+  return output.save({ updateFieldAppearances: false });
 }

@@ -225,6 +225,14 @@ export function AppHeader() {
           ) : null}
         </div>
       </div>
+      {showStudioActions ? (
+        <p className="mx-auto max-w-[1680px] border-t border-border/50 px-3 py-2 text-xs leading-5 text-muted-foreground sm:px-8">
+          {uiLanguage === "TR"
+            ? "AI isteği gönderdiğinde CV içeriğin sunucumuz üzerinden Google Gemini’ye aktarılır. ATS önerilerinde Gemini çalışmazsa CV içeriği Groq’a da gönderilebilir. Çeviri yalnızca Gemini kullanır. AI kullanmadan CV düzenleyip indirebilirsin."
+            : "When you send an AI request, your CV content is sent through our server to Google Gemini. ATS suggestions may also send your CV content to Groq if Gemini is unavailable. Translation only uses Gemini. You can edit and download your CV without AI."}
+          {" "}<Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{uiLanguage === "TR" ? "Veri paylaşımı ayrıntıları" : "Data sharing details"}</Link>
+        </p>
+      ) : null}
     </header>
   );
 }

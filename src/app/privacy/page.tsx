@@ -32,6 +32,16 @@ export default function PrivacyPage() {
           <p className="leading-7 text-muted-foreground">AI özelliğini kullanarak bu aktarımı başlatmış olursun. Kimlik numarası, banka bilgisi, sağlık bilgisi veya paylaşmak istemediğin başka hassas verileri yükleme.</p>
         </section>
         <section className="space-y-3">
+          <h2 className="text-2xl font-semibold">Paylaşılan bilgiler ve işleme amacı</h2>
+          <p className="leading-7 text-muted-foreground">AI ile içe aktarmada seçtiğin dosyadan çıkarılan CV metni veya görsel içeriği; ATS önerilerinde ve çeviride CV alanları paylaşılır. Bunlar ad, iletişim bilgileri, iş deneyimi, eğitim, beceriler ve CV’ye eklediğin diğer bilgileri içerebilir. Amaç seçtiğin içe aktarma, ifade önerisi veya çeviri işlemini gerçekleştirmektir. ATS yedeği yalnızca CV metni/JSON verisini Groq’a aktarır; orijinal PDF dosyanı veya görselini Groq’a göndermez.</p>
+          <p className="leading-7 text-muted-foreground">AI kullanımı isteğe bağlıdır. AI isteği göndermeden manuel düzenleme ve indirme yapabilirsin. Sağlayıcıların altyapıları nedeniyle içerik Türkiye dışında işlenebilir. Bu açıklama, gereken hukuki dayanak veya yurt dışı aktarım yükümlülüklerinin yerine geçtiği anlamına gelmez.</p>
+        </section>
+        <section className="space-y-3">
+          <h2 className="text-2xl font-semibold">Sağlayıcıların veri koşulları</h2>
+          <p className="leading-7 text-muted-foreground">Google’ın ücretsiz Gemini hizmetlerinde gönderilen içerik ve yanıtlar ürün geliştirme amacıyla kullanılabilir ve insan incelemesine konu olabilir; hesap, bölge ve ücretli hizmet koşullarına göre uygulama değişebilir. Groq’un standart çıkarım hizmeti için varsayılan içerik saklamama politikası bulunur; güvenlik incelemesi, etkinleştirilen özellikler ve hesap ayarları istisnalar oluşturabilir. Tüm sağlayıcılar için sıfır saklama veya eğitimde hiç kullanılmama garantisi vermiyoruz.</p>
+          <p className="leading-7 text-muted-foreground"><a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" className="underline">Google Gemini veri kullanım koşulları</a>{" · "}<a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer" className="underline">Groq veri işleme açıklaması</a></p>
+        </section>
+        <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Tarayıcı depolaması</h2>
           <p className="leading-7 text-muted-foreground">Düzenlediğin CV ve PDF editörünün son taslağı, kaldığın yerden devam edebilmen için tarayıcının yerel depolamasında tutulabilir. PDF taslağı aynı tarayıcıda “Düzenlemeye devam et” ile açılabilir, “Taslağı sil” ile kaldırılabilir. Bu veri sunucumuza gönderilmez; ortak veya herkese açık bir cihaz kullanıyorsan işlem bitince veriyi ve indirilen dosyaları temizle.</p>
         </section>

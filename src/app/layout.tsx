@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s | EkoPDF",
   },
   description:
-    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",
+    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Groq API kullanır.",
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: SITE_NAME,
     title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
-    description: "Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",
+    description: "Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Groq API kullanır.",
     locale: "tr_TR",
   },
   twitter: {

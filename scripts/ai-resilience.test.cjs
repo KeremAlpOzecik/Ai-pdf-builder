@@ -5,9 +5,9 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const ts = require("typescript");
 
-function loadGeminiParser() {
+function loadAIParser() {
   const out = {};
-  const source = fs.readFileSync("src/lib/gemini.ts", "utf8");
+  const source = fs.readFileSync("src/lib/ai.ts", "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   vm.runInNewContext(compiled, {
     exports: out,
@@ -17,14 +17,15 @@ function loadGeminiParser() {
       "@/lib/normalize-cv": { normalizeCv: value => value },
       "@/lib/cv-utils": { cvHasContent: () => true },
       "@/lib/groq": {},
+      "@/lib/ai-availability": { AI_ENABLED: false },
     })[name] ?? require(name),
     process,
   });
-  return out.parseGeminiJson;
+  return out.parseAiJson;
 }
 
-test("Gemini JSON parser accepts plain, fenced, and narrated objects", () => {
-  const parse = loadGeminiParser();
+test("AI JSON parser accepts plain, fenced, and narrated objects", () => {
+  const parse = loadAIParser();
   assert.deepEqual(JSON.parse(JSON.stringify(parse('{"targetLanguage":"TR"}'))), { targetLanguage: "TR" });
   assert.deepEqual(JSON.parse(JSON.stringify(parse('```json\n{"targetLanguage":"EN"}\n```'))), { targetLanguage: "EN" });
   assert.deepEqual(JSON.parse(JSON.stringify(parse('Result:\n{"targetLanguage":"TR"}\nDone'))), { targetLanguage: "TR" });

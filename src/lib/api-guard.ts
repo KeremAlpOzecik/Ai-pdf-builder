@@ -1,3 +1,4 @@
+import { AI_ENABLED, AI_PAUSED_TR } from "@/lib/ai-availability";
 import { NextResponse } from "next/server";
 
 const WINDOW_MS = 60_000;
@@ -5,6 +6,7 @@ const MAX_REQUESTS_PER_WINDOW = 30;
 const requests = new Map<string, { count: number; resetAt: number }>();
 
 export function guardAiRequest(request: Request) {
+  if (!AI_ENABLED) return NextResponse.json({ code: "AI_TEMPORARILY_DISABLED", error: AI_PAUSED_TR }, { status: 503 });
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
   let originHost: string | undefined;

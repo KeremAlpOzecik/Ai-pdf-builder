@@ -1,9 +1,10 @@
-import { generateCvJson } from "@/lib/gemini";
+import { generateCvJson } from "@/lib/ai";
 import type { TargetLanguage } from "@/types/cv";
 import { aiErrorResponse, isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest, hasImageSignature } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const ALLOWED = new Set(["image/png", "image/jpeg", "image/webp", "image/jpg"]);
 
@@ -28,9 +29,10 @@ export async function POST(request: Request) {
     if (files.length === 0 || files.some((file) => !(file instanceof File))) {
       return Response.json({ error: "At least one image file is required." }, { status: 400 });
     }
+    if (files.length > 3) return Response.json({ error: responseLanguage === "TR" ? "En fazla 3 CV görseli yükleyebilirsin." : "Upload at most 3 CV images." }, { status: 400 });
     const imageFiles = files as File[];
     const totalBytes = imageFiles.reduce((sum, file) => sum + file.size, 0);
-    if (totalBytes > MAX_AI_UPLOAD_BYTES) {
+    if (totalBytes > 12 * 1024 * 1024) {
       return Response.json({ error: "Uploaded images are too large in total." }, { status: 413 });
     }
     if (imageFiles.some((file) => !ALLOWED.has(file.type))) {

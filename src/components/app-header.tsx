@@ -1,5 +1,7 @@
 "use client";
 
+import { AI_ENABLED, AI_PAUSED_TR, AI_PAUSED_EN } from "@/lib/ai-availability";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -54,7 +56,7 @@ export function AppHeader() {
   const showStudioActions = isStudio && screen === "editor";
 
   async function enhance() {
-    if (!hasCvData) return;
+    if (!AI_ENABLED || !hasCvData) return;
     startAiJob("ats");
     try {
       const res = await fetch("/api/enhance-ats", {
@@ -76,7 +78,7 @@ export function AppHeader() {
   }
 
   async function translate() {
-    if (!hasCvData) return;
+    if (!AI_ENABLED || !hasCvData) return;
     const next = uiLanguage === "EN" ? "TR" : "EN";
     startAiJob("translate");
     try {
@@ -166,7 +168,7 @@ export function AppHeader() {
                 variant="outline"
                 className="hidden h-9 px-3.5 sm:inline-flex"
                 onClick={() => void enhance()}
-                disabled={busy || !hasCvData}
+                disabled={!AI_ENABLED || busy || !hasCvData}
               >
                 {aiJob === "ats" ? (
                   <Loader2 className="animate-spin" />
@@ -199,7 +201,7 @@ export function AppHeader() {
                   <DropdownMenuItem
                     className="sm:hidden"
                     onClick={() => void enhance()}
-                    disabled={busy || !hasCvData}
+                    disabled={!AI_ENABLED || busy || !hasCvData}
                   >
                     {labels.optimizeAts}
                   </DropdownMenuItem>
@@ -210,7 +212,7 @@ export function AppHeader() {
                   >
                     {labels.exportPdf}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => void translate()} disabled={busy || !hasCvData}>
+                  <DropdownMenuItem onClick={() => void translate()} disabled={!AI_ENABLED || busy || !hasCvData}>
                     <Languages />
                     {labels.translate}
                   </DropdownMenuItem>
@@ -227,9 +229,7 @@ export function AppHeader() {
       </div>
       {showStudioActions ? (
         <p className="mx-auto max-w-[1680px] border-t border-border/50 px-3 py-2 text-xs leading-5 text-muted-foreground sm:px-8">
-          {uiLanguage === "TR"
-            ? "AI isteği gönderdiğinde CV içeriğin sunucumuz üzerinden Google Gemini’ye aktarılır. ATS önerilerinde Gemini çalışmazsa CV içeriği Groq’a da gönderilebilir. Çeviri yalnızca Gemini kullanır. AI kullanmadan CV düzenleyip indirebilirsin."
-            : "When you send an AI request, your CV content is sent through our server to Google Gemini. ATS suggestions may also send your CV content to Groq if Gemini is unavailable. Translation only uses Gemini. You can edit and download your CV without AI."}
+          {uiLanguage === "TR" ? AI_PAUSED_TR : AI_PAUSED_EN}
           {" "}<Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{uiLanguage === "TR" ? "Veri paylaşımı ayrıntıları" : "Data sharing details"}</Link>
         </p>
       ) : null}

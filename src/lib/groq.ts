@@ -3,41 +3,38 @@ import { normalizeCv } from "@/lib/normalize-cv";
 import { cvHasContent } from "@/lib/cv-utils";
 import type { CVData, TargetLanguage } from "@/types/cv";
 
-/** Only transient provider failures and unusable output qualify for fallback. */
-export function shouldUseGroq(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const details = error as { status?: number; code?: number; name?: string; message?: string };
-  const status = Number(details.status ?? details.code);
-  if ([400, 401, 403].includes(status)) return false;
-  return status === 429 || status === 404 || status >= 500 ||
-    details.name === "AI_EMPTY_CV_ERROR" || details.name === "SyntaxError" ||
-    /timeout|timed out|deadline|abort|fetch failed|network|resource_exhausted|quota|overloaded|unavailable|empty model response|429|503/i.test(details.message ?? "");
-}
-
-export async function generateGroqAts(options: {
+export async function generateGroqCv(options: {
+  parts?: { inlineData: { mimeType: string; data: string } }[];
   userPrompt: string;
   instruction: string;
   temperature: number;
   targetLanguage: TargetLanguage;
 }): Promise<CVData> {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error("Groq fallback is not configured.");
+  if (!apiKey) {
+    const error = new Error("AI service is not configured.");
+    error.name = "AI_CONFIGURATION_ERROR";
+    throw error;
+  }
+  const images = options.parts ?? [];
+  if (images.length > 3 || images.some(part => !/^image\/(png|jpeg|webp)$/.test(part.inlineData.mimeType))) throw new Error("Unsupported AI image input.");
+  const vision = images.length > 0;
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(40_000),
     cache: "no-store",
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      model: vision ? (process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b") : (process.env.GROQ_MODEL || "openai/gpt-oss-120b"),
       messages: [
-        { role: "system", content: options.instruction },
-        { role: "user", content: options.userPrompt },
+        { role: "system", content: options.instruction + (vision ? `\nReturn JSON matching this schema: ${JSON.stringify(CV_JSON_SCHEMA)}` : "") },
+        { role: "user", content: vision ? [{ type: "text", text: options.userPrompt }, ...images.map(part => ({ type: "image_url", image_url: { url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` } }))] : options.userPrompt },
       ],
       temperature: options.temperature,
       max_completion_tokens: 4096,
-      response_format: {
+      response_format: vision ? { type: "json_object" } : {
         type: "json_schema",
-        json_schema: { name: "ats_cv", strict: true, schema: CV_JSON_SCHEMA },
+        json_schema: { name: "cv", strict: true, schema: CV_JSON_SCHEMA },
       },
     }),
   });

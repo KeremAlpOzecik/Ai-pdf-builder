@@ -1,5 +1,7 @@
 "use client";
 
+import { AI_ENABLED, AI_PAUSED_TR, AI_PAUSED_EN } from "@/lib/ai-availability";
+
 import { ArrowRight, FilePlus2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { HeroPreview } from "@/components/tools/hero-preview";
@@ -25,7 +27,7 @@ export function Welcome() {
   const canContinue = cvHasContent(cv);
 
   async function importFiles(kind: "pdf" | "image", files: File[]) {
-    if (files.length === 0) return;
+    if (!AI_ENABLED || files.length === 0) return;
     startAiJob("parse");
     try {
       const next = await parseCvFile(files, kind, targetLanguage);
@@ -55,9 +57,7 @@ export function Welcome() {
           </p>
       <p className="mt-3 text-sm text-muted-foreground/80">{labels.welcomeNoAccount}</p>
           <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-            {targetLanguage === "TR"
-              ? "AI ile içe aktarma CV içeriğini Google Gemini API’ye gönderir. Hassas bilgi yükleme."
-              : "AI import sends CV content to the Google Gemini API. Do not upload sensitive information."}
+            {targetLanguage === "TR" ? AI_PAUSED_TR : AI_PAUSED_EN}
           </p>
 
       <ol className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
@@ -101,8 +101,8 @@ export function Welcome() {
             {labels.welcomeCreateHint}
           </span>
         </button>
-        <FileDrop accept="application/pdf,.pdf" disabled={busy} onFiles={files => void importFiles("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomePdfHint}</span></FileDrop>
-        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={busy} onFiles={files => void importFiles("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomeImageHint}</span></FileDrop>
+        <FileDrop accept="application/pdf,.pdf" disabled={!AI_ENABLED || busy} onFiles={files => void importFiles("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomePdfHint}</span></FileDrop>
+        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={!AI_ENABLED || busy} onFiles={files => void importFiles("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomeImageHint}</span></FileDrop>
       </div>
       {busy ? (
         <div className="mt-8">

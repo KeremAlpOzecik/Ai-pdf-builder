@@ -1,4 +1,4 @@
-import { generateCvJson } from "@/lib/gemini";
+import { generateCvJson } from "@/lib/ai";
 import { normalizeCv } from "@/lib/normalize-cv";
 import type { CVData, TargetLanguage } from "@/types/cv";
 import { aiErrorResponse, isTargetLanguage, MAX_AI_JSON_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       mode: "enhance",
       targetLanguage,
       temperature: 0.3,
-      userPrompt: `Rewrite this CV for ATS. Keep facts identical. Strengthen action verbs and measurable impact in highlights and summary. targetLanguage=${targetLanguage}.
+      userPrompt: `Rewrite this CV for ATS. Keep facts identical. Strengthen wording only. Preserve the exact level of detail; do not add measurable impact, scale, outcomes, API types or architecture unless explicitly present. targetLanguage=${targetLanguage}.
 
 ${JSON.stringify(source)}`,
     });

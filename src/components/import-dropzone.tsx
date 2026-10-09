@@ -1,5 +1,7 @@
 "use client";
 
+import { AI_ENABLED, AI_PAUSED_TR, AI_PAUSED_EN } from "@/lib/ai-availability";
+
 import { FileDrop } from "@/components/tools/file-drop";
 import { toast } from "sonner";
 import { AiProgress } from "@/components/ai-progress";
@@ -19,7 +21,7 @@ export function ImportDropzones() {
   const busy = aiJob !== null;
 
   async function send(kind: "pdf" | "image", files: File[]) {
-    if (files.length === 0) return;
+    if (!AI_ENABLED || files.length === 0) return;
     startAiJob("parse");
     try {
       const cv = await parseCvFile(files, kind, targetLanguage);
@@ -37,13 +39,11 @@ export function ImportDropzones() {
   return (
     <div className="space-y-5">
       <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-        {targetLanguage === "TR"
-          ? "AI içe aktarma CV metnini veya görselini Google Gemini API’ye gönderir. Hassas bilgileri yükleme."
-          : "AI import sends CV text or images to the Google Gemini API. Do not upload sensitive information."}
+        {targetLanguage === "TR" ? AI_PAUSED_TR : AI_PAUSED_EN}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <FileDrop accept="application/pdf,.pdf" disabled={busy} onFiles={files => void send("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropPdfHint}</span></FileDrop>
-        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={busy} onFiles={files => void send("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropImageHint}</span></FileDrop>
+        <FileDrop accept="application/pdf,.pdf" disabled={!AI_ENABLED || busy} onFiles={files => void send("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropPdfHint}</span></FileDrop>
+        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={!AI_ENABLED || busy} onFiles={files => void send("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.dropImageHint}</span></FileDrop>
       </div>
       <AiProgress />
     </div>

@@ -1,10 +1,11 @@
-import { generateCvJson } from "@/lib/gemini";
+import { generateCvJson } from "@/lib/ai";
 import { normalizeCv } from "@/lib/normalize-cv";
 import type { CVData, TargetLanguage } from "@/types/cv";
 import { aiErrorResponse, isTargetLanguage, MAX_AI_JSON_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   let responseLanguage: TargetLanguage = "EN";

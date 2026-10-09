@@ -13,12 +13,12 @@ export function requestBodyTooLarge(request: Request, maxBytes: number) {
 }
 
 export function safeServerError(error: unknown, fallback: string) {
-  console.error(fallback, error);
+  console.error(fallback, { category: error instanceof Error ? error.name : "UnknownError" });
   return fallback;
 }
 
 export function aiErrorResponse(error: unknown, fallback: string, language: TargetLanguage) {
-  console.error(fallback, error);
+  console.error(fallback, { category: error instanceof Error ? error.name : "UnknownError" });
   const details = error && typeof error === "object" ? error as { name?: unknown; message?: unknown } : {};
   const name = typeof details.name === "string" ? details.name : "";
   const message = typeof details.message === "string" ? details.message.toLowerCase() : "";

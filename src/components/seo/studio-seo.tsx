@@ -56,7 +56,7 @@ export function StudioSeo() {
           {tr ? "Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin." : "Create a clean, selectable resume for application systems such as LinkedIn. Use the PDF editor for small corrections or merge documents into an application package."}
         </p>
         <p className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-          {tr ? <>Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Google Gemini API’ye gönderilir. ATS önerilerinde Gemini kullanılamazsa CV metni yedek sağlayıcı Groq’a gönderilebilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Note: Import, ATS editing, and translation send CV content to the Google Gemini API. ATS suggestions may use Groq as a backup. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}
+          {tr ? <>Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Groq API’ye gönderilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Note: Import, ATS editing, and translation send CV content to the Groq API. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}
         </p>
         <ol className="mt-8 space-y-5">
           {displaySteps.map((step, index) => (

@@ -1,9 +1,10 @@
-import { generateCvJson } from "@/lib/gemini";
+import { generateCvJson } from "@/lib/ai";
 import type { TargetLanguage } from "@/types/cv";
 import { aiErrorResponse, isTargetLanguage, MAX_AI_UPLOAD_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest, hasPdfSignature } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   let responseLanguage: TargetLanguage = "EN";
@@ -65,28 +66,9 @@ export async function POST(request: Request) {
     const prompt =
       `Parse this resume PDF into CVData. Extract only. Do not optimize wording. targetLanguage=${targetLanguage}. Do not invent facts.`;
 
-    const cv =
-      text.length > 20
-        ? await generateCvJson({
-            mode: "parse",
-            targetLanguage,
-            temperature: 0.1,
-            userPrompt: `${prompt}\n\n${text.slice(0, 60000)}`,
-          })
-        : await generateCvJson({
-            mode: "parse",
-            targetLanguage,
-            temperature: 0.1,
-            userPrompt: prompt,
-            parts: [
-              {
-                inlineData: {
-                  mimeType: "application/pdf",
-                  data: buffer.toString("base64"),
-                },
-              },
-            ],
-          });
+    if (text.length <= 20) return Response.json({ code: "PDF_NEEDS_IMAGES", error: "This PDF needs image extraction." }, { status: 422 });
+    const cv = await generateCvJson({ mode: "parse", targetLanguage, temperature: 0.1,
+      userPrompt: `${prompt}\n\n${text.slice(0, 60000)}` });
 
     return Response.json({ cv });
   } catch (error) {

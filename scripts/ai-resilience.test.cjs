@@ -16,6 +16,7 @@ function loadGeminiParser() {
       "@/lib/cv-json-schema": { CV_JSON_SCHEMA: {} },
       "@/lib/normalize-cv": { normalizeCv: value => value },
       "@/lib/cv-utils": { cvHasContent: () => true },
+      "@/lib/groq": {},
     })[name] ?? require(name),
     process,
   });

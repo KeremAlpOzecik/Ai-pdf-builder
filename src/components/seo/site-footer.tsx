@@ -64,7 +64,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 border-t border-border/70 px-5 py-5 text-xs text-muted-foreground sm:px-8">
         <Link className="hover:text-foreground hover:underline" href="/privacy">{tr ? "Gizlilik politikası" : "Privacy policy"}</Link>
         <Link className="hover:text-foreground hover:underline" href="/terms">{tr ? "Kullanım şartları" : "Terms of use"}</Link>
-        <span>{tr ? "Temel PDF araçları tarayıcıda çalışır; AI özellikleri Google Gemini kullanır." : "Core PDF tools run in your browser; AI features use Google Gemini."}</span>
+        <span>{tr ? "Temel PDF araçları tarayıcıda çalışır; AI özellikleri Google Gemini kullanır; ATS önerilerinde Groq yedektir." : "Core PDF tools run in your browser; AI features use Google Gemini; ATS suggestions may use Groq as a backup."}</span>
       </div>
     </footer>
   );

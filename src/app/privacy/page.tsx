@@ -16,19 +16,19 @@ export default function PrivacyPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Şeffaflık</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Gizlilik politikası</h1>
-          <p className="mt-4 text-sm text-muted-foreground">Son güncelleme: 8 Ekim 2026</p>
+          <p className="mt-4 text-sm text-muted-foreground">Son güncelleme: 9 Ekim 2026</p>
         </div>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Kısa özet</h2>
-          <p className="leading-7 text-muted-foreground">EkoPDF, temel PDF işlemlerini tarayıcında yapar. CV içe aktarma, ATS düzenleme ve çeviri gibi AI özellikleri çalışabilmek için içeriği sunucumuz üzerinden Google Gemini API’ye gönderir.</p>
+          <p className="leading-7 text-muted-foreground">EkoPDF, temel PDF işlemlerini tarayıcında yapar. CV içe aktarma, ATS düzenleme ve çeviri gibi AI özellikleri çalışabilmek için içeriği sunucumuz üzerinden Google Gemini API’ye gönderir. ATS önerilerinde Gemini kullanılamazsa Groq yedek sağlayıcı olarak kullanılabilir.</p>
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Tarayıcıda çalışan işlemler</h2>
           <p className="leading-7 text-muted-foreground">Düzenleme, birleştirme, bölme, sıkıştırma, OCR, imza, filigran, döndürme, sayfa numarası ve görsel/PDF dönüşümlerinin temel işlemleri cihazındaki tarayıcıda gerçekleştirilir. Bu işlemlerde seçtiğin dosyanın içeriğini kendi sunucumuza yüklemeyiz.</p>
         </section>
         <section className="space-y-3">
-          <h2 className="text-2xl font-semibold">AI özellikleri ve Google Gemini</h2>
-          <p className="leading-7 text-muted-foreground">PDF veya görselden CV çıkarma, ATS düzenleme ve çeviri sırasında CV metni, CV JSON verisi veya görsel/PDF içeriği Google Gemini API’ye gönderilebilir. Google’ın ilgili API hesabı ve kullanım katmanı için geçerli veri işleme, saklama ve model geliştirme koşulları uygulanır. Ücretsiz API kullanımında içeriklerin ürünleri geliştirmek için kullanılabileceğini varsayarak hassas bilgi yüklememeni öneririz.</p>
+          <h2 className="text-2xl font-semibold">AI özellikleri ve hizmet sağlayıcıları</h2>
+          <p className="leading-7 text-muted-foreground">PDF veya görselden CV çıkarma, ATS düzenleme ve çeviri sırasında CV metni, CV JSON verisi veya görsel/PDF içeriği Google Gemini API’ye gönderilebilir. ATS önerilerinde Gemini yoğunluk, kota veya bağlantı hatası verirse CV JSON verisi Groq API’ye gönderilebilir. Groq, PDF veya görsel içe aktarma için kullanılmaz. Groq’un veri işleme ve saklama koşulları bu yedek işlemlerde geçerlidir. Google’ın ilgili API hesabı ve kullanım katmanı için geçerli veri işleme, saklama ve model geliştirme koşulları uygulanır. Ücretsiz API kullanımında içeriklerin ürünleri geliştirmek için kullanılabileceğini varsayarak hassas bilgi yüklememeni öneririz.</p>
           <p className="leading-7 text-muted-foreground">AI özelliğini kullanarak bu aktarımı başlatmış olursun. Kimlik numarası, banka bilgisi, sağlık bilgisi veya paylaşmak istemediğin başka hassas verileri yükleme.</p>
         </section>
         <section className="space-y-3">

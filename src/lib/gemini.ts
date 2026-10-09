@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { CV_JSON_SCHEMA } from "@/lib/cv-json-schema";
 import { normalizeCv } from "@/lib/normalize-cv";
 import { cvHasContent } from "@/lib/cv-utils";
+import { generateGroqAts, shouldUseGroq } from "@/lib/groq";
 import type { CVData, TargetLanguage } from "@/types/cv";
 
 export type GeminiMode = "parse" | "enhance" | "translate";
@@ -72,6 +73,7 @@ export async function generateCvJson(options: {
   targetLanguage: TargetLanguage;
 }): Promise<CVData> {
   const ai = getGeminiClient();
+  const groqEnabled = options.mode === "enhance" && !!process.env.GROQ_API_KEY && !options.parts?.some(part => "inlineData" in part);
   const parts: ContentPart[] = options.parts?.length
     ? options.parts
     : [{ text: options.userPrompt }];
@@ -91,7 +93,7 @@ export async function generateCvJson(options: {
           temperature: options.temperature,
           responseMimeType: "application/json",
           responseJsonSchema: CV_JSON_SCHEMA,
-          httpOptions: { timeout: REQUEST_TIMEOUT_MS },
+          httpOptions: { timeout: groqEnabled ? 10_000 : REQUEST_TIMEOUT_MS },
         },
       });
       const text = response.text;
@@ -106,6 +108,16 @@ export async function generateCvJson(options: {
       return cv;
     } catch (error) {
       lastError = error;
+      if (groqEnabled) {
+        if (!shouldUseGroq(error)) throw error;
+        // A shared Gemini quota/availability failure should not delay the independent backup.
+        return generateGroqAts({
+          userPrompt: options.userPrompt,
+          instruction: INSTRUCTIONS.enhance,
+          temperature: options.temperature,
+          targetLanguage: options.targetLanguage,
+        });
+      }
     }
   }
   throw lastError instanceof Error

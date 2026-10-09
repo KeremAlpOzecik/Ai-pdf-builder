@@ -5,6 +5,7 @@ import { aiErrorResponse, isTargetLanguage, MAX_AI_JSON_BYTES, requestBodyTooLar
 import { guardAiRequest } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   let responseLanguage: TargetLanguage = "EN";

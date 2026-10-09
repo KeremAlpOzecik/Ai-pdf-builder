@@ -30,7 +30,7 @@ export default function OpenGraphImage() {
             fontWeight: 600,
           }}
         >
-          AI CV Builder
+          EkoPDF
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 64, lineHeight: 1.1, fontWeight: 700, maxWidth: 920 }}>

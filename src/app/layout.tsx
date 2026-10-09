@@ -28,8 +28,8 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | AI CV Builder",
-    template: "%s | AI CV Builder",
+    default: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | EkoPDF",
+    template: "%s | EkoPDF",
   },
   description:
     "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Gemini API kullanır.",

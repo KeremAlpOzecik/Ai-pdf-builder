@@ -33,8 +33,8 @@ export function Providers({ children }: { children: ReactNode }) {
     const studio = pathname === "/studio";
     const tools = pathname.startsWith("/tools/");
     document.title = lang === "TR"
-      ? studio ? "ATS CV Stüdyosu | AI CV Builder" : tools ? "Ücretsiz PDF araçları | AI CV Builder" : "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | AI CV Builder"
-      : studio ? "ATS CV Studio | AI CV Builder" : tools ? "Free PDF tools | AI CV Builder" : "Edit PDFs and build an ATS-ready CV for free | AI CV Builder";
+      ? studio ? "ATS CV Stüdyosu | EkoPDF" : tools ? "Ücretsiz PDF araçları | EkoPDF" : "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | EkoPDF"
+      : studio ? "ATS CV Studio | EkoPDF" : tools ? "Free PDF tools | EkoPDF" : "Edit PDFs and build an ATS-ready CV for free | EkoPDF";
     const description = lang === "TR"
       ? "PDF düzenleme ve ATS uyumlu CV oluşturma araçları."
       : "PDF editing tools and an ATS-ready CV builder.";

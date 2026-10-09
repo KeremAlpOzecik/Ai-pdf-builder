@@ -130,7 +130,7 @@ export function AppHeader() {
         <Link href="/" className="flex min-w-0 items-center gap-3 text-left">
           <BrandMark className="size-9 shrink-0 text-primary" />
           <div className="min-w-0">
-            <p className="font-heading truncate text-[1.05rem] leading-none tracking-tight">
+            <p className="font-heading truncate text-[1.35rem] font-semibold leading-none tracking-tight">
               {labels.appName}
             </p>
             <p className="mt-1 hidden truncate text-[11px] text-muted-foreground sm:block">

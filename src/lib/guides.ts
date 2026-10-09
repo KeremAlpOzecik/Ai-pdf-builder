@@ -18,7 +18,7 @@ export const guides: Guide[] = [
       "Birden fazla PDF dosyasını tek belgede birleştirmek için tarayıcıda çalışan ücretsiz yöntem. Hesap yok, dosya cihazında kalır.",
     keywords: ["ücretsiz PDF birleştirme", "PDF birleştir", "online PDF merger"],
     intro:
-      "İş başvurusunda diploma, sertifika ve CV’yi ayrı ayrı göndermek yerine tek PDF’te toplamak hem senin hem de işverenin işini kolaylaştırır. AI CV Builder’daki birleştirme aracı dosyaları tarayıcıda sıralar ve tek belge üretir; dosyaların bir sunucuya yüklenmesi gerekmez.",
+      "İş başvurusunda diploma, sertifika ve CV’yi ayrı ayrı göndermek yerine tek PDF’te toplamak hem senin hem de işverenin işini kolaylaştırır. EkoPDF’deki birleştirme aracı dosyaları tarayıcıda sıralar ve tek belge üretir; dosyaların bir sunucuya yüklenmesi gerekmez.",
     sections: [
       {
         title: "Hangi dosyaları tek PDF yapmak mantıklı?",
@@ -54,7 +54,7 @@ export const guides: Guide[] = [
       "PDF metnini düzenlenebilir Word dosyasına aktarmanın ücretsiz yolu. CV ve dilekçe metnini DOCX olarak indir.",
     keywords: ["PDF Word çevirme", "PDF to Word ücretsiz", "PDF DOCX"],
     intro:
-      "PDF içindeki cümleyi değiştirmek istediğinde belgeyi Word’e almak çoğu zaman en hızlı yoldur. AI CV Builder, PDF’teki metni düzenlenebilir bir DOCX dosyasına aktarır. Karmaşık çok kolonlu tasarımlar sadeleşebilir; asıl kazanç, metni kopyalayıp yeniden yazmak zorunda kalmamandır.",
+      "PDF içindeki cümleyi değiştirmek istediğinde belgeyi Word’e almak çoğu zaman en hızlı yoldur. EkoPDF, PDF’teki metni düzenlenebilir bir DOCX dosyasına aktarır. Karmaşık çok kolonlu tasarımlar sadeleşebilir; asıl kazanç, metni kopyalayıp yeniden yazmak zorunda kalmamandır.",
     sections: [
       {
         title: "Ne zaman PDF’i Word’e çevirmelisin?",
@@ -126,7 +126,7 @@ export const guides: Guide[] = [
       "Mevcut CV PDF’inde yazım hatasını düzeltmek, tarihi güncellemek ve yeni dosya indirmek için tarayıcıda PDF düzenleme.",
     keywords: ["CV PDF düzenle", "PDF yazı değiştir", "özgeçmiş PDF editör"],
     intro:
-      "CV’ni sıfırdan yazmak yerine mevcut PDF’teki bir tarihi veya yazım hatasını düzeltmek çoğu zaman yeter. Dijital, seçilebilir metin içeren dosyalarda satıra tıklayıp değiştirebilirsin. AI CV Builder düzenleyici bunu tarayıcıda, hesap açmadan yapar.",
+      "CV’ni sıfırdan yazmak yerine mevcut PDF’teki bir tarihi veya yazım hatasını düzeltmek çoğu zaman yeter. Dijital, seçilebilir metin içeren dosyalarda satıra tıklayıp değiştirebilirsin. EkoPDF düzenleyici bunu tarayıcıda, hesap açmadan yapar.",
     sections: [
       {
         title: "Dijital PDF ile taranmış PDF farkı",

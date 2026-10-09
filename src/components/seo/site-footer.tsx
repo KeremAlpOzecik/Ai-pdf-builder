@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import { guides } from "@/lib/guides";
 import { toolSeo } from "@/lib/tool-seo";
 import { useDisplayLanguage, useLabels } from "@/components/providers";
@@ -20,7 +21,7 @@ export function SiteFooter() {
     <footer className="border-t border-border/70 bg-background">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-3">
         <div>
-          <p className="font-heading text-base tracking-tight">AI CV Builder</p>
+          <Link href="/" className="inline-flex items-center gap-3"><BrandMark className="size-10 shrink-0" /><span className="font-heading text-2xl font-semibold tracking-tight">EkoPDF</span></Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
             {tr ? "Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda ATS uyumlu hale getir. Hesap yok." : "Edit PDFs, run OCR, add signatures or watermarks, convert Word files, and compress documents for free. Build an ATS-ready resume in your browser. No account required."}
           </p>

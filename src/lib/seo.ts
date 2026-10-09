@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/site-url";
 
-export const SITE_NAME = "AI CV Builder";
+export const SITE_NAME = "EkoPDF";
 export const SEO_UPDATED_AT = "2026-09-08";
 
 // Next.js replaces nested metadata instead of merging it. Every page must
@@ -26,7 +26,7 @@ export function pageMetadata({
     alt: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
   };
   return {
-    title,
+    title: { absolute: `${title} | ${SITE_NAME}` },
     description,
     keywords,
     alternates: { canonical: path },

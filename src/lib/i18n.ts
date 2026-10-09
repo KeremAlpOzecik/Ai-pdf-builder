@@ -2,7 +2,7 @@ import type { TargetLanguage } from "@/types/cv";
 
 export const copy = {
   EN: {
-    appName: "AI CV Builder",
+    appName: "EkoPDF",
     tagline: "Upload a PDF, tweak it, download. No account.",
     edit: "Edit",
     preview: "Preview",
@@ -247,7 +247,7 @@ export const copy = {
     toolFailed: "Could not process the file. Try another one.",
   },
   TR: {
-    appName: "AI CV Oluşturucu",
+    appName: "EkoPDF",
     tagline: "PDF yükle, düzenle, indir. Hesap yok.",
     edit: "Düzenle",
     preview: "Önizleme",

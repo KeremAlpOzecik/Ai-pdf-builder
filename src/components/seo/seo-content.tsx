@@ -81,7 +81,7 @@ export function SeoContent() {
           </div>
           <div className="space-y-5 text-base leading-7 text-muted-foreground">
             <p>
-              AI CV Builder; PDF düzenleme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
+              EkoPDF; PDF düzenleme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
               sayfa numarası sunar. Bu araçları ücretsiz ve hesap açmadan kullanabilirsin:
               dosyanı seç, işlemi çalıştır, sonucu indir. Bu temel araçlarda dosyan sunucuya yüklenmez.
             </p>

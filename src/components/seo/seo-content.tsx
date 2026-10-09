@@ -7,6 +7,18 @@ import { useDisplayLanguage } from "@/components/providers";
 
 const faq = [
   {
+    question: "PDF ücretsiz nasıl düzenlenir?",
+    answer: "EkoPDF’de PDF düzenle aracını aç ve dosyanı seç. Yazı veya görsel ekleyebilir, hatalı alanı kapatıp üzerine doğru yazıyı yerleştirebilirsin. Sonucu PDF indir ile al. Hesap gerekmez; işlem tarayıcıda yapılır. Mevcut metin doğrudan değişmez ve kapatılan sayfalar görüntüye dönüşür.",
+  },
+  {
+    question: "PDF dosyaları ücretsiz nasıl birleştirilir?",
+    answer: "EkoPDF’nin PDF birleştir aracında dosyalarını seç, sıralarını düzenle ve birleştirme işlemini çalıştır. Birleştirilmiş PDF’i indir. Hesap gerekmez; dosyalar tarayıcıda işlenir.",
+  },
+  {
+    question: "PDF ücretsiz Word’e nasıl çevrilir?",
+    answer: "EkoPDF’nin PDF → Word aracına metin içeren PDF’ini yükle ve dönüştürme işlemini çalıştır. Metni düzenlenebilir DOCX olarak indir. Karmaşık sayfa düzenleri sadeleşebilir; taranmış görüntülerde önce OCR gerekebilir. Orijinal tasarımın birebir korunması garanti edilmez.",
+  },
+  {
     question: "PDF işlemleri ücretsiz mi?",
     answer:
       "Evet. PDF düzenleme, Word-PDF, birleştirme, OCR, imza, filigran, döndürme, sayfa numarası ve sıkıştırma ücretsiz. Günlük limit yok; hesap açmazsın.",

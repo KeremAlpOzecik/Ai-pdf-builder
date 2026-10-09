@@ -74,6 +74,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    alternateName: "EkoPdf",
     name: SITE_NAME,
     url: siteUrl,
     inLanguage: "tr-TR",
@@ -82,6 +84,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   const appSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": `${siteUrl}/#application`,
+    image: `${siteUrl}/ekopdf-mark.svg`,
+    isAccessibleForFree: true,
     name: SITE_NAME,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",

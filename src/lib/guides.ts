@@ -58,7 +58,7 @@ export const guides: Guide[] = [
     sections: [
       {
         title: "Ne zaman PDF’i Word’e çevirmelisin?",
-        body: "Tarih, unvan veya tek bir cümle değişecekse ve elinde kaynak DOCX yoksa dönüştürmek işe yarar. Uzun dilekçe, transkript açıklaması veya eski bir CV metnini güncellemek için de kullanılır. Hedefin yalnızca bir yazım hatasını düzeltmekse PDF düzenleyici daha az bozar: metne tıklayıp yerinde değiştirirsin, sayfa düzeni korunur.",
+        body: "Tarih, unvan veya tek bir cümle değişecekse ve elinde kaynak DOCX yoksa dönüştürmek işe yarar. Uzun dilekçe, transkript açıklaması veya eski bir CV metnini güncellemek için de kullanılır. Küçük bir görsel düzeltme için PDF düzenleyicide hatalı alanı kapatıp üzerine yeni yazı ekleyebilirsin. Bu işlem eski metni doğrudan değiştirmez; kapatılan sayfa görüntüye dönüşür. Seçilebilir metin ve ATS uyumu gerekiyorsa kaynak DOCX’i düzenle veya CV stüdyosunda yeniden oluştur.",
       },
       {
         title: "PDF’i yükle ve metni çıkar",
@@ -126,11 +126,11 @@ export const guides: Guide[] = [
       "Mevcut CV PDF’inde yazım hatasını düzeltmek, tarihi güncellemek ve yeni dosya indirmek için tarayıcıda PDF düzenleme.",
     keywords: ["CV PDF düzenle", "PDF yazı değiştir", "özgeçmiş PDF editör"],
     intro:
-      "CV’ni sıfırdan yazmak yerine mevcut PDF’teki bir tarihi veya yazım hatasını düzeltmek çoğu zaman yeter. Dijital, seçilebilir metin içeren dosyalarda satıra tıklayıp değiştirebilirsin. EkoPDF düzenleyici bunu tarayıcıda, hesap açmadan yapar.",
+      "CV’ni sıfırdan yazmak yerine mevcut PDF’teki bir tarihi veya yazım hatasını düzeltmek çoğu zaman yeter. EkoPDF düzenleyicide hatalı alanı kapatıp üzerine doğru metni ekleyebilirsin. Araç mevcut yazıyı doğrudan değiştirmez; işlemler tarayıcıda, hesap açmadan yapılır.",
     sections: [
       {
         title: "Dijital PDF ile taranmış PDF farkı",
-        body: "Word’den veya LinkedIn’den dışa aktarılmış PDF’te tıklanabilir metin vardır. Telefonda fotoğrafı çekilmiş veya tarayıcıdan «görüntü olarak kaydet» yapılmış dosyada yoktur. Tıklayınca satır seçilmiyorsa bu bir tarama PDF’sidir. O durumda stüdyoya ekran görüntüsü yükleyip alanları yeniden kurmak daha temiz sonuç verir.",
+        body: "Dijital PDF’lerde seçilebilir metin bulunabilir; taranmış PDF’lerde sayfa bir görüntüdür. EkoPDF her iki türün üzerine yazı ve görsel ekleyebilir. Alan kapatılan sayfa indirilirken görüntüye dönüşür; o sayfanın metin seçimi, bağlantıları ve form alanları korunmaz. ATS için seçilebilir metin gerekiyorsa CV stüdyosunda yeniden oluştur.",
       },
       {
         title: "Yazım hatası ve iletişim satırı",
@@ -146,7 +146,7 @@ export const guides: Guide[] = [
       },
       {
         title: "Düzenlemek yetmeyince stüdyo",
-        body: "Birden fazla bölüm değişecekse, dili TR’den EN’e çevireceksen veya ATS için maddeleri yeniden yazacaksan PDF tıklama düzenleyicisi yetmez. Stüdyoda içe aktar, canlı önizlemede çalış, PDF veya Word indir. Büyük revizyonu satır tıklayarak yapmak hem yavaş hem hata üretme ihtimali yüksek.",
+        body: "Birden fazla bölüm değişecekse, dili TR’den EN’e çevireceksen veya ATS için maddeleri yeniden yazacaksan alan kapatma ve yazı ekleme yöntemi yetmez. Stüdyoda içe aktar, canlı önizlemede çalış, PDF veya Word indir. Büyük revizyonlarda kaynak belgeyi düzenlemek veya CV’yi yeniden oluşturmak daha uygundur.",
       },
     ],
     related: [
@@ -206,7 +206,7 @@ export const guides: Guide[] = [
       },
       {
         title: "Küçük düzeltme: PDF’te tıkla",
-        body: "Tek bir tarih, telefon veya yazım hatası varsa PDF düzenleyiciyi aç, satıra tıkla, değiştir, indir. LinkedIn PDF’i dijital olduğu için metin genellikle tıklanır. Taşma olursa cümleyi kısalt. Bu yol, «LinkedIn CV PDF düzenle ücretsiz» aramasındaki asıl ihtiyacı karşılar: hesap açmadan, dosyayı baştan yazmadan düzeltmek.",
+        body: "Tek bir tarih, telefon veya yazım hatası varsa PDF düzenleyiciyi aç, Alanı kapat ile eski yazının üstünü ört, Yazı ekle ile doğru metni yerleştir ve indir. Yeni yazının konumunu ve boyutunu kontrol et. Kapatılan sayfa görüntüye dönüşeceği için ATS başvurularında CV stüdyosunda yeniden oluşturmayı tercih et. Bu yol, «LinkedIn CV PDF düzenle ücretsiz» aramasındaki asıl ihtiyacı karşılar: hesap açmadan, dosyayı baştan yazmadan düzeltmek.",
       },
       {
         title: "Büyük düzeltme: stüdyoya aktar",
@@ -231,18 +231,18 @@ export const guides: Guide[] = [
     eyebrow: "Hızlı düzeltme",
     title: "CV PDF yazım hatası nasıl düzeltilir?",
     description:
-      "Özgeçmiş PDF’indeki yazım hatasını tarayıcıda tıklayıp düzelt. Yeni CV yazmadan güncel dosya indir.",
+      "Özgeçmiş PDF’indeki hatalı alanı kapatıp üzerine doğru yazıyı ekle. Görsel düzeltme ve ATS için yeniden oluşturma seçeneklerini öğren.",
     keywords: ["cv pdf yazım hatası düzelt", "pdf yazım hatası", "özgeçmiş yanlış yazım"],
     intro:
-      "Başvuruyu göndermeden bir dakika kala fark edilen «yonetici», eksik harf veya yanlış e-posta, tüm dosyayı yeniden tasarlamanı gerektirmez. Seçilebilir metinli CV PDF’sinde satıra tıklayıp hatayı yerinde düzeltebilirsin.",
+      "Başvuruyu göndermeden bir dakika kala fark edilen «yonetici», eksik harf veya yanlış e-posta, tüm dosyayı yeniden tasarlamanı gerektirmez. PDF düzenleyicide eski yazının üstünü kapatıp üzerine doğru yazıyı ekleyebilirsin. Bu görsel bir düzeltmedir; eski metin doğrudan düzenlenmez.",
     sections: [
       {
         title: "Önce hatanın türünü ayır",
         body: "Tek kelime / e-posta / telefon ise PDF düzenleyici yeter. Paragrafın anlamı bozuksa, fiil zamanı tutmuyorsa veya bölüm eksikse stüdyoya geç. Yazım denetimi Word’de kalmış eski bir dosyayı PDF yaptıysan hata PDF’e gömülüdür; kaynak DOCX varsa orada düzeltip yeniden PDF almak daha temiz olabilir.",
       },
       {
-        title: "Satıra tıkla, kısa tut, taşırma",
-        body: "Düzenleyicide hatalı satırı seç, doğrusunu yaz. Uzun kelime aynı puntoda sığmazsa punto büyütmeye çalışma; kelimeyi veya cümleyi kısalt. Türkçe i/İ ayrımına dikkat et. Şirket ve üniversite adlarını resmi yazımdan kopyala. Değişen satırın altındaki tarih veya madde kaydıysa bir sonraki satırı da kontrol et.",
+        title: "Alanı kapat, doğru yazıyı ekle",
+        body: "Alanı kapat aracını hatalı yazının üzerine yerleştir ve boyutlandır. Ardından Yazı ekle aracına doğru metni yazıp aynı bölgeye taşı. Uzun kelime aynı puntoda sığmazsa punto büyütmeye çalışma; kelimeyi veya cümleyi kısalt. Türkçe i/İ ayrımına dikkat et. Şirket ve üniversite adlarını resmi yazımdan kopyala. Değişen satırın altındaki tarih veya madde kaydıysa bir sonraki satırı da kontrol et.",
       },
       {
         title: "İletişim hataları öncelikli",
@@ -253,8 +253,8 @@ export const guides: Guide[] = [
         body: "Yeni PDF indir, eski dosyayı «eski» klasörüne al. Kariyer portalı aynı ada izin verip önbellek tutuyorsa dosya adına tarih ekle. E-postayla gönderdiysen düzeltilmiş kopyayı kısa bir notla tekrar at; «güncel CV, yazım düzeltmesi» yeter. Aynı ilana üç dosya yağdırma.",
       },
       {
-        title: "Tarama PDF’sinde yazım düzelmez",
-        body: "Tıklanınca imleç çıkmıyorsa metin yoktur. Fotoğraf CV’sini düzenlemeye çalışma. Stüdyoya ekran görüntüsü yükle, alanları oluştur, doğru metinle yeni PDF al. Bu, «üzerine yazı yazılmış tarama»den hem daha okunaklı hem ATS için daha güvenlidir.",
+        title: "Taranmış PDF ve ATS uyumu",
+        body: "Taranmış PDF’ye de alan kapatma ve yeni yazı ekleme uygulanabilir. Ancak görsel düzeltme, sayfayı seçilebilir metinli bir CV’ye dönüştürmez. ATS başvurusu için CV stüdyosuna PDF veya ekran görüntüsü aktar, alanları kontrol et ve doğru metinle yeni CV oluştur.",
       },
     ],
     related: [

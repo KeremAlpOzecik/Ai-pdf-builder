@@ -14,7 +14,7 @@ const faq = [
   {
     question: "LinkedIn CV PDF’ini ücretsiz düzenleyebilir miyim?",
     answer:
-      "Evet. LinkedIn’den indirdiğin dijital PDF’i düzenleyiciye yükle, yazım hatası veya tarihi yerinde değiştir. Büyük revizyon için stüdyoya aktar.",
+      "Evet. PDF’i yükle, hatalı alanı kapatıp üzerine doğru yazıyı ekle. Eski metin doğrudan değişmez; kapatılan sayfa görüntüye dönüşür. ATS uyumu veya büyük revizyon için CV stüdyosunda yeniden oluştur.",
   },
   {
     question: "ATS uyumlu CV’yi Türkçe ve ücretsiz hazırlar mısınız?",
@@ -24,7 +24,7 @@ const faq = [
   {
     question: "CV PDF yazım hatasını nasıl düzeltirim?",
     answer:
-      "Seçilebilir metinli dosyada satıra tıklayıp düzelt, yeni PDF indir. Taranmış görüntüyse stüdyoya ekran görüntüsü yükle.",
+      "Alanı kapat ile eski yazının üstünü ört, Yazı ekle ile doğrusunu yerleştir ve PDF’i indir. Bu yöntem dijital ve taranmış PDF’lerde görsel düzeltme yapar. ATS için CV stüdyosunda seçilebilir metinli bir CV oluştur.",
   },
   {
     question: "Dosyalarım sunucuya yükleniyor mu?",

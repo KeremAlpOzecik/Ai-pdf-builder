@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         </section>
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold">Haklar ve iletişim</h2>
-          <p className="leading-7 text-muted-foreground">Bu metin uygulamanın mevcut veri akışını açıklar; resmi hukuki danışmanlık değildir. Veri talepleri veya politika soruları için uygulama sahibine ulaşılabilir. Politika değişirse bu sayfadaki güncelleme tarihi yenilenir.</p>
+          <p className="leading-7 text-muted-foreground">EkoPDF, Kerem Alp Ozecik tarafından bireysel olarak işletilir. Kişisel verilerinin işlenmesi, paylaşımı, düzeltilmesi veya silinmesiyle ilgili sorular ve talepler için <a href="mailto:keremalpozecik@gmail.com" className="underline">keremalpozecik@gmail.com</a> adresine yazabilirsin. Üçüncü taraf sağlayıcılardaki kayıtların silinmesi, ilgili sağlayıcının koşullarına ve yasal saklama yükümlülüklerine tabidir. Politika değişirse bu sayfadaki güncelleme tarihi yenilenir.</p>
         </section>
       </article>
     </main>

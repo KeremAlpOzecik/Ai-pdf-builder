@@ -34,10 +34,10 @@ export function Providers({ children }: { children: ReactNode }) {
     const tools = pathname.startsWith("/tools/");
     document.title = lang === "TR"
       ? studio ? "CV Stüdyosu | EkoPDF" : tools ? "Ücretsiz PDF araçları | EkoPDF" : "Ücretsiz PDF düzenle ve sade CV oluştur | EkoPDF"
-      : studio ? "CV Studio | EkoPDF" : tools ? "Free PDF tools | EkoPDF" : "Edit PDFs and build an simple CV for free | EkoPDF";
+      : studio ? "CV Studio | EkoPDF" : tools ? "Free PDF tools | EkoPDF" : "Edit PDFs and build a simple CV for free | EkoPDF";
     const description = lang === "TR"
       ? "PDF düzenleme ve sade CV oluşturma araçları."
-      : "PDF editing tools and an simple CV builder.";
+      : "PDF editing tools and a simple CV builder.";
     document.querySelector('meta[name="description"]')?.setAttribute("content", description);
   }, [lang, pathname]);
 

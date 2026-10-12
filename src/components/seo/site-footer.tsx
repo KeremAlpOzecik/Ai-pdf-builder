@@ -23,7 +23,7 @@ export function SiteFooter() {
         <div>
           <Link href="/" className="inline-flex items-center gap-3"><BrandMark className="size-10 shrink-0" /><span className="font-heading text-2xl font-semibold tracking-tight">EkoPDF</span></Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-            {tr ? "Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda sade bir şablonla yeniden oluştur. Hesap yok." : "Edit PDFs, run OCR, add signatures or watermarks, convert Word files, and compress documents for free. Build an simple resume in your browser. No account required."}
+            {tr ? "Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda sade bir şablonla yeniden oluştur. Hesap yok." : "Edit PDFs, run OCR, add signatures or watermarks, convert Word files, and compress documents for free. Build a simple resume in your browser. No account required."}
           </p>
         </div>
         <div>

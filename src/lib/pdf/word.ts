@@ -66,8 +66,9 @@ export async function docxToPdf(file: File) {
   return pdf.save();
 }
 
-export async function pdfToDocx(file: File) {
+export async function pdfToDocx(file: File, onProgress?: (percent: number) => void) {
   const doc = await openPdf(await file.arrayBuffer());
+  try {
   const children: Paragraph[] = [];
   for (let i = 1; i <= doc.numPages; i += 1) {
     const page = await doc.getPage(i);
@@ -85,9 +86,13 @@ export async function pdfToDocx(file: File) {
         children: [new TextRun({ text: text || `Page ${i}`, size: 22 })],
       }),
     );
+    page.cleanup();
+    onProgress?.(i / doc.numPages * 90);
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
   const word = new Document({
     sections: [{ children: children.length ? children : [new Paragraph("")] }],
   });
-  return Packer.toBlob(word);
+  return await Packer.toBlob(word);
+  } finally { await doc.loadingTask.destroy(); }
 }

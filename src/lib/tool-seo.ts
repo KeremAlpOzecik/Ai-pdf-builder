@@ -13,6 +13,15 @@ export type ToolSeo = {
 };
 
 export const toolSeo: Record<ToolSlug, ToolSeo> = {
+  "compare-pdf": {
+    slug: "compare-pdf", title: "PDF Belge Karşılaştırma | EkoPDF", h1: "PDF belgelerini karşılaştır",
+    description: "Eski ve yeni PDF belgesinin metin farklarını yan yana incele. Eklemeler ve silmeler renklerle vurgulanır; işlem tarayıcında yapılır.",
+    keywords: ["PDF karşılaştırma", "PDF diff", "belge karşılaştırma"],
+    summary: "İki PDF’nin metin katmanını karşılaştır, eklenen ve silinen kelimeleri senkronize kaydırma ile incele. Görsel ve biçim farkları karşılaştırılmaz.",
+    steps: [{ title: "İki PDF seç", body: "Eski ve yeni belgeyi ayrı alanlara bırak. Dosya başına en fazla 25 MB desteklenir." }, { title: "Karşılaştır", body: "Metin farkları hesaplanır. Metinsiz sayfalar için OCR uyarısı gösterilir." }, { title: "Farkları incele", body: "Silinen metinler pembe, eklenen metinler yeşil gösterilir. Özet kelime sayılarını belirtir." }],
+    faqs: [{ question: "Taranmış PDF karşılaştırılabilir mi?", answer: "Metin katmanı bulunmayan sayfalar doğrudan karşılaştırılamaz. Önce OCR ile metin katmanı oluşturun." }, { question: "Dosyalar sunucuya gönderilir mi?", answer: "Hayır. Karşılaştırma tarayıcıda çalışır." }],
+    related: [{ label: "PDF OCR", href: "/tools/ocr" }, { label: "PDF düzenle", href: "/tools/edit-pdf" }],
+  },
   "compress-image": {
     slug: "compress-image", title: "Fotoğrafı 100, 200 veya 500 KB altına küçült", h1: "Fotoğraf boyutunu hedef KB sınırına küçült",
     description: "JPEG, PNG ve WebP fotoğrafları 100 KB, 200 KB, 500 KB veya özel sınıra küçült. Cihazda işlem, ücretsiz önizleme ve JPEG/WebP indirme.",

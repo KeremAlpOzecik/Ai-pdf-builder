@@ -27,6 +27,7 @@ export function ToolsHub() {
   const labels = useLabels();
   const tr = useDisplayLanguage() === "TR";
   const cards = [
+    { href: "/tools/compare-pdf", icon: Files, title: tr ? "PDF karşılaştır" : "Compare PDFs", hint: tr ? "İki belgedeki eklenen ve silinen metinleri yan yana görün." : "View added and removed text side by side." },
     { href: "/tools/compress-image", icon: FileImage, title: tr ? "Fotoğraf boyutunu küçült" : "Compress photo", hint: tr ? "100, 200, 500 KB veya özel sınır; cihazında çalışır." : "100, 200, 500 KB or a custom limit; works on your device." },
     {
       href: "/studio",

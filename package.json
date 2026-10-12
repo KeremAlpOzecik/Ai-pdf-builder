@@ -22,8 +22,10 @@
     "@vercel/analytics": "^2.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "diff": "^9.0.0",
     "docx": "^9.7.1",
     "framer-motion": "^13.1.1",
+    "jszip": "^3.10.2",
     "konva": "^10.5.0",
     "lucide-react": "^1.38.0",
     "mammoth": "^1.12.2",
@@ -53,8 +55,8 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.4.0",
+    "shadcn": "^4.19.1",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "shadcn": "^4.19.1"
+    "typescript": "^5"
   }
 }

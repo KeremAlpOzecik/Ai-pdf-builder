@@ -39,3 +39,15 @@ Open [http://localhost:3000](http://localhost:3000). The form and preview work w
 - Language switcher for UI labels
 - Mobile Edit / Preview tabs
 - PDF and Word export (single-column ATS layout)
+
+## Client-side batch PDF tools
+
+Compression, splitting, PDF → Word, Word → PDF and PDF → JPG share `src/components/tools/batch-tool.tsx`. It accepts 15+ files, appends uploads, supports drag ordering and keyboard-accessible move buttons, and keeps status, progress, errors and output blobs associated with stable file IDs. Inputs are limited to 25 MB each and 500 MB per group.
+
+`src/lib/batch-queue.ts` runs one task by default and allows up to three concurrent tasks. Task failures are isolated. Completed files are retained when retrying failed/waiting files; changing processing settings invalidates prior results. Navigation aborts pending tasks and suppresses late UI updates; already active library calls finish and release their resources.
+
+`src/lib/pdf/batch-split.ts` loads each source once for all its output pages. Range selection is validated against each document individually, rather than clamped to another file's page count. Visual page selection remains available for a single file. Compression and PDF conversion report page progress and release PDF.js workers and canvases after use. DOCX conversion reports its initial processing stage and completion because the converter has no granular progress API.
+
+`src/lib/batch-zip.ts` loads JSZip on demand, sanitizes filenames and resolves case-insensitive collisions with numbered suffixes. ZIP export becomes available after all tasks finish, includes successful outputs and preserves list order. STORE compression avoids recompressing PDF/JPEG/DOCX data. Input and output blobs and the generated ZIP still occupy browser memory; use smaller groups for documents producing large raster outputs.
+
+Run `npm test` for queue, ZIP, split and existing regressions. After `npm run build`, run `npx playwright test e2e/batch-processing.spec.ts --project=chromium --project=mobile-chromium` for upload, reorder, error isolation, actual conversions and ZIP download checks.

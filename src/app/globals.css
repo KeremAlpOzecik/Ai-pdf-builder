@@ -246,3 +246,6 @@
 .tool-workspace:has(.simple-pdf-editor) > p,
 .tool-workspace:has(.simple-pdf-editor) > div:not(:last-child) { display: none; }
 .tool-workspace:has(.simple-pdf-editor) > div:last-child { margin-top: 0; }
+/* Text diff marks retain contrast in both light and dark themes. */
+.pdf-diff-removed { background: #ffe4e6; color: #881337; border-bottom: 2px solid #fb7185; border-radius: 2px; }
+.pdf-diff-added { background: #dcfce7; color: #14532d; border-bottom: 2px solid #4ade80; border-radius: 2px; }

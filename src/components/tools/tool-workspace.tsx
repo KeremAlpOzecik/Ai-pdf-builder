@@ -7,6 +7,8 @@ import Link from "next/link";
 import { FileList, formatBytes } from "@/components/tools/file-list";
 import { PagePicker } from "@/components/tools/page-picker";
 const EditPdfEditor = dynamic(() => import("@/components/tools/edit-pdf-editor").then(m => m.EditPdfEditor));
+const PdfCompare = dynamic(() => import("@/components/tools/pdf-compare").then(m => m.PdfCompare));
+const BatchTool = dynamic(() => import("@/components/tools/batch-tool").then(m => m.BatchTool));
 import { FileDrop } from "@/components/tools/file-drop";
 import { PdfPlacementPreview } from "@/components/tools/pdf-placement-preview";
 import { PdfRotatePreview } from "@/components/tools/pdf-rotate-preview";
@@ -37,6 +39,7 @@ import { MAX_FILE_BYTES, isToolSlug, type ToolSlug } from "@/lib/tools";
 
 function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
   const map = {
+    "compare-pdf": ["PDF belge karşılaştırma", "İki PDF arasındaki metin farklarını görün."],
     "compress-image": ["Fotoğraf boyutunu küçült", "100, 200, 500 KB veya özel sınır seç; sonucu önizle ve indir."],
     "edit-pdf": [labels.toolEditPdf, labels.toolEditPdfHint],
     "word-to-pdf": [labels.toolWordPdf, labels.toolWordPdfHint],
@@ -55,7 +58,7 @@ function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
 }
 
 function actionCopy(
-  slug: Exclude<ToolSlug, "edit-pdf">,
+  slug: Exclude<ToolSlug, "edit-pdf" | "compare-pdf">,
   labels: (typeof copy)[keyof typeof copy],
   jpgMode: "to-pdf" | "to-jpg",
 ) {
@@ -87,7 +90,9 @@ export function ToolWorkspace({ slug }: { slug: string }) {
       </ToolShell>
     );
   }
+  if (slug === "compare-pdf") return <ToolShell wide title={tr ? "PDF Belge Karşılaştırma" : "Compare PDF documents"} hint={tr ? "Eski ve yeni belgeyi seçin; metin farklarını yan yana inceleyin." : "Choose old and new documents and inspect text differences side by side."}><PdfCompare /></ToolShell>;
   const [title, hint] = copyFor(slug, labels);
+  if (slug === "compress" || slug === "split" || slug === "pdf-to-word" || slug === "word-to-pdf") return <ToolShell title={title} hint={hint}><BatchTool key={slug} slug={slug} /></ToolShell>;
   return (
     <ToolShell
       title={title}
@@ -105,7 +110,7 @@ export function ToolWorkspace({ slug }: { slug: string }) {
   );
 }
 
-function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
+function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf" | "compare-pdf"> }) {
   const labels = useLabels();
   const tr = useDisplayLanguage() === "TR";
   const [results, setResults] = useState<{ blob: Blob; name: string }[]>([]);
@@ -138,6 +143,8 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf"> }) {
     if (slug === "jpg-pdf" && jpgMode === "to-pdf") return "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
     return "application/pdf,.pdf";
   }, [slug, jpgMode]);
+
+  if (slug === "jpg-pdf" && jpgMode === "to-jpg") return <div className="space-y-4"><div className="flex gap-2"><Button variant="outline" onClick={() => setJpgMode("to-pdf")}>{labels.jpgToPdf}</Button><Button>{labels.pdfToJpg}</Button></div><BatchTool slug="pdf-to-jpg" /></div>;
 
   const multiple =
     slug === "merge" ||

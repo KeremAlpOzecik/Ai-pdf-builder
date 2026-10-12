@@ -64,15 +64,18 @@ const COMPRESS_QUALITY: Record<CompressQuality, number> = {
   keep: 0.82,
 };
 
-export async function compressPdf(file: File, quality: CompressQuality | number = "balanced") {
+export async function compressPdf(file: File, quality: CompressQuality | number = "balanced", onProgress?: (percent: number) => void) {
   const jpegQuality = typeof quality === "number" ? quality : COMPRESS_QUALITY[quality];
   const data = await file.arrayBuffer();
   const doc = await openPdf(data);
+  try {
   const out = await PDFDocument.create();
   for (let i = 1; i <= doc.numPages; i += 1) {
     const page = await doc.getPage(i);
     const canvas = await renderPageToCanvas(page, 1.35);
-    const jpeg = await canvasToJpeg(canvas, jpegQuality);
+    let jpeg: Uint8Array;
+    try { jpeg = await canvasToJpeg(canvas, jpegQuality); }
+    finally { canvas.width = 0; canvas.height = 0; page.cleanup(); }
     const image = await out.embedJpg(jpeg);
     const pdfPage = out.addPage([image.width, image.height]);
     pdfPage.drawImage(image, {
@@ -81,8 +84,11 @@ export async function compressPdf(file: File, quality: CompressQuality | number 
       width: image.width,
       height: image.height,
     });
+    onProgress?.(i / doc.numPages * 95);
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
-  return out.save();
+  return await out.save();
+  } finally { await doc.loadingTask.destroy(); }
 }
 
 export async function imagesToPdf(files: File[]) {
@@ -105,23 +111,28 @@ export async function imagesToPdf(files: File[]) {
   return out.save();
 }
 
-export async function pdfToJpegs(file: File, quality = 0.9) {
+export async function pdfToJpegs(file: File, quality = 0.9, onProgress?: (percent: number) => void) {
   const doc = await openPdf(await file.arrayBuffer());
+  try {
   const blobs: { blob: Blob; name: string }[] = [];
   const stem = file.name.replace(/\.[^.]+$/, "") || "page";
   for (let i = 1; i <= doc.numPages; i += 1) {
     const page = await doc.getPage(i);
     const canvas = await renderPageToCanvas(page, 1.6);
-    const blob = await new Promise<Blob>((resolve, reject) => {
+    let blob: Blob;
+    try { blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (next) => (next ? resolve(next) : reject(new Error("JPEG failed"))),
         "image/jpeg",
         quality,
       );
-    });
+    }); } finally { canvas.width = 0; canvas.height = 0; page.cleanup(); }
     blobs.push({ blob, name: `${stem}-${i}.jpg` });
+    onProgress?.(i / doc.numPages * 100);
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
   return blobs;
+  } finally { await doc.loadingTask.destroy(); }
 }
 
 async function canvasToJpeg(canvas: HTMLCanvasElement, quality: number) {

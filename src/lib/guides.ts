@@ -11,13 +11,44 @@ export type Guide = {
 
 export const guides: Guide[] = [
   {
+    slug: "pdf-belge-karsilastirma", eyebrow: "PDF karşılaştırma rehberi",
+    title: "İki PDF belgesi arasındaki metin farkları nasıl bulunur?",
+    description: "Eski ve yeni PDF’nin metin farklarını yan yana karşılaştır. Eklenen ve silinen kelimeleri, OCR gereksinimini ve karşılaştırmanın sınırlarını öğren.",
+    keywords: ["PDF karşılaştırma", "PDF diff", "iki belge arasındaki fark"],
+    intro: "EkoPDF’nin belge karşılaştırma aracı iki PDF’nin metin katmanını cihazında çıkarır ve kelime farklarını gösterir. Sözleşme taslağı, dilekçe veya CV’nin eski ve yeni sürümünü inceleyebilirsin. Görselleri, imzaları, renkleri veya sayfa tasarımını karşılaştırmaz.",
+    sections: [
+      { title: "Eski ve yeni belgeyi ayrı seç", body: "Eski Belge ve Yeni Belge alanlarına birer PDF bırak. Her dosya en fazla 25 MB olmalı. Metin çıkarma için belge başına 300 sayfa ve 300.000 karakter sınırı vardır; çok fazla fark içeren belgeler işlem sınırına takılabilir." },
+      { title: "Renkleri ve özeti doğru oku", body: "Belgeleri karşılaştır düğmesine bas. Eski taraftaki silinen veya değişen metin pembe, yeni taraftaki eklenen metin yeşil gösterilir. Özetin değişiklik sayısı bitişik fark bloklarını; ekleme ve silme sayıları boşlukla ayrılan kelimeleri sayar. Bir kelimenin değiştirilmesi hem silme hem ekleme olarak görünür." },
+      { title: "İki metni birlikte kaydır", body: "İki görünümün kaydırması oransal olarak senkronizedir. Görünüm çıkarılan metni gösterir; orijinal PDF sayfasının görsel kopyası değildir. Çok sütunlu belgelerde metin okuma sırası değişebilir; kritik bir farkı kaynak PDF’de de kontrol et." },
+      { title: "Taranmış veya metinsiz sayfaları kontrol et", body: "Metin katmanı olmayan sayfalar boş veya taranmış olabilir. Araç bu sayfaları uyarıda listeler; görüntü içeriğini karşılaştıramaz. Önce OCR aracında aranabilir bir kopya oluştur. OCR yalnızca ilk 20 sayfayı işler ve tanıma hataları üretebilir; uzun taramaları önce böl ve çıkan metni kontrol et." },
+      { title: "Belgeler cihazında işlenir", body: "PDF metni karşılaştırma için bir sunucuya gönderilmez. Sonuç, insan incelemesini kolaylaştıran bir metin farkıdır; hukuki değerlendirme veya belgenin görsel olarak aynı olduğuna ilişkin doğrulama yerine geçmez." },
+    ],
+    related: [{ label: "PDF belgelerini karşılaştır", href: "/tools/compare-pdf" }, { label: "Taranmış PDF’ye OCR uygula", href: "/tools/ocr" }, { label: "Uzun PDF’yi böl", href: "/tools/split" }],
+  },
+  {
+    slug: "toplu-pdf-isleme", eyebrow: "Toplu işlem rehberi",
+    title: "Birden fazla PDF nasıl işlenir ve sonuçlar ZIP olarak indirilir?",
+    description: "15+ dosyayla toplu PDF sıkıştırma, bölme ve dönüştürme. Kuyruk, dosya durumları, hata sonrası tekrar deneme ve ZIP indirme adımlarını öğren.",
+    keywords: ["toplu PDF işleme", "batch PDF", "PDF ZIP indirme", "birden fazla PDF sıkıştırma"],
+    intro: "EkoPDF’de PDF sıkıştırma, bölme, PDF → Word, Word → PDF ve PDF → JPG araçları ayrı ayrı dosyaları aynı işlem kuyruğunda işler. Dosyalar cihazında kalır. PDF birleştirme farklı bir işlemdir: birden fazla kaynağı tek PDF yapar; batch işlem ise her kaynak için ayrı çıktılar üretir.",
+    sections: [
+      { title: "Dosyaları ekle ve sırala", body: "15 veya daha fazla dosyayı birlikte seçebilir, sürükleyip bırakabilir ve listeye yeni dosyalar ekleyebilirsin. Dosya başına 25 MB ve grup toplamında 500 MB giriş sınırı vardır. Kartlar dosya adını ve boyutunu gösterir; sürükleme veya ok düğmeleriyle sırayı değiştir. İstenmeyen dosyaları kaldır veya Tümünü Temizle ile listeyi boşalt." },
+      { title: "Belleğe uygun işlem sayısı seç", body: "Varsayılan kuyruk dosyaları sırayla işler. Aynı anda işlenecek dosya sayısını 1–3 arasında seçebilirsin. Mobil cihazlarda ve görüntü ağırlıklı belgelerde 1 daha az bellek kullanır. Giriş boyutu sınırı, çıktıların küçük kalacağını garanti etmez; çok sayıda yüksek çözünürlüklü sayfa için daha küçük gruplar kullan." },
+      { title: "Her dosyanın durumunu izle", body: "Bekliyor, İşleniyor, Tamamlandı ve Hata durumları dosya kartında görünür. Sayfa bazlı işlemler ilerlemeyi günceller. Word → PDF dönüştürücüsü ayrıntılı ilerleme sunmadığı için başlangıç aşaması ve tamamlanma gösterilir. Bozuk veya parola korumalı bir dosya hata verse bile diğer dosyalar devam eder." },
+      { title: "Bölme aralığını her belge için düşün", body: "Bölmede aynı sayfa aralığı bütün PDF’lere uygulanır. Örneğin 2–5 aralığı üç sayfalı bir PDF’de hata verir; araç aralığı sessizce daraltmaz. Her sayfayı ayrı dosya yapmak da mümkündür. Görsel sayfa seçimi yalnızca tek dosya seçildiğinde kullanılabilir." },
+      { title: "Tamamlanan sonuçları ZIP indir", body: "Bütün dosyaların işlemi bittiğinde Tümünü ZIP Olarak İndir kullanılabilir. ZIP yalnızca tamamlanan çıktıları içerir; aynı adlı dosyalara numara eklenir. Hatalı dosyaları tamamlanan sonuçları kaybetmeden yeniden dene. İşlem ayarlarını değiştirirsen sonuçlar sıfırlanır ve yeni ayarlarla yeniden işlenir." },
+      { title: "Sonuçların sınırlarını kontrol et", body: "PDF sıkıştırma sayfaları görüntüye dönüştürür ve seçilebilir metni kaybettirir; boyut bazen artabilir. PDF → Word çıkarılan metni aktarır, orijinal tasarımı birebir korumaz. Word → PDF’de biçim sadeleşebilir. PDF → JPG’nin çıktısı metin katmanı olmayan görüntüdür. Orijinalleri sakla ve göndermeden önce çıktıları açarak kontrol et." },
+    ],
+    related: [{ label: "Toplu PDF sıkıştır", href: "/tools/compress" }, { label: "Toplu PDF böl", href: "/tools/split" }, { label: "PDF’leri Word’e çevir", href: "/tools/pdf-to-word" }, { label: "Word dosyalarını PDF yap", href: "/tools/word-to-pdf" }, { label: "PDF’leri JPG yap", href: "/tools/jpg-pdf" }],
+  },
+  {
     slug: "fotograf-200-kb-kucultme", eyebrow: "Fotoğraf rehberi",
     title: "Fotoğrafı 100, 200 veya 500 KB altına nasıl küçültürsün?",
     description: "Başvuru formu için JPEG, PNG ve WebP görsellerini hedef dosya boyutuna cihazında küçült; kaliteyi ve piksel ölçülerini kontrol et.",
     keywords: ["fotoğraf 200 KB küçültme", "JPG 100 KB", "fotoğraf boyut küçültme"],
     intro: "Bir form fotoğrafın fazla büyük olduğunu söylüyorsa önce izin verilen dosya biçimini, boyut sınırını ve piksel ölçülerini oku. EkoPDF dosyayı cihazında JPEG veya WebP’ye dönüştürerek üst boyut sınırına indirmeyi dener. Kalite kaybı olabilir; sınırın altında olmak başvurunun kabulünü garanti etmez.",
     sections: [
-      {title:"Boyut sınırını seç",body:"Fotoğraf boyutunu küçült aracında görselini seç. 100, 200 veya 500 KB düğmelerini kullanabilir, 10–25000 KB arasında özel sınır girebilirsin. Burada 1 KB, 1000 bayttır."},
+      {title:"Fotoğrafı seç ve boyut sınırını belirle",body:"Fotoğraf boyutunu küçült aracında görselini seç. Seçildi göstergesi, dosya adı ve orijinal önizleme fotoğrafın hazır olduğunu gösterir; içerik sunucuya yüklenmez. 100, 200 veya 500 KB düğmelerini kullanabilir, 10–25000 KB arasında özel sınır girebilirsin. Burada 1 KB, 1000 bayttır. İşlemi Fotoğrafı küçült düğmesiyle başlat."},
       {title:"Dosya biçimini kontrol et",body:"Form JPG/JPEG istiyorsa JPEG seç. WebP’yi ancak form destekliyorsa kullan. PNG giriş olarak kabul edilir; PNG çıktısı sunulmaz. Saydam bölgeler JPEG’de beyaz olur ve animasyon sabit kareye dönüşür."},
       {title:"Ölçüleri ve okunabilirliği kontrol et",body:"Araç önce sıkıştırma kalitesini, gerekirse piksel ölçülerini azaltır. Sonuç boyutunu ve önizlemedeki ayrıntıları kontrol et. Formun minimum genişlik/yükseklik koşulunu karşılamıyorsa daha büyük boyut sınırı dene veya uygun başka bir fotoğraf seç."},
       {title:"Yeni dosyayı indir",body:"İndirilen kopyayı başvuru formunda kullan. Orijinalini sakla. Fotoğraf içeriği sunucuya gönderilmez; barındırma ve analitik teknik verileri ayrıca işleyebilir."},

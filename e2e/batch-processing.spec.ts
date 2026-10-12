@@ -40,6 +40,7 @@ test("17 files: append, reorder, isolated error, duplicate-safe ZIP and clear", 
     { name: "broken.pdf", mimeType: "application/pdf", buffer: Buffer.from("invalid pdf") },
   ]);
   await expect(queue.locator(":scope > li")).toHaveCount(17);
+  await expect(page.locator('button[data-has-files="true"]')).toContainText('17 dosya seçildi');
   await queue.getByRole("button", { name: "document-2.pdf: Yukarı taşı" }).click();
   await expect(queue.locator(":scope > li").nth(1)).toContainText("document-2.pdf");
   await page.getByLabel("Aynı anda işlenecek dosya sayısı").selectOption("3");
@@ -59,6 +60,7 @@ test("17 files: append, reorder, isolated error, duplicate-safe ZIP and clear", 
   expect(pdf.getPageCount()).toBe(1);
   await page.getByRole("button", { name: "Tümünü Temizle", exact: true }).click();
   await expect(queue).toHaveCount(0);
+  await expect(page.locator('button[data-has-files="true"]')).toHaveCount(0);
 });
 
 for (const slug of ["compress", "pdf-to-word", "jpg-pdf"] as const) {

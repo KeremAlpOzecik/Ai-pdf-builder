@@ -19,6 +19,7 @@ export function pageMetadata({
   keywords?: string[];
   type?: "website" | "article";
 }): Metadata {
+  const pageTitle = title.replace(/(?:\s*\|\s*EkoPDF)+$/iu, "").trim();
   const image = {
     url: absoluteUrl("/opengraph-image"),
     width: 1200,
@@ -26,12 +27,12 @@ export function pageMetadata({
     alt: "Ücretsiz PDF düzenle ve sade CV oluştur",
   };
   return {
-    title: { absolute: `${title} | ${SITE_NAME}` },
+    title: { absolute: `${pageTitle} | ${SITE_NAME}` },
     description,
     keywords,
     alternates: { canonical: path },
     openGraph: {
-      title,
+      title: pageTitle,
       description,
       url: path,
       type,
@@ -41,7 +42,7 @@ export function pageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: pageTitle,
       description,
       images: [image],
     },

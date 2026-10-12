@@ -1,4 +1,5 @@
 import type { ToolSlug } from "@/lib/tools";
+import { englishToolSeo } from "@/lib/tool-seo-en";
 
 export type ToolSeo = {
   slug: ToolSlug;
@@ -12,15 +13,20 @@ export type ToolSeo = {
   related: Array<{ label: string; href: string }>;
 };
 
+const batchFaqs = [
+  { question: "Birden fazla dosyayı aynı anda işleyebilir miyim?", answer: "Evet. 15 veya daha fazla dosya seçebilir, listeye yeni dosyalar ekleyebilir ve sıralarını değiştirebilirsin. Dosya başına 25 MB, grubun toplamı için 500 MB giriş sınırı vardır. Varsayılan olarak dosyalar sırayla işlenir; aynı anda 1–3 dosya seçilebilir." },
+  { question: "Tüm sonuçları tek ZIP olarak indirebilir miyim?", answer: "Evet. İşlemler bittikten sonra Tümünü ZIP Olarak İndir düğmesi tamamlanan çıktıları paketler. Aynı adlı dosyalar numaralandırılır. Hatalı dosyalar ZIP’e dahil edilmez; diğer sonuçları kaybetmeden yeniden deneyebilirsin." },
+];
+
 export const toolSeo: Record<ToolSlug, ToolSeo> = {
   "compare-pdf": {
-    slug: "compare-pdf", title: "PDF Belge Karşılaştırma | EkoPDF", h1: "PDF belgelerini karşılaştır",
+    slug: "compare-pdf", title: "PDF belge karşılaştırma | Metin farklarını gör", h1: "PDF belgelerini karşılaştır",
     description: "Eski ve yeni PDF belgesinin metin farklarını yan yana incele. Eklemeler ve silmeler renklerle vurgulanır; işlem tarayıcında yapılır.",
     keywords: ["PDF karşılaştırma", "PDF diff", "belge karşılaştırma"],
     summary: "İki PDF’nin metin katmanını karşılaştır, eklenen ve silinen kelimeleri senkronize kaydırma ile incele. Görsel ve biçim farkları karşılaştırılmaz.",
     steps: [{ title: "İki PDF seç", body: "Eski ve yeni belgeyi ayrı alanlara bırak. Dosya başına en fazla 25 MB desteklenir." }, { title: "Karşılaştır", body: "Metin farkları hesaplanır. Metinsiz sayfalar için OCR uyarısı gösterilir." }, { title: "Farkları incele", body: "Silinen metinler pembe, eklenen metinler yeşil gösterilir. Özet kelime sayılarını belirtir." }],
-    faqs: [{ question: "Taranmış PDF karşılaştırılabilir mi?", answer: "Metin katmanı bulunmayan sayfalar doğrudan karşılaştırılamaz. Önce OCR ile metin katmanı oluşturun." }, { question: "Dosyalar sunucuya gönderilir mi?", answer: "Hayır. Karşılaştırma tarayıcıda çalışır." }],
-    related: [{ label: "PDF OCR", href: "/tools/ocr" }, { label: "PDF düzenle", href: "/tools/edit-pdf" }],
+    faqs: [{ question: "Taranmış PDF karşılaştırılabilir mi?", answer: "Metin katmanı bulunmayan sayfalar doğrudan karşılaştırılamaz. Önce OCR ile metin katmanı oluşturun ve tanıma sonucunu kontrol edin." }, { question: "Karşılaştırma sınırları nelerdir?", answer: "Her PDF için 25 MB, 300 sayfa ve 300.000 çıkarılan karakter sınırı vardır. Çok fazla fark içeren belgeler de işlem sınırına takılabilir." }, { question: "Özetteki değişiklik sayıları ne anlama gelir?", answer: "Değişiklik sayısı bitişik fark bloklarını, ekleme ve silme sayıları kelimeleri sayar. Bir kelimenin değiştirilmesi eski tarafta silme, yeni tarafta ekleme olarak görünür." }, { question: "Dosyalar sunucuya gönderilir mi?", answer: "Hayır. Karşılaştırma tarayıcıda çalışır." }],
+    related: [{ label: "PDF karşılaştırma rehberi", href: "/guides/pdf-belge-karsilastirma" }, { label: "PDF OCR", href: "/tools/ocr" }, { label: "PDF düzenle", href: "/tools/edit-pdf" }],
   },
   "compress-image": {
     slug: "compress-image", title: "Fotoğrafı 100, 200 veya 500 KB altına küçült", h1: "Fotoğraf boyutunu hedef KB sınırına küçült",
@@ -28,7 +34,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     keywords: ["fotoğraf 200 KB küçültme", "fotoğraf 100 KB", "JPG boyut küçültme", "fotoğraf sıkıştırma"],
     summary: "Başvuru formunun dosya boyutu sınırı için görselini seç, üst sınırı belirle ve sonucu kontrol et. Kalite veya piksel ölçüleri azalabilir; kayıpsız dönüşüm ya da başvurunun kabulü garanti edilmez. Belge içeriği sunucuya gönderilmez.",
     steps: [{title:"Görsel seç",body:"25 MB altında JPEG, PNG veya WebP seç. En fazla 40 megapiksel desteklenir."},{title:"Üst sınırı seç",body:"100, 200, 500 KB veya 10–25000 KB arasında özel sınır seç. 1 KB, 1000 bayt olarak hesaplanır."},{title:"Önizle ve indir",body:"JPEG veya WebP çıktısını orijinalle karşılaştır. Dosya boyutunu ve piksel ölçülerini kontrol edip indir."}],
-    faqs: [{question:"Kalite kaybı olur mu?",answer:"Olabilir. Hedef boyuta ulaşmak için kalite ve gerekirse piksel ölçüleri azaltılır. İndirmeden önce önizlemeyi kontrol et."},{question:"PNG çıktısı var mı?",answer:"Hayır. JPEG veya WebP çıktısı sunulur. JPEG’de saydam alanlar beyaz olur; animasyonlar sabit kareye dönüşür."},{question:"Fotoğrafım yükleniyor mu?",answer:"Görsel içeriği sunucuya yüklenmez; işlem cihazındaki tarayıcıda yapılır. Barındırma ve analitik teknik verileri ayrıca işleyebilir."}],
+    faqs: [{question:"Fotoğrafı seçtim; yükleme tamamlandı mı?",answer:"Dosya adı, seçildi göstergesi ve orijinal önizleme fotoğrafın hazır olduğunu gösterir. Fotoğrafı küçült düğmesine basınca işlem başlar. Görsel içeriği sunucuya yüklenmez."},{question:"Kalite kaybı olur mu?",answer:"Olabilir. Hedef boyuta ulaşmak için kalite ve gerekirse piksel ölçüleri azaltılır. İndirmeden önce önizlemeyi kontrol et."},{question:"PNG çıktısı var mı?",answer:"Hayır. JPEG veya WebP çıktısı sunulur. JPEG’de saydam alanlar beyaz olur; animasyonlar sabit kareye dönüşür."},{question:"Fotoğrafım yükleniyor mu?",answer:"Görsel içeriği sunucuya yüklenmez; işlem cihazındaki tarayıcıda yapılır. Barındırma ve analitik teknik verileri ayrıca işleyebilir."}],
     related: [{label:"Fotoğraf küçültme rehberi",href:"/guides/fotograf-200-kb-kucultme"},{label:"Görselleri PDF yap",href:"/tools/jpg-pdf"}],
   },
   "edit-pdf": {
@@ -53,16 +59,17 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "word-to-pdf",
     title: "Word’ü PDF’e ücretsiz çevir",
     h1: "Word’ü PDF’e çevir",
-    description: "DOCX dosyasını tarayıcıda yazdırılabilir PDF’e dönüştür. Ücretsiz, hesapsız Word-PDF çevirici.",
+    description: "Birden fazla DOCX dosyasını tarayıcıda PDF’e dönüştür. Dosya başına durum takibi, toplu ZIP indirme; ücretsiz ve hesapsız Word-PDF çevirici.",
     keywords: ["Word PDF çevirme", "DOCX PDF ücretsiz", "ücretsiz Word dönüştürücü"],
     summary:
-      "Düzenlediğin özgeçmiş veya dilekçeyi kariyer sitelerinin istediği PDF formatına almak için DOCX yükle, dönüştür, indir. Kaynak dosyadaki yazı tipleri sadeleşebilir; gönderiden önce bir önizleme aç.",
+      "Bir veya birden fazla DOCX dosyasını PDF’e dönüştür, sonuçları ayrı ayrı veya ZIP olarak indir. Dosyalar tarayıcıda işlenir. Kaynak belgedeki yazı tipleri ve sayfa düzeni sadeleşebilir; orijinal tasarımın birebir korunması garanti edilmez.",
     steps: [
-      { title: "DOCX seç", body: ".docx dosyasını bırak veya dosya seç. Eski .doc formatı değil, Word’ün mevcut DOCX çıktısını kullan." },
-      { title: "PDF’e dönüştür", body: "İşlem tarayıcıda çalışır. Bittiğinde dosyayı indir." },
-      { title: "Başvuru öncesi bak", body: "Sayfa kırılması, logo ve Türkçe karakterleri kontrol et. Büyükse sıkıştırma aracına geç." },
+      { title: "DOCX dosyalarını seç", body: "Bir veya birden fazla .docx seç. Eski .doc desteklenmez. Dosya başına en fazla 25 MB, grup toplamında 500 MB giriş kabul edilir." },
+      { title: "Dönüştür ve durumları izle", body: "Dosyaları sırala, aynı anda işlenecek dosya sayısını 1–3 arasında seç ve işlemi başlat. Hata veren dosyalar diğerlerini durdurmaz." },
+      { title: "Kontrol et ve indir", body: "Sonuçları ayrı ayrı veya ZIP olarak indir. Başvuru öncesinde sayfa kırılmalarını, metni ve Türkçe karakterleri kontrol et." },
     ],
     faqs: [
+      ...batchFaqs,
       {
         question: "Word CV’yi ücretsiz PDF yapabilir miyim?",
         answer: "Evet. DOCX yükle, PDF indir. Hesap açmazsın; dosya cihazında işlenir.",
@@ -74,16 +81,17 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "pdf-to-word",
     title: "PDF’i Word’e ücretsiz çevir",
     h1: "PDF’i Word’e çevir",
-    description: "PDF metnini düzenlenebilir DOCX dosyasına ücretsiz aktar. CV ve dilekçe metnini Word’de aç.",
+    description: "Birden fazla PDF’nin metnini düzenlenebilir DOCX dosyalarına aktar. Tarayıcıda toplu PDF-Word dönüşümü ve ZIP indirme; ücretsiz ve hesapsız.",
     keywords: ["PDF Word çevirme", "PDF to DOCX ücretsiz", "ücretsiz PDF dönüştürücü"],
     summary:
-      "Kaynak Word yoksa ve metni başka şablona yapıştıracaksan PDF → Word işine yarar. Çok kolonlu tasarım sadeleşir. Yalnızca bir yazım hatası için PDF düzenleyici daha az bozar.",
+      "Birden fazla PDF’den metin çıkarıp ayrı DOCX dosyaları oluştur. Sonuçları tek tek veya ZIP olarak indir. Çok kolonlu tasarım ve biçim sadeleşebilir; bu araç PDF’nin görünümünü birebir kopyalamaz. Taranmış sayfalar için önce OCR ile metin katmanı oluştur.",
     steps: [
-      { title: "PDF yükle", body: "Metin katmanı olan dijital PDF kullan. Tarama görüntüsünde metin çıkmayabilir." },
-      { title: "DOCX indir", body: "Tarih, e-posta ve başlıkların kayıp kaymadığına bak." },
-      { title: "CV ise stüdyoyu dene", body: "Özgeçmişi baştan kurmak için stüdyoda içe aktarmak genelde daha temizdir." },
+      { title: "PDF dosyalarını seç", body: "Metin katmanı olan bir veya birden fazla PDF seç. Dosya başına 25 MB, grubun toplamı için 500 MB giriş sınırı vardır." },
+      { title: "Metinleri dönüştür", body: "Listeyi sırala, aynı anda 1–3 dosya işle ve dosya durumlarını izle. Metinsiz taramaları önce OCR aracından geçir." },
+      { title: "DOCX veya ZIP indir", body: "Tamamlanan Word dosyalarını ayrı ayrı veya ZIP olarak indir. Tarih, e-posta ve başlıkların doğru aktarıldığını kontrol et." },
     ],
     faqs: [
+      ...batchFaqs,
       {
         question: "PDF CV’yi Word’e ücretsiz çevirebilir miyim?",
         answer: "Evet. Metin çıkarılır, DOCX indirilir. Düzen sadeleşebilir; iletişim bilgilerini kontrol et.",
@@ -119,16 +127,18 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "split",
     title: "PDF böl | Sayfa aralığını ayır",
     h1: "PDF böl",
-    description: "PDF’ten istediğin sayfa aralığını yeni dosya olarak ayır. Ücretsiz, hesapsız PDF split.",
+    description: "Birden fazla PDF’yi sayfa aralığına göre böl veya her sayfayı ayrı dosya yap. Tarayıcıda toplu PDF bölme, durum takibi ve ZIP indirme.",
     keywords: ["PDF bölme", "PDF sayfa ayırma", "PDF split ücretsiz"],
     summary:
-      "Uzun bir evrak setinden yalnızca CV sayfasını veya transkript aralığını çıkar. Başlangıç ve bitiş sayfasını seç, yeni PDF indir.",
+      "Bir veya birden fazla PDF’ye aynı sayfa aralığını uygula ya da her sayfayı ayrı PDF yap. Tek dosyada görsel sayfa seçimi de kullanılabilir. Aralık her belge için ayrı doğrulanır; kısa bir belge hata verse bile diğer dosyalar işlenir. Sonuçlar ayrı ayrı veya ZIP olarak indirilebilir.",
     steps: [
-      { title: "PDF yükle", body: "Sayfa sayısı okununca aralığı gir." },
-      { title: "Aralığı ayır", body: "1. sayfa CV ise 1–1, ekler 2–5 gibi net tut." },
-      { title: "İndir ve adlandır", body: "Dosya adını `transkript.pdf` gibi içeriğe göre koy." },
+      { title: "PDF dosyalarını seç", body: "Bir veya birden fazla PDF ekle ve listeyi sırala. Dosya başına en fazla 25 MB, grubun toplamında 500 MB giriş desteklenir." },
+      { title: "Ayırma yöntemini belirle", body: "Aynı sayfa aralığını bütün dosyalara uygula veya her sayfayı ayrı dosya yap. Görsel sayfa seçimi yalnızca tek dosyada sunulur." },
+      { title: "İşle ve indir", body: "Dosya durumlarını izle. Tamamlanan PDF’leri ayrı ayrı veya tek ZIP olarak indir; hatalı dosyaları yeniden deneyebilirsin." },
     ],
     faqs: [
+      ...batchFaqs,
+      { question: "Belgelerin sayfa sayıları farklıysa ne olur?", answer: "Seçtiğin aralık her belge için kontrol edilir. Örneğin 2–5 aralığı üç sayfalı bir belgede hata verir; aralık otomatik değiştirilmez ve diğer uygun belgeler işlenmeye devam eder." },
       {
         question: "PDF’ten tek sayfa ücretsiz çıkarabilir miyim?",
         answer: "Evet. Sayfa aralığını seç, yeni PDF indir.",
@@ -140,37 +150,40 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "compress",
     title: "PDF sıkıştır | Dosya boyutunu küçült",
     h1: "PDF sıkıştır",
-    description: "Büyük PDF’i kariyer sitesi limitinin altına küçült. Ücretsiz PDF sıkıştırma, tarayıcıda çalışır.",
+    description: "Birden fazla PDF’yi tarayıcıda sıkıştır; kalite seç, dosya durumlarını izle ve sonuçları ZIP indir. Ücretsiz, hesapsız toplu PDF sıkıştırma.",
     keywords: ["PDF sıkıştırma", "PDF boyutu küçültme", "compress PDF ücretsiz"],
     summary:
-      "Tarama görüntüleri ve yüksek çözünürlüklü logolar dosyayı şişirir. Sıkıştırma sayfaları daha düşük görüntü kalitesiyle yeniden çizer. CV’de isim ve telefonun hâlâ okunduğunu kontrol et.",
+      "Bir veya birden fazla PDF’yi seç, kaliteyi belirle ve sonuçları tek tek veya ZIP olarak indir. Sıkıştırma sayfaları görüntüye dönüştürür; seçilebilir metin korunmaz. Boyut azalması veya belirli bir MB sınırına ulaşılması garanti edilmez; bazı belgelerin boyutu artabilir. Orijinalini sakla ve çıktının okunabilirliğini kontrol et.",
     steps: [
-      { title: "Büyük PDF’i yükle", body: "25 MB altındaki dosyalar kabul edilir." },
-      { title: "Sıkıştır", body: "Çıktıyı aç, yazı ve imza leke mi bak." },
-      { title: "Orijinali sakla", body: "Portal için küçük kopyayı gönder, kaynağı silme." },
+      { title: "PDF dosyalarını seç", body: "15 veya daha fazla dosya birlikte seçilebilir. Dosya başına en fazla 25 MB, grup toplamında 500 MB giriş sınırı vardır." },
+      { title: "Kaliteyi seç ve sıkıştır", body: "Dengeli, daha küçük dosya veya yüksek kalite seç. Düşük bellek kullanımı için varsayılan sırayla işlemeyi kullan; istersen aynı anda 1–3 dosya işle." },
+      { title: "Sonuçları kontrol et ve indir", body: "Yazı ve imzaların okunabilirliğini kontrol et. Tamamlanan çıktıları ayrı ayrı veya ZIP olarak indir; orijinal PDF’leri sakla." },
     ],
     faqs: [
+      ...batchFaqs,
+      { question: "PDF mutlaka küçülür mü; metin katmanı korunur mu?", answer: "Hayır. Sayfalar görüntüye dönüştürüldüğü için seçilebilir metin korunmaz ve dosya boyutu bazen artabilir. Belirli bir dosya boyutu veya başvuru formunun kabulü garanti edilmez." },
       {
         question: "CV PDF’im yüklenmiyor, küçültebilir miyim?",
-        answer: "Evet. Sıkıştırma boyutu düşürür. Metin okunaklı kalmazsa dijital (taranmamış) CV üret.",
+        answer: "Küçültmeyi deneyebilirsin; sonuç belgeye göre değişir. Boyutu ve okunabilirliği kontrol et. Seçilebilir metin gerekiyorsa kaynak Word’den veya CV stüdyosundan dijital bir PDF oluştur.",
       },
     ],
-    related: [{ label: "Sıkıştırma rehberi", href: "/guides/pdf-sikistirma" }],
+    related: [{ label: "Toplu işlem rehberi", href: "/guides/toplu-pdf-isleme" }, { label: "Sıkıştırma rehberi", href: "/guides/pdf-sikistirma" }],
   },
   "jpg-pdf": {
     slug: "jpg-pdf",
     title: "JPG’yi PDF’e çevir | PDF sayfasını JPG yap",
     h1: "JPG ↔ PDF dönüştür",
-    description: "JPG, PNG veya WEBP görsellerini PDF yap; PDF sayfalarını JPG olarak indir. Ücretsiz, hesapsız.",
+    description: "JPG, PNG veya WebP görsellerini PDF yap; birden fazla PDF’nin sayfalarını JPG’ye çevir ve ZIP indir. Tarayıcıda ücretsiz dönüştürme.",
     keywords: ["JPG PDF çevirme", "görseli PDF yapma", "PDF JPG dönüştürme"],
     summary:
-      "Telefonla çekilmiş belgeyi tek PDF’te toplamak veya PDF sayfasını görsel olarak paylaşmak için kullan. Özgeçmişi fotoğraftan başvuru PDF’si yapmak yerine stüdyoda metin katmanlı çıktı almak ATS için daha iyidir.",
+      "Görseller → PDF modunda fotoğrafları tek PDF’te topla. PDF → JPG modunda birden fazla PDF’nin sayfalarını ayrı JPEG dosyalarına dönüştür; sonuçları tek tek veya ZIP olarak indir. JPEG çıktıları görüntüdür; PDF’nin metin katmanını ve etkileşimli formlarını içermez.",
     steps: [
       { title: "Yön seç", body: "Görseller → PDF veya PDF → JPG." },
-      { title: "Dosyaları yükle", body: "Birden fazla görseli sırayla ekleyebilirsin." },
-      { title: "İndir", body: "PDF olacaksa sayfa sırasını yüklemeden önce kontrol et." },
+      { title: "Dosyaları yükle", body: "Fotoğrafları tek PDF için sırala veya PDF → JPG modunda birden fazla PDF seç. PDF → JPG batch grubunda giriş sınırı dosya başına 25 MB, toplam 500 MB’dır." },
+      { title: "İşle ve indir", body: "Görsellerden tek PDF indir. PDF → JPG modunda dosya durumlarını izle, tamamlanan görüntüleri ayrı ayrı veya ZIP olarak indir." },
     ],
     faqs: [
+      { question: "Birden fazla PDF’yi JPG’ye çevirip ZIP indirebilir miyim?", answer: "Evet. PDF → JPG moduna geç, PDF’leri seç ve işle. Bütün dosyaların işlemi bitince tamamlanan görüntüleri ZIP olarak indirebilirsin. Hatalı dosyalar diğerlerini durdurmaz; aynı adlı çıktılar numaralandırılır." },
       {
         question: "CV fotoğrafını PDF yapmalı mıyım?",
         answer:
@@ -184,7 +197,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     title: "Ücretsiz OCR PDF | Taramayı aranabilir yap",
     h1: "Taranmış PDF’i ücretsiz OCR ile aranabilir yap",
     description:
-      "Tarama veya fotoğraf PDF’sine metin katmanı ekle. Smallpdf ve iLovePDF’de ücretli olan OCR burada ücretsiz, tarayıcıda çalışır.",
+      "Tarama veya fotoğraf PDF’sine Türkçe ve İngilizce OCR ile metin katmanı ekle. İlk 20 sayfa tarayıcıda işlenir; ücretsiz ve hesapsız.",
     keywords: ["ücretsiz OCR PDF", "tarama PDF metin", "OCR PDF ücretsiz"],
     summary:
       "Görüntü sayfalarını okuyup görünmez bir metin katmanı ekler. Belge görünümü aynı kalır; kopyala-yapıştır ve arama çalışır. Uzun dosyalarda ilk 20 sayfa işlenir.",
@@ -208,7 +221,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     slug: "sign",
     title: "Ücretsiz PDF imzala",
     h1: "PDF’e ücretsiz imza ekle",
-    description: "PDF’in son sayfasına yazı veya görsel imza ekle. E-imza damgası ücretsiz, hesapsız.",
+    description: "PDF’in son sayfasına yazı veya görsel imza ekle. Ücretsiz, hesapsız; bu araç nitelikli elektronik imza oluşturmaz.",
     keywords: ["ücretsiz PDF imzala", "PDF imza ekle", "e-imza PDF ücretsiz"],
     summary:
       "İsim yaz veya şeffaf PNG imza yükle. Damga son sayfanın sağına konur. Bu görsel imzadır; nitelikli elektronik imza (e-imza / KEP) yerine geçmez.",
@@ -294,6 +307,8 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
   },
 };
 
-export function getToolSeo(slug: string): ToolSeo | undefined {
-  return Object.hasOwn(toolSeo, slug) ? toolSeo[slug as ToolSlug] : undefined;
+export function getToolSeo(slug: string, language: "TR" | "EN" = "TR"): ToolSeo | undefined {
+  if (!Object.hasOwn(toolSeo, slug)) return undefined;
+  const seo = toolSeo[slug as ToolSlug];
+  return language === "EN" ? { ...seo, ...englishToolSeo[seo.slug] } : seo;
 }

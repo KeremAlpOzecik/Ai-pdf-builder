@@ -120,7 +120,7 @@ export function BatchTool({ slug }: { slug: BatchToolSlug }) {
   }
 
   return <div className="space-y-5 rounded-2xl border bg-card p-4 sm:p-6" aria-busy={disabled}>
-    <FileDrop multiple disabled={disabled} accept={slug === "word-to-pdf" ? ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" : ".pdf,application/pdf"} onFiles={add}>
+    <FileDrop multiple selectedFiles={items.map(item => item.file)} disabled={disabled} accept={slug === "word-to-pdf" ? ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" : ".pdf,application/pdf"} onFiles={add}>
       <p className="mt-2 text-sm text-muted-foreground">{tr ? "15+ dosyayı birlikte seçin; listeye yeni dosyalar ekleyebilirsiniz." : "Select 15+ files at once; add more files to the list anytime."}</p>
     </FileDrop>
     {items.length > 0 && <>

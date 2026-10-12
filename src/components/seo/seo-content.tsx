@@ -6,6 +6,8 @@ import { guides } from "@/lib/guides";
 import { useDisplayLanguage } from "@/components/providers";
 
 const faq = [
+  { question: "Birden fazla PDF’yi işleyip ZIP indirebilir miyim?", answer: "Evet. PDF sıkıştırma, bölme, PDF → Word, Word → PDF ve PDF → JPG araçlarında çoklu dosya işleme vardır. Dosya başına 25 MB, batch grubunun toplamı için 500 MB giriş sınırı uygulanır. Tamamlanan sonuçları ayrı ayrı veya ZIP olarak indirebilirsin." },
+  { question: "İki PDF arasındaki değişiklikleri nasıl bulurum?", answer: "PDF karşılaştırma aracında eski ve yeni belgeyi seç. Metin farkları yan yana gösterilir; silinen metinler pembe, eklenenler yeşildir. Görseller ve biçim değişiklikleri karşılaştırılmaz; metinsiz taramalar için önce OCR gerekir." },
   {
     question: "PDF ücretsiz nasıl düzenlenir?",
     answer: "EkoPDF’de PDF düzenle aracını aç ve dosyanı seç. Yazı veya görsel ekleyebilir, hatalı alanı kapatıp üzerine doğru yazıyı yerleştirebilirsin. Sonucu PDF indir ile al. Hesap gerekmez; işlem tarayıcıda yapılır. Mevcut metin doğrudan değişmez ve kapatılan sayfalar görüntüye dönüşür.",
@@ -93,7 +95,7 @@ export function SeoContent() {
           </div>
           <div className="space-y-5 text-base leading-7 text-muted-foreground">
             <p>
-              EkoPDF; PDF düzenleme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
+              EkoPDF; PDF düzenleme, metin karşılaştırma, toplu işleme, ZIP indirme, fotoğraf küçültme, Word dönüşümü, birleştirme, sıkıştırma, OCR, imza, filigran, döndürme ve
               sayfa numarası sunar. Bu araçları ücretsiz ve hesap açmadan kullanabilirsin:
               dosyanı seç, işlemi çalıştır, sonucu indir. Bu temel araçlarda dosyan sunucuya yüklenmez.
             </p>

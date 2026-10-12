@@ -78,7 +78,7 @@ export function PdfCompare() {
     <div className="grid gap-5 md:grid-cols-2">
       {titles.map((title, index) => <section key={title} aria-label={title}>
         <h2 className="mb-3 text-lg font-semibold">{title}</h2>
-        <FileDrop accept=".pdf,application/pdf" disabled={busy} onFiles={selected => select(index, selected[0])}>
+        <FileDrop selectedFiles={files[index] ? [files[index]!] : []} accept=".pdf,application/pdf" disabled={busy} onFiles={selected => select(index, selected[0])}>
           <span className="mt-2 max-w-full break-all text-sm text-muted-foreground">{files[index]?.name ?? (tr ? "PDF dosyanızı buraya bırakın" : "Drop your PDF here")}</span>
         </FileDrop>
       </section>)}

@@ -80,6 +80,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     url: siteUrl,
     inLanguage: "tr-TR",
     description: "Ücretsiz PDF araçları ve cihazda çalışan CV oluşturucu.",
+    publisher: { "@id": `${siteUrl}/#organization` },
   };
   const appSchema = {
     "@context": "https://schema.org",
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     url: siteUrl,
+    publisher: { "@id": `${siteUrl}/#organization` },
     offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
     description: "Tarayıcıda PDF düzenleme ve sade CV oluşturma.",
     featureList: [
@@ -98,6 +100,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       "LinkedIn CV PDF içe aktarma",
       "sade özgeçmiş",
       "Word-PDF dönüştürme",
+      "PDF metin karşılaştırma",
+      "Toplu PDF işleme ve ZIP indirme",
+      "Fotoğraf boyutunu hedef KB sınırına küçültme",
     ],
   };
 
@@ -113,6 +118,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SiteFooter />
         </Providers>
         <JsonLd data={websiteSchema} />
+        <JsonLd data={{ "@context": "https://schema.org", "@type": "Organization", "@id": `${siteUrl}/#organization`, name: SITE_NAME, url: siteUrl, logo: `${siteUrl}/ekopdf-mark.svg` }} />
         <JsonLd data={appSchema} />
         <Analytics />
       </body>

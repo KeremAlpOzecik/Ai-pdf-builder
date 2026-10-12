@@ -35,9 +35,10 @@ export function StudioSeo() {
   const howTo = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "Sade Türkçe CV nasıl hazırlanır?",
-    description: "LinkedIn CV PDF’ini yükle, yazım hatasını düzelt, sade özgeçmiş indir.",
-    step: steps.map((step, index) => ({
+    name: tr ? "Sade Türkçe CV nasıl hazırlanır?" : "How to create a simple resume",
+    inLanguage: tr ? "tr-TR" : "en",
+    description: tr ? "LinkedIn CV PDF’ini yükle, yazım hatasını düzelt, sade özgeçmiş indir." : "Import a resume, review the draft and download PDF or Word.",
+    step: displaySteps.map((step, index) => ({
       "@type": "HowToStep",
       position: index + 1,
       name: step.title,

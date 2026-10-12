@@ -7,13 +7,14 @@ import { getToolSeo } from "@/lib/tool-seo";
 import { useDisplayLanguage } from "@/components/providers";
 
 export function ToolArticle({ slug }: { slug: string }) {
-  const seo = getToolSeo(slug);
   const tr = useDisplayLanguage() === "TR";
+  const seo = getToolSeo(slug, tr ? "TR" : "EN");
   if (!seo) return null;
 
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    inLanguage: tr ? "tr-TR" : "en",
     mainEntity: seo.faqs.map((item) => ({
       "@type": "Question",
       name: item.question,
@@ -24,6 +25,7 @@ export function ToolArticle({ slug }: { slug: string }) {
   const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
+    inLanguage: tr ? "tr-TR" : "en",
     name: seo.h1,
     description: seo.description,
     step: seo.steps.map((step, index) => ({
@@ -38,16 +40,16 @@ export function ToolArticle({ slug }: { slug: string }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Ücretsiz PDF araçları", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 1, name: tr ? "Ücretsiz PDF araçları" : "Free PDF tools", item: absoluteUrl("/") },
       { "@type": "ListItem", position: 2, name: seo.h1, item: absoluteUrl(`/tools/${slug}`) },
     ],
   };
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 pb-16">
-      <p className="text-base leading-7 text-muted-foreground">{tr ? seo.summary : "Choose your file, configure the available options, then process and download the result. Document processing runs in your browser."}</p>
+    <section aria-label={tr ? "Araç rehberi" : "Tool guide"} className="mx-auto w-full max-w-3xl px-6 pb-16">
+      <p className="text-base leading-7 text-muted-foreground">{seo.summary}</p>
       <ol className="mt-10 space-y-6">
-        {(tr ? seo.steps : [{ title: "Choose a file", body: "Select a supported file within the size limit." }, { title: "Configure", body: "Review the options and preview before processing." }, { title: "Download", body: "Open the result and verify its content." }]).map((step, index) => (
+        {seo.steps.map((step, index) => (
           <li key={step.title}>
             <h2 className="text-xl font-semibold tracking-tight">
               {index + 1}. {step.title}
@@ -57,7 +59,7 @@ export function ToolArticle({ slug }: { slug: string }) {
         ))}
       </ol>
       <div className="mt-10 space-y-4">
-        {(tr ? seo.faqs : [{ question: "Is this tool free?", answer: "Yes. No account or daily limit is required." }]).map((item) => (
+        {seo.faqs.map((item) => (
           <div key={item.question} className="rounded-2xl border border-border/70 bg-card p-5">
             <h2 className="text-base font-semibold">{item.question}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.answer}</p>
@@ -74,6 +76,15 @@ export function ToolArticle({ slug }: { slug: string }) {
       <JsonLd data={faqSchema} />
       <JsonLd data={howToSchema} />
       <JsonLd data={breadcrumb} />
+      <JsonLd data={{
+        "@context": "https://schema.org", "@type": "WebApplication",
+        "@id": absoluteUrl(`/tools/${slug}#application`), name: seo.h1,
+        url: absoluteUrl(`/tools/${slug}`), description: seo.description,
+        inLanguage: tr ? "tr-TR" : "en", applicationCategory: "BusinessApplication",
+        operatingSystem: "Web", isAccessibleForFree: true,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
+        isPartOf: { "@id": absoluteUrl("/#website") },
+      }} />
     </section>
   );
 }

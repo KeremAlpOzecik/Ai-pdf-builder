@@ -35,8 +35,8 @@ export function ImageCompressor() {
     finally { setBusy(false); }
   }
   return <div className="space-y-6">
-    <FileDrop accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" disabled={busy} onFiles={files => { clear(); setFile(files[0]); }}><span className="text-sm text-muted-foreground">{tr ? "JPEG, PNG veya WebP fotoğraf seç" : "Choose a JPEG, PNG or WebP photo"}</span></FileDrop>
-    {file && <p className="text-sm break-all">{file.name} · {(file.size / 1000).toFixed(1)} KB</p>}
+    <FileDrop selectedFiles={file ? [file] : []} accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" disabled={busy} onFiles={files => { clear(); setFile(files[0]); }}><span className="mt-2 text-sm text-muted-foreground">{file ? (tr ? "Fotoğraf hazır. Hedef boyutu seçip küçültme işlemini başlatın." : "Photo ready. Choose a target size and start compression.") : (tr ? "JPEG, PNG veya WebP fotoğraf seç" : "Choose a JPEG, PNG or WebP photo")}</span></FileDrop>
+    {file && <div className="space-y-3"><div className="grid gap-4 sm:grid-cols-2"><Preview blob={file} label={tr ? "Orijinal" : "Original"} />{result && <Preview blob={result.blob} label={tr ? "Küçültülen" : "Compressed"} />}</div><Button variant="ghost" disabled={busy} onClick={() => { setFile(undefined); clear(); }}>{tr ? "Fotoğrafı kaldır" : "Remove photo"}</Button></div>}
     <div className="flex flex-wrap gap-2">{[100,200,500].map(kb=><Button key={kb} variant={target===String(kb)?"default":"outline"} disabled={busy} aria-pressed={target===String(kb)} onClick={()=>{clear();setTarget(String(kb));}}>{kb} KB</Button>)}</div>
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="grid gap-2 text-sm">{tr ? "Hedef üst sınır (KB)" : "Target size limit (KB)"}<input type="number" min="10" max="25000" step="1" value={target} disabled={busy} onChange={e=>{clear();setTarget(e.target.value);}} className="rounded-lg border bg-background px-3 py-2" /></label>
@@ -47,7 +47,6 @@ export function ImageCompressor() {
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {result && file && <>
       <div role="status" className="rounded-xl border bg-primary/5 p-4"><p>{tr ? "Sonuç" : "Result"}: {(result.blob.size/1000).toFixed(1)} KB · {result.width} × {result.height} px</p><p className="mt-1 text-sm">{tr ? "Hedef sınırın altında. İndirmeden önce önizlemeyi kontrol et." : "Below the size limit. Review the preview before downloading."}</p>{result.blob.size>=file.size && <p className="mt-2 text-sm">{tr ? "Orijinal dosya zaten küçük; bu çıktı orijinalden daha büyük olabilir." : "The original is already small; this output may be larger than the original."}</p>}</div>
-      <div className="grid gap-4 sm:grid-cols-2"><Preview blob={file} label={tr ? "Orijinal" : "Original"} /><Preview blob={result.blob} label={tr ? "Küçültülen" : "Compressed"} /></div>
       <Button onClick={()=>downloadBlob(result.blob,`${stem(file.name)}-${target}kb.${format==='image/jpeg'?'jpg':'webp'}`)}>{tr ? "Fotoğrafı indir" : "Download photo"}</Button>
     </>}
   </div>;

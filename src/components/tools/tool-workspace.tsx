@@ -284,7 +284,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf" | "compare-p
           </Button>
         </div>
       ) : null}
-      <FileDrop disabled={busy || validating} accept={accept} multiple={multiple} onFiles={(next) => void onFiles(next)}>
+      <FileDrop selectedFiles={files} disabled={busy || validating} accept={accept} multiple={multiple} onFiles={(next) => void onFiles(next)}>
         <p className="mt-2 text-xs text-muted-foreground">
           {slug === "word-to-pdf"
             ? labels.pickDocx

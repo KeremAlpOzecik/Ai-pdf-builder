@@ -15,8 +15,8 @@ const steps = [
     body: "Unvan, tarih, iletişim ve maddeleri düzenle. Türkçe karakterler önizlemede görünür.",
   },
   {
-    title: "ATS için önerileri seçerek uygula",
-    body: "Yapay zekâ ifade önerir; her satırı kabul veya reddedebilirsin. Uydurma ölçü ekletme.",
+    title: "İçe aktarma taslağını kontrol et",
+    body: "Kaynak metni form ile karşılaştır. Yanlış eşleşmeleri düzelt; eksik bilgileri elle ekle.",
   },
   {
     title: "PDF veya Word indir",
@@ -29,7 +29,7 @@ export function StudioSeo() {
   const displaySteps = tr ? steps : [
     { title: "Upload a PDF, LinkedIn export, or start blank", body: "Import an existing resume or fill in the form without creating an account." },
     { title: "Edit with live preview", body: "Review titles, dates, contact details, and bullet points." },
-    { title: "Review ATS suggestions", body: "Apply or dismiss every AI suggestion individually; nothing changes without your approval." },
+    { title: "Review the imported draft", body: "Compare the source text with the form. Correct OCR errors and add missing information." },
     { title: "Download PDF or Word", body: "Export a selectable, application-ready document." },
   ];
   const howTo = {
@@ -48,7 +48,7 @@ export function StudioSeo() {
   return (
     <section className="border-t border-border/70 bg-background px-5 py-16 sm:px-8">
       <div className="mx-auto max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{tr ? "Ücretsiz yapay zekâ CV stüdyosu" : "Free AI CV studio"}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{tr ? "Cihazında çalışan CV stüdyosu" : "On-device CV studio"}</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight">
           {tr ? "LinkedIn CV PDF’ini yükle, ATS uyumlu Türkçe özgeçmiş indir" : "Upload a LinkedIn resume PDF and download an ATS-ready CV"}
         </h2>
@@ -56,7 +56,7 @@ export function StudioSeo() {
           {tr ? "Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin." : "Create a clean, selectable resume for application systems such as LinkedIn. Use the PDF editor for small corrections or merge documents into an application package."}
         </p>
         <p className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-          {tr ? <>Not: PDF veya ekran görüntüsü içe aktarma, ATS düzenleme ve çeviri özelliklerinde CV içeriği Groq API’ye gönderilir. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Note: Import, ATS editing, and translation send CV content to the Groq API. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}
+          {tr ? <>PDF ve görsel içe aktarma cihazında çalışır. CV içeriği sunucuya gönderilmez; çıkarılan taslağı kontrol et. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Import runs on your device without uploading CV content. Review the extracted draft. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}
         </p>
         <ol className="mt-8 space-y-5">
           {displaySteps.map((step, index) => (

@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "public/pdf.worker.min.mjs",
+    "public/ocr/core/**",
+    "public/ocr/worker.min.js",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

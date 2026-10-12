@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChangeSummary } from "@/components/change-summary";
+import { ImportReview } from "@/components/import-review";
 import { FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
@@ -116,7 +116,7 @@ export function Dashboard() {
                 <ScaledCvPreview interactive cv={cv} template={resumeTemplate} />
               </ScrollArea>
             </section>
-            <aside className={`min-w-0 rounded-2xl border bg-card p-4 lg:col-span-2 xl:col-span-1 ${showSuggestions ? "" : "hidden lg:block"}`}><h2 className="text-lg font-semibold">{tr ? "AI önerileri" : "AI suggestions"}</h2><p className="my-3 text-sm leading-6 text-muted-foreground">{tr ? "AI önerileri ve çeviri geçici olarak kapalıdır. Önerileri tek tek uygulayabilir veya reddedebilirsiniz. İçeriğiniz onayınız olmadan değişmez." : "AI suggestions and translation are temporarily unavailable. Apply or dismiss each suggestion; your content changes only with your approval."}</p><p className="mb-4 text-sm text-muted-foreground">{tr ? "Manuel CV düzenleme ve indirme kullanılabilir." : "Manual CV editing and downloads remain available."}</p><ChangeSummary /></aside>
+            <aside className={`min-w-0 rounded-2xl border bg-card p-4 lg:col-span-2 xl:col-span-1 ${showSuggestions ? "" : "hidden lg:block"}`}><ImportReview /></aside>
           </div>
           <nav className="sticky bottom-0 z-20 grid grid-cols-3 gap-1 border-t border-border bg-background p-2 lg:hidden">
             <Button
@@ -131,7 +131,7 @@ export function Dashboard() {
             >
               {labels.preview}
             </Button>
-            <Button variant={showSuggestions ? "default" : "ghost"} onClick={() => setShowSuggestions(true)}>{tr ? "AI önerileri" : "AI suggestions"}</Button>
+            <Button variant={showSuggestions ? "default" : "ghost"} onClick={() => setShowSuggestions(true)}>{tr ? "İçe aktarma kontrolü" : "Import review"}</Button>
           </nav>
         </>
       )}

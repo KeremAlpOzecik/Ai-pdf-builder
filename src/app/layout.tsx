@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     template: "%s | EkoPDF",
   },
   description:
-    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Groq API kullanır.",
+    "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word ve PDF dönüştür. Temel PDF araçları tarayıcıda çalışır; CV içe aktarma yerel metin çıkarma ve OCR kullanır.",
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
     "ATS uyumlu CV Türkçe ücretsiz",
     "cv pdf yazım hatası düzelt",
-    "yapay zekâ CV oluşturucu",
+    "OCR CV içe aktarma",
   ],
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: SITE_NAME,
     title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
-    description: "Temel PDF araçları tarayıcıda çalışır; ATS AI özellikleri Groq API kullanır.",
+    description: "Temel PDF araçları tarayıcıda çalışır; CV içe aktarma yerel metin çıkarma ve OCR kullanır.",
     locale: "tr_TR",
   },
   twitter: {
@@ -79,7 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     name: SITE_NAME,
     url: siteUrl,
     inLanguage: "tr-TR",
-    description: "Ücretsiz PDF araçları ve yapay zekâ destekli CV oluşturucu.",
+    description: "Ücretsiz PDF araçları ve cihazda çalışan CV oluşturucu.",
   };
   const appSchema = {
     "@context": "https://schema.org",

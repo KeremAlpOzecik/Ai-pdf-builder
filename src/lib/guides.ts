@@ -79,7 +79,7 @@ export const guides: Guide[] = [
     ],
     related: [
       { label: "PDF → Word aracını aç", href: "/tools/pdf-to-word" },
-      { label: "AI CV stüdyosunu aç", href: "/studio" },
+      { label: "CV stüdyosunu aç", href: "/studio" },
     ],
   },
   {
@@ -88,7 +88,7 @@ export const guides: Guide[] = [
     title: "ATS uyumlu CV nasıl oluşturulur?",
     description:
       "İş başvurularında CV’nin ATS tarafından okunması için sade düzen, doğru başlıklar ve ölçülü anahtar kelime kullanımı.",
-    keywords: ["ATS uyumlu CV", "ATS özgeçmiş", "yapay zekâ CV oluşturucu"],
+    keywords: ["ATS uyumlu CV", "ATS özgeçmiş", "OCR CV içe aktarma"],
     intro:
       "ATS (Applicant Tracking System), iş başvurularındaki özgeçmişleri alanlara ve kelimelere göre tarar. Sade bir düzen, açık bölüm başlıkları ve ilandaki gerçek beceriler CV’nin elenmeden geçme ihtimalini artırır. Amaç robotu kandırmak değil; insan kaynaklarının dosyayı açmadan önce doğru aday olarak görmesini sağlamaktır.",
     sections: [
@@ -102,7 +102,7 @@ export const guides: Guide[] = [
       },
       {
         title: "Anahtar kelimeyi ilandan al, doldurma",
-        body: "İlandaki zorunlu becerileri CV’nde görünür kıl ama cümleyi kelime salatasına çevirme. Aynı cümleyi üç kez tekrarlamak hem ATS hem insan için kötüdür. Türkçe ilanlarda Türkçe başlık, İngilizce ilanlarda İngilizce fiil kullan. Stüdyodaki ATS düzenleme, ifadeleri güçlendirmek için öneri üretir; her satırı kabul etmek zorunda değilsin.",
+        body: "İlandaki zorunlu becerileri CV’nde görünür kıl ama cümleyi kelime salatasına çevirme. Aynı cümleyi üç kez tekrarlamak hem ATS hem insan için kötüdür. Türkçe ilanlarda Türkçe başlık, İngilizce ilanlarda İngilizce fiil kullan. İfadeleri formdan kendin düzenle; otomatik öneri veya çeviri sunulmaz.",
       },
       {
         title: "Dosya formatı ve ad",
@@ -114,7 +114,7 @@ export const guides: Guide[] = [
       },
     ],
     related: [
-      { label: "AI CV stüdyosunu aç", href: "/studio" },
+      { label: "CV stüdyosunu aç", href: "/studio" },
       { label: "Türkçe ATS CV rehberi", href: "/guides/ats-uyumlu-cv-turkce-ucretsiz" },
     ],
   },
@@ -210,7 +210,7 @@ export const guides: Guide[] = [
       },
       {
         title: "Büyük düzeltme: stüdyoya aktar",
-        body: "Özet zayıfsa, maddeler kopyala-yapıştır gibi duruyorsa veya dili çevireceksen stüdyoda PDF’i içe aktar. Alanlar forma dolar; canlı önizlemede ATS için düzenle’ye basıp önerileri tek tek kabul et. Gerçek olmayan ölçü ekletme. Bitince PDF veya Word indir. Bu, LinkedIn şablonunun görünümünden bağımsız, sade bir başvuru dosyası üretir.",
+        body: "Özet veya maddeler değişecekse stüdyoda PDF’i cihazında içe aktar. Alanlar taslak olarak doldurulur; çıkarılan metni kaynakla karşılaştır ve yanlış eşleşmeleri formdan düzelt. İçerik otomatik çevrilmez. Bitince PDF veya Word indir. Bu, LinkedIn şablonundan bağımsız, sade bir başvuru dosyası üretir.",
       },
       {
         title: "LinkedIn metnini ilana göre kırp",
@@ -282,7 +282,7 @@ export const guides: Guide[] = [
       },
       {
         title: "Ücretsiz akış: içe aktar, düzelt, indir",
-        body: "Mevcut PDF veya LinkedIn çıktısını stüdyoya yükle. Hesap açmadan alanları düzelt. ATS için düzenle önerilerini oku; abartılı fiilleri reddet. Türkçe karakterlerin PDF’te bozulmadığını önizlemede gör. Word isteyen kurum için DOCX indir. Bu zincir, ücretli CV sitelerindeki «indirmeden önce öde» duvarı olmadan çalışır.",
+        body: "Mevcut PDF veya LinkedIn çıktısını cihazında içe aktar. Çıkarılan metni ve doldurulan taslağı kontrol edip alanları elle düzelt. Türkçe karakterleri önizlemede kontrol et. Word isteyen kurum için DOCX indir. Hesap veya ödeme gerekmez.",
       },
       {
         title: "Türkçe ATS’nin takıldığı yerler",

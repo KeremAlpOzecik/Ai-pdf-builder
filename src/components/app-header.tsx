@@ -1,15 +1,11 @@
 "use client";
 
-import { AI_ENABLED, AI_PAUSED_TR, AI_PAUSED_EN } from "@/lib/ai-availability";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FileDown,
-  Languages,
-  Loader2,
   MoreHorizontal,
-  ScanText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandMark } from "@/components/brand-mark";
@@ -22,10 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDisplayLanguage, useLabels } from "@/components/providers";
-import { diffCv } from "@/lib/cv-diff";
 import { cvHasContent } from "@/lib/cv-utils";
 import { useCvStore } from "@/store/cv-store";
-import type { CVData } from "@/types/cv";
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -42,9 +36,6 @@ export function AppHeader() {
   const resumeTemplate = useCvStore((s) => s.resumeTemplate);
   const uiLanguage = useDisplayLanguage();
   const setUiLanguage = useCvStore((s) => s.setUiLanguage);
-  const startAiJob = useCvStore((s) => s.startAiJob);
-  const stopAiJob = useCvStore((s) => s.stopAiJob);
-  const startReview = useCvStore((s) => s.startReview);
   const screen = useCvStore((s) => s.screen);
   const reset = useCvStore((s) => s.reset);
   const sourceFileName = useCvStore((s) => s.sourceFileName);
@@ -54,51 +45,6 @@ export function AppHeader() {
   const hasCvData = cvHasContent(cv);
   const isStudio = pathname === "/studio";
   const showStudioActions = isStudio && screen === "editor";
-
-  async function enhance() {
-    if (!AI_ENABLED || !hasCvData) return;
-    startAiJob("ats");
-    try {
-      const res = await fetch("/api/enhance-ats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cv, targetLanguage: cv.targetLanguage }),
-      });
-      const json = (await res.json()) as { cv?: CVData; error?: string };
-      if (!res.ok || !json.cv) throw new Error(json.error || labels.atsFailed);
-      const changes = diffCv(cv, json.cv);
-      startReview("ats", json.cv, changes);
-      toast.success(labels.atsDone);
-    } catch (error) {
-      console.error("ATS request failed", error);
-      toast.error(error instanceof Error ? error.message : labels.atsFailed);
-    } finally {
-      stopAiJob();
-    }
-  }
-
-  async function translate() {
-    if (!AI_ENABLED || !hasCvData) return;
-    const next = uiLanguage === "EN" ? "TR" : "EN";
-    startAiJob("translate");
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cv, targetLanguage: next }),
-      });
-      const json = (await res.json()) as { cv?: CVData; error?: string };
-      if (!res.ok || !json.cv) throw new Error(json.error || labels.translateFailed);
-      const changes = diffCv(cv, json.cv);
-      startReview("translate", json.cv, changes);
-      toast.success(labels.translateDone);
-    } catch (error) {
-      console.error("Translation failed", error);
-      toast.error(error instanceof Error ? error.message : labels.translateFailed);
-    } finally {
-      stopAiJob();
-    }
-  }
 
   async function exportPdf() {
     try {
@@ -165,19 +111,6 @@ export function AppHeader() {
           {showStudioActions ? (
             <>
               <Button
-                variant="outline"
-                className="hidden h-9 px-3.5 sm:inline-flex"
-                onClick={() => void enhance()}
-                disabled={!AI_ENABLED || busy || !hasCvData}
-              >
-                {aiJob === "ats" ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <ScanText />
-                )}
-                {labels.optimizeAts}
-              </Button>
-              <Button
                 className="hidden h-9 px-3.5 sm:inline-flex"
                 onClick={() => void exportPdf()}
                 disabled={busy || !hasCvData}
@@ -200,21 +133,10 @@ export function AppHeader() {
                 <DropdownMenuContent align="end" className="min-w-48">
                   <DropdownMenuItem
                     className="sm:hidden"
-                    onClick={() => void enhance()}
-                    disabled={!AI_ENABLED || busy || !hasCvData}
-                  >
-                    {labels.optimizeAts}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="sm:hidden"
                     onClick={() => void exportPdf()}
                     disabled={busy || !hasCvData}
                   >
                     {labels.exportPdf}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => void translate()} disabled={!AI_ENABLED || busy || !hasCvData}>
-                    <Languages />
-                    {labels.translate}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => void exportDocx()} disabled={busy || !hasCvData}>
                     <FileDown />
@@ -227,12 +149,6 @@ export function AppHeader() {
           ) : null}
         </div>
       </div>
-      {showStudioActions ? (
-        <p className="mx-auto max-w-[1680px] border-t border-border/50 px-3 py-2 text-xs leading-5 text-muted-foreground sm:px-8">
-          {uiLanguage === "TR" ? AI_PAUSED_TR : AI_PAUSED_EN}
-          {" "}<Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{uiLanguage === "TR" ? "Veri paylaşımı ayrıntıları" : "Data sharing details"}</Link>
-        </p>
-      ) : null}
     </header>
   );
 }

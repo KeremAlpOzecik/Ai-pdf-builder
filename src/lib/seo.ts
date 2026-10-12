@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const SITE_NAME = "EkoPDF";
-export const SEO_UPDATED_AT = "2026-09-08";
+export const SEO_UPDATED_AT = "2026-10-12";
 
 // Next.js replaces nested metadata instead of merging it. Every page must
 // include the shared image, locale and card settings when defining its own SEO.

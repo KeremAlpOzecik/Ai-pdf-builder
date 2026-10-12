@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Generated from the installed, lockfile-pinned OCR runtime during build.
+/public/ocr/core/
+/public/ocr/worker.min.js

@@ -103,7 +103,7 @@ test("invalid PDF stays in upload view with a visible error", async ({
       mimeType: "application/pdf",
       buffer: Buffer.from("%PDF-1.7\nnot a valid document"),
     });
-  await expect(page.getByRole("alert")).toContainText("PDF açılamadı");
+  await expect(page.getByRole("alert").filter({ hasText: "PDF açılamadı" })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "PDF indir", exact: true }),
   ).toHaveCount(0);

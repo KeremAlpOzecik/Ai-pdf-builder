@@ -1,43 +1,6 @@
-import { generateCvJson } from "@/lib/ai";
-import { normalizeCv } from "@/lib/normalize-cv";
-import type { CVData, TargetLanguage } from "@/types/cv";
-import { aiErrorResponse, isTargetLanguage, MAX_AI_JSON_BYTES, requestBodyTooLarge } from "@/lib/request-validation";
 import { guardAiRequest } from "@/lib/api-guard";
 
-export const runtime = "nodejs";
-export const maxDuration = 60;
-
+// Legacy clients must never send documents onward, even if credentials exist.
 export async function POST(request: Request) {
-  let responseLanguage: TargetLanguage = "EN";
-  try {
-    const blocked = guardAiRequest(request);
-    if (blocked) return blocked;
-    if (requestBodyTooLarge(request, MAX_AI_JSON_BYTES)) {
-      return Response.json({ error: "Request payload is too large." }, { status: 413 });
-    }
-    const body = (await request.json()) as {
-      cv?: CVData;
-      targetLanguage?: TargetLanguage;
-    };
-    if (!body.cv) {
-      return Response.json({ error: "cv payload is required." }, { status: 400 });
-    }
-    const requestedLanguage = body.targetLanguage ?? body.cv.targetLanguage;
-    const targetLanguage = isTargetLanguage(requestedLanguage) ? requestedLanguage : "EN";
-    responseLanguage = targetLanguage;
-    const source = normalizeCv(body.cv, targetLanguage);
-
-    const cv = await generateCvJson({
-      mode: "enhance",
-      targetLanguage,
-      temperature: 0.3,
-      userPrompt: `Rewrite this CV for ATS. Keep facts identical. Strengthen wording only. Preserve the exact level of detail; do not add measurable impact, scale, outcomes, API types or architecture unless explicitly present. targetLanguage=${targetLanguage}.
-
-${JSON.stringify(source)}`,
-    });
-
-    return Response.json({ cv });
-  } catch (error) {
-    return aiErrorResponse(error, responseLanguage === "TR" ? "ATS önerileri oluşturulamadı." : "ATS enhancement failed.", responseLanguage);
-  }
+  return guardAiRequest(request) ?? Response.json({ code: "AI_REMOVED", error: "Cloud CV processing is unavailable. Use browser-only import." }, { status: 410 });
 }

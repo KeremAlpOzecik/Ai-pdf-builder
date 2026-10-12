@@ -4,12 +4,12 @@ import { StudioSeo } from "@/components/seo/studio-seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMetadata({
-  title: "ATS uyumlu CV oluştur | Ücretsiz yapay zekâ stüdyosu",
+  title: "ATS uyumlu CV oluştur | Cihazında çalışan CV stüdyosu",
   description:
-    "LinkedIn CV PDF’ini içe aktar, Türkçe veya İngilizce özgeçmiş hazırla. AI önerilerini incele, PDF veya Word indir. Hesap gerekmez.",
+    "PDF veya görselleri cihazında OCR ile içe aktar. Taslağı kontrol et, Türkçe veya İngilizce CV hazırla ve PDF veya Word indir.",
   keywords: [
     "ATS uyumlu CV Türkçe ücretsiz",
-    "yapay zekâ CV oluşturucu",
+    "OCR CV içe aktarma",
     "linkedin cv pdf düzenle",
     "ücretsiz özgeçmiş hazırlama",
   ],

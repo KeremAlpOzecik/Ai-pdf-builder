@@ -28,6 +28,8 @@ export type PendingReview = {
 };
 
 interface CVStore {
+  importText: string;
+  setImportText: (text: string) => void;
   cv: CVData;
   uiLanguage: TargetLanguage;
   mobileView: MobileView;
@@ -76,6 +78,8 @@ function finishTranslateIfDone(
 export const useCvStore = create<CVStore>()(
   persist(
     (set) => ({
+      importText: "",
+      setImportText: (importText) => set({ importText }),
       cv: createEmptyCv("TR"),
       uiLanguage: "TR",
       mobileView: "edit",
@@ -166,6 +170,7 @@ export const useCvStore = create<CVStore>()(
           uiLanguage: state.uiLanguage,
           screen: "home",
           formTab: "import",
+          importText: "",
           sourceFileName: null,
           pendingReview: null,
         })),

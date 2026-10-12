@@ -1,12 +1,14 @@
 "use client";
 
-import { AI_ENABLED, AI_PAUSED_TR, AI_PAUSED_EN } from "@/lib/ai-availability";
+import { useState } from "react";
+import { LOCAL_IMPORT_TR, LOCAL_IMPORT_EN } from "@/lib/import-client";
+import { cvHasContent as hasExistingContent } from "@/lib/cv-utils";
 
 import { ArrowRight, FilePlus2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { HeroPreview } from "@/components/tools/hero-preview";
 import { FileDrop } from "@/components/tools/file-drop";
-import { AiProgress } from "@/components/ai-progress";
+
 import { Button } from "@/components/ui/button";
 import { parseCvFile } from "@/lib/import-client";
 import { cvHasContent } from "@/lib/cv-utils";
@@ -16,6 +18,8 @@ import { useCvStore } from "@/store/cv-store";
 export function Welcome() {
   const cv = useCvStore((s) => s.cv);
   const labels = useLabels();
+  const [progress, setProgress] = useState("");
+  const setImportText = useCvStore(s => s.setImportText);
   const setCv = useCvStore((s) => s.setCv);
   const openEditor = useCvStore((s) => s.openEditor);
   const startAiJob = useCvStore((s) => s.startAiJob);
@@ -27,11 +31,13 @@ export function Welcome() {
   const canContinue = cvHasContent(cv);
 
   async function importFiles(kind: "pdf" | "image", files: File[]) {
-    if (!AI_ENABLED || files.length === 0) return;
+    if (files.length === 0 || useCvStore.getState().aiJob) return;
+    if (hasExistingContent(useCvStore.getState().cv) && !window.confirm(targetLanguage === "TR" ? "Mevcut CV taslağı yeni dosyayla değiştirilsin mi?" : "Replace the current CV draft with this file?")) return;
     startAiJob("parse");
     try {
-      const next = await parseCvFile(files, kind, targetLanguage);
-      setCv(next);
+      const next = await parseCvFile(files, kind, targetLanguage, setProgress);
+      setCv(next.cv);
+      setImportText(next.text);
       setSourceFileName(files.map((file) => file.name).join(", "));
       openEditor("personal");
       toast.success(labels.importDone);
@@ -57,7 +63,7 @@ export function Welcome() {
           </p>
       <p className="mt-3 text-sm text-muted-foreground/80">{labels.welcomeNoAccount}</p>
           <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-            {targetLanguage === "TR" ? AI_PAUSED_TR : AI_PAUSED_EN}
+            {targetLanguage === "TR" ? LOCAL_IMPORT_TR : LOCAL_IMPORT_EN}
           </p>
 
       <ol className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
@@ -101,12 +107,12 @@ export function Welcome() {
             {labels.welcomeCreateHint}
           </span>
         </button>
-        <FileDrop accept="application/pdf,.pdf" disabled={!AI_ENABLED || busy} onFiles={files => void importFiles("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomePdfHint}</span></FileDrop>
-        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={!AI_ENABLED || busy} onFiles={files => void importFiles("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomeImageHint}</span></FileDrop>
+        <FileDrop accept="application/pdf,.pdf" disabled={busy} onFiles={files => void importFiles("pdf", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomePdfHint}</span></FileDrop>
+        <FileDrop accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple disabled={busy} onFiles={files => void importFiles("image", files)}><span className="mt-2 text-sm text-muted-foreground">{labels.welcomeImageHint}</span></FileDrop>
       </div>
       {busy ? (
         <div className="mt-8">
-          <AiProgress />
+          <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{busy ? progress : ""}</p>
         </div>
       ) : null}
     </div>

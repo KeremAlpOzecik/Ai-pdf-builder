@@ -117,7 +117,7 @@ export function ToolsHub() {
           <div>
             <p className="text-sm font-semibold text-primary">{tr ? "PDF araçları ve CV stüdyosu" : "PDF tools & CV studio"}</p>
             <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-[-0.035em] sm:text-5xl lg:text-[56px]">{tr ? "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur" : "Edit PDFs and build an ATS-ready CV for free"}</h1>
-            <p className="mt-6 max-w-xl text-lg leading-7 text-muted-foreground">{tr ? "PDF’lerinizi düzenleyin, dönüştürün ve birleştirin. CV stüdyosunda özgeçmişinizi hazırlayın, AI önerilerini inceleyin ve indirin." : "Edit, convert and merge PDFs. Build your resume in CV Studio, review AI suggestions and download."}</p>
+            <p className="mt-6 max-w-xl text-lg leading-7 text-muted-foreground">{tr ? "PDF’lerinizi düzenleyin, dönüştürün ve birleştirin. CV stüdyosunda özgeçmişinizi hazırlayın, bilgilerinizi kontrol edin ve indirin." : "Edit, convert and merge PDFs. Build your resume in CV Studio, review your details and download."}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/tools/edit-pdf" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90"><FilePenLine className="size-4" />{tr ? "PDF yükle ve başla" : "Upload a PDF to start"}<ArrowUpRight className="size-4" /></Link>
               <Link href="/studio" className="inline-flex min-h-12 items-center gap-2 rounded-xl border bg-card px-5 font-semibold hover:bg-muted"><Sparkles className="size-4" />{tr ? "CV Stüdyosunu aç" : "Open CV Studio"}</Link>

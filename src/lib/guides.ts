@@ -70,7 +70,7 @@ export const guides: Guide[] = [
       },
       {
         title: "CV için daha temiz alternatif",
-        body: "Özgeçmişi baştan düzenlemek istiyorsan stüdyoya geç. PDF veya LinkedIn çıktısını içe aktar, alanları canlı önizlemede düzelt ve ATS için ifade önerisi al. Bu yol, dönüştürülmüş Word dosyasındaki bozulmuş düzenle uğraşmaktan genellikle daha kısa sürer. Word çıktısını yalnızca metni başka bir şablona yapıştıracağın zaman tercih et.",
+        body: "Özgeçmişi baştan düzenlemek istiyorsan stüdyoya geç. PDF veya LinkedIn çıktısını içe aktar, alanları canlı önizlemede düzelt ve çıkarılan taslağı kaynak metinle karşılaştır. Bu yol, dönüştürülmüş Word dosyasındaki bozulmuş düzenle uğraşmaktan genellikle daha kısa sürer. Word çıktısını yalnızca metni başka bir şablona yapıştıracağın zaman tercih et.",
       },
       {
         title: "Dönüştürme sonrası başvuru kontrol listesi",
@@ -85,12 +85,12 @@ export const guides: Guide[] = [
   {
     slug: "ats-uyumlu-cv-olusturma",
     eyebrow: "CV rehberi",
-    title: "ATS uyumlu CV nasıl oluşturulur?",
+    title: "ATS başvuruları için sade CV nasıl hazırlanır?",
     description:
       "İş başvurularında CV’nin ATS tarafından okunması için sade düzen, doğru başlıklar ve ölçülü anahtar kelime kullanımı.",
-    keywords: ["ATS uyumlu CV", "ATS özgeçmiş", "OCR CV içe aktarma"],
+    keywords: ["sade CV", "ATS özgeçmiş", "OCR CV içe aktarma"],
     intro:
-      "ATS (Applicant Tracking System), iş başvurularındaki özgeçmişleri alanlara ve kelimelere göre tarar. Sade bir düzen, açık bölüm başlıkları ve ilandaki gerçek beceriler CV’nin elenmeden geçme ihtimalini artırır. Amaç robotu kandırmak değil; insan kaynaklarının dosyayı açmadan önce doğru aday olarak görmesini sağlamaktır.",
+      "ATS, aday takip sistemlerinin genel adıdır. CV okuma ve değerlendirme yöntemleri sisteme göre değişir. Bu rehber sade düzen ve açık bölüm başlıkları için öneriler sunar; belirli bir ATS’de doğru okunma, yüksek puan veya başvurunun kabulü garanti edilmez. EkoPDF ATS puanı hesaplamaz ve işe alım sistemlerinde uyumluluk sertifikası sunmaz.",
     sections: [
       {
         title: "Sade, tek kolonlu düzen kullan",
@@ -195,7 +195,7 @@ export const guides: Guide[] = [
     eyebrow: "LinkedIn ve CV",
     title: "LinkedIn CV PDF’ini ücretsiz düzenleme",
     description:
-      "LinkedIn’den indirdiğin özgeçmiş PDF’ini tarayıcıda düzelt, yazım hatasını gider, ATS uyumlu dosya indir. Hesap yok.",
+      "LinkedIn’den indirdiğin özgeçmiş PDF’ini tarayıcıda düzelt, yazım hatasını gider, metni seçilebilir dosya indir. Hesap yok.",
     keywords: ["linkedin cv pdf düzenle ücretsiz", "linkedin özgeçmiş pdf", "linkedin cv indir düzenle"],
     intro:
       "LinkedIn profilini PDF olarak indirmek hızlı bir özgeçmiş üretir ama dosya genelde fazla geneldir: ilana göre unvan yok, maddeler zayıf, Türkçe karakter veya tarih formatı kaymış olabilir. Bu rehber, o PDF’i silmeden nasıl düzelteceğini anlatır.",
@@ -265,12 +265,12 @@ export const guides: Guide[] = [
   {
     slug: "ats-uyumlu-cv-turkce-ucretsiz",
     eyebrow: "Türkçe başvuru",
-    title: "ATS uyumlu CV Türkçe ve ücretsiz nasıl hazırlanır?",
+    title: "Sade Türkçe CV ücretsiz nasıl hazırlanır?",
     description:
-      "Türkiye kariyer siteleri için Türkçe, ATS uyumlu, ücretsiz özgeçmiş. Hesap yok; PDF’i tarayıcıda oluştur veya düzelt.",
-    keywords: ["ATS uyumlu CV Türkçe ücretsiz", "ücretsiz Türkçe özgeçmiş", "kariyer.net cv"],
+      "Türkçe, sade ve metni seçilebilir CV hazırlama rehberi. Başvuru sistemlerinde uyumluluk veya kabul garantisi verilmez; ilan sahibinin dosya koşullarını kontrol et.",
+    keywords: ["sade Türkçe CV şablonları", "ücretsiz Türkçe özgeçmiş", "kariyer.net cv"],
     intro:
-      "Türkiye’deki ilanların çoğu Türkçe form ve ATS kullanır. İngilizce şablonla başvurmak, bölüm adlarını ve tarihleri şaşırtabilir. Bu rehber, ücretsiz araçlarla Türkçe, sade ve taranabilir bir CV çıkarmanı anlatır.",
+      "CV dilini ve dosya biçimini ilan sahibinin talebine göre seç. Bu rehber ücretsiz araçlarla Türkçe, sade ve metni seçilebilir bir CV hazırlamayı anlatır. Metnin seçilebilir olması her başvuru sisteminde doğru okunacağı anlamına gelmez; otomatik çeviri ve ATS puanlama sunulmaz.",
     sections: [
       {
         title: "Türkçe ilan, Türkçe CV",

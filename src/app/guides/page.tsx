@@ -8,7 +8,7 @@ import { absoluteUrl, pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "PDF ve CV rehberleri",
   description:
-    "LinkedIn CV PDF düzenleme, ATS uyumlu Türkçe özgeçmiş, yazım hatası düzeltme ve ücretsiz PDF birleştirme rehberleri.",
+    "LinkedIn CV PDF düzenleme, sade Türkçe özgeçmiş, yazım hatası düzeltme ve ücretsiz PDF birleştirme rehberleri.",
   path: "/guides",
 });
 

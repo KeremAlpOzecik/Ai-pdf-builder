@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur";
+export const alt = "Ücretsiz PDF düzenle ve sade CV oluştur";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -34,7 +34,7 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 64, lineHeight: 1.1, fontWeight: 700, maxWidth: 920 }}>
-            Ücretsiz PDF düzenle, ATS uyumlu CV oluştur
+            Ücretsiz PDF düzenle, sade CV oluştur
           </div>
           <div style={{ fontSize: 28, color: "rgba(255,255,255,0.72)", maxWidth: 860 }}>
             Temel PDF araçları tarayıcıda çalışır. AI özellikleri Groq API kullanır.

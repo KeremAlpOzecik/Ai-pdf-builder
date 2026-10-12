@@ -28,7 +28,7 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur | EkoPDF",
+    default: "Ücretsiz PDF düzenle ve sade CV oluştur | EkoPDF",
     template: "%s | EkoPDF",
   },
   description:
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
-    "ATS uyumlu CV Türkçe ücretsiz",
+    "sade Türkçe CV şablonları",
     "cv pdf yazım hatası düzelt",
     "OCR CV içe aktarma",
   ],
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: SITE_NAME,
-    title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
+    title: "Ücretsiz PDF düzenle ve sade CV oluştur",
     description: "Temel PDF araçları tarayıcıda çalışır; CV içe aktarma yerel metin çıkarma ve OCR kullanır.",
     locale: "tr_TR",
   },
@@ -92,11 +92,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     operatingSystem: "Web",
     url: siteUrl,
     offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
-    description: "Tarayıcıda PDF düzenleme ve ATS uyumlu CV oluşturma.",
+    description: "Tarayıcıda PDF düzenleme ve sade CV oluşturma.",
     featureList: [
       "Ücretsiz PDF düzenleme",
       "LinkedIn CV PDF içe aktarma",
-      "ATS uyumlu özgeçmiş",
+      "sade özgeçmiş",
       "Word-PDF dönüştürme",
     ],
   };

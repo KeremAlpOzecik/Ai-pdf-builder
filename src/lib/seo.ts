@@ -23,7 +23,7 @@ export function pageMetadata({
     url: absoluteUrl("/opengraph-image"),
     width: 1200,
     height: 630,
-    alt: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
+    alt: "Ücretsiz PDF düzenle ve sade CV oluştur",
   };
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },

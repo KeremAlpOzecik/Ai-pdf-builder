@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     "public/ocr/worker.min.js",
     "test-results/**",
     "playwright-report/**",
+    "tmp/**",
   ]),
 ]);
 

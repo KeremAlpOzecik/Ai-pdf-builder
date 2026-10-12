@@ -26,12 +26,12 @@ const faq = [
   {
     question: "LinkedIn CV PDF’ini ücretsiz düzenleyebilir miyim?",
     answer:
-      "Evet. PDF’i yükle, hatalı alanı kapatıp üzerine doğru yazıyı ekle. Eski metin doğrudan değişmez; kapatılan sayfa görüntüye dönüşür. ATS uyumu veya büyük revizyon için CV stüdyosunda yeniden oluştur.",
+      "Evet. PDF’i yükle, hatalı alanı kapatıp üzerine doğru yazıyı ekle. Eski metin doğrudan değişmez; kapatılan sayfa görüntüye dönüşür. Metni seçilebilir bir çıktı veya büyük revizyon için CV stüdyosunda yeniden oluştur.",
   },
   {
-    question: "ATS uyumlu CV’yi Türkçe ve ücretsiz hazırlar mısınız?",
+    question: "Türkçe CV şablonları ücretsiz mi?",
     answer:
-      "Stüdyoda PDF veya ekran görüntüsü içe aktarılır; modern, klasik ve kompakt şablonlarla özgeçmiş hazırlanır. İçe aktarılan taslaktaki alanları kaynak metinle karşılaştırıp düzeltmelisin.",
+      "Evet. Modern, klasik ve kompakt şablonlarla CV hazırlayabilirsin. İçe aktarılan taslağı kontrol etmelisin. EkoPDF ATS puanı hesaplamaz; belirli bir başvuru sisteminde uyumluluk veya kabul garantisi vermez.",
   },
   {
     question: "CV PDF yazım hatasını nasıl düzeltirim?",
@@ -64,8 +64,8 @@ export function SeoContent() {
   if (!tr) return (
     <>
       <section className="mx-auto mt-16 max-w-7xl border-t border-border/70 px-5 py-12 sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Free PDF tools · ATS CV</p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight">Edit documents in your browser and download an ATS-ready resume</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Free PDF tools · CV templates</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight">Edit documents in your browser and download an simple resume</h2>
         <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">Merge, split, compress, rotate, sign, watermark, convert, and OCR PDF files without an account. Core PDF tools process files locally in your browser. CV import uses on-device OCR and creates a draft for you to review.</p>
         <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold"><Link className="underline" href="/studio">Open CV studio →</Link><Link className="underline" href="/tools/edit-pdf">Open PDF editor →</Link><Link className="underline" href="/guides">View guides →</Link></div>
       </section>
@@ -85,10 +85,10 @@ export function SeoContent() {
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Ücretsiz PDF araçları · ATS CV
+              Ücretsiz PDF araçları · CV şablonları
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              LinkedIn özgeçmişini tarayıcıda düzelt, ATS uyumlu Türkçe CV indir
+              LinkedIn özgeçmişini tarayıcıda düzelt, sade Türkçe CV indir
             </h2>
           </div>
           <div className="space-y-5 text-base leading-7 text-muted-foreground">

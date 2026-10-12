@@ -45,7 +45,7 @@ export function ToolArticle({ slug }: { slug: string }) {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-16">
-      <p className="text-base leading-7 text-muted-foreground">{tr ? seo.summary : "Choose your file, configure the available options, then process and download the result. Your file is handled in the browser unless the tool explicitly states that it uses AI."}</p>
+      <p className="text-base leading-7 text-muted-foreground">{tr ? seo.summary : "Choose your file, configure the available options, then process and download the result. Document processing runs in your browser."}</p>
       <ol className="mt-10 space-y-6">
         {(tr ? seo.steps : [{ title: "Choose a file", body: "Select a supported file within the size limit." }, { title: "Configure", body: "Review the options and preview before processing." }, { title: "Download", body: "Open the result and verify its content." }]).map((step, index) => (
           <li key={step.title}>

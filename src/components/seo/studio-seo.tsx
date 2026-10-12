@@ -35,8 +35,8 @@ export function StudioSeo() {
   const howTo = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "ATS uyumlu CV Türkçe ücretsiz nasıl hazırlanır?",
-    description: "LinkedIn CV PDF’ini yükle, yazım hatasını düzelt, ATS uyumlu özgeçmiş indir.",
+    name: "Sade Türkçe CV nasıl hazırlanır?",
+    description: "LinkedIn CV PDF’ini yükle, yazım hatasını düzelt, sade özgeçmiş indir.",
     step: steps.map((step, index) => ({
       "@type": "HowToStep",
       position: index + 1,
@@ -50,10 +50,10 @@ export function StudioSeo() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{tr ? "Cihazında çalışan CV stüdyosu" : "On-device CV studio"}</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-          {tr ? "LinkedIn CV PDF’ini yükle, ATS uyumlu Türkçe özgeçmiş indir" : "Upload a LinkedIn resume PDF and download an ATS-ready CV"}
+          {tr ? "LinkedIn CV PDF’ini yükle, sade Türkçe özgeçmiş indir" : "Upload a LinkedIn resume PDF and download a simple CV"}
         </h2>
         <p className="mt-4 text-base leading-7 text-muted-foreground">
-          {tr ? "Kariyer.net ve LinkedIn başvuruları için sade, tek kolonlu, metni seçilebilir CV üret. Yazım hatası için PDF düzenleyiciye, evrak paketi için birleştirme aracına geçebilirsin." : "Create a clean, selectable resume for application systems such as LinkedIn. Use the PDF editor for small corrections or merge documents into an application package."}
+          {tr ? "Sade, metni seçilebilir bir CV hazırla. Dosya biçimini başvurduğun kurumun koşullarına göre seç. ATS uyumu, puan veya işe alım sonucu garanti edilmez; ATS puanlama ve otomatik çeviri sunulmaz." : "Create a simple resume with selectable text. Follow the employer's file requirements. ATS compatibility, scores and hiring outcomes are not guaranteed; ATS scoring and automatic translation are not offered."}
         </p>
         <p className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
           {tr ? <>PDF ve görsel içe aktarma cihazında çalışır. CV içeriği sunucuya gönderilmez; çıkarılan taslağı kontrol et. Ayrıntılar için <Link className="font-semibold underline" href="/privacy">gizlilik politikasına</Link> bak.</> : <>Import runs on your device without uploading CV content. Review the extracted draft. See the <Link className="font-semibold underline" href="/privacy">privacy policy</Link> for details.</>}

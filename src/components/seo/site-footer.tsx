@@ -23,7 +23,7 @@ export function SiteFooter() {
         <div>
           <Link href="/" className="inline-flex items-center gap-3"><BrandMark className="size-10 shrink-0" /><span className="font-heading text-2xl font-semibold tracking-tight">EkoPDF</span></Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-            {tr ? "Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda ATS uyumlu hale getir. Hesap yok." : "Edit PDFs, run OCR, add signatures or watermarks, convert Word files, and compress documents for free. Build an ATS-ready resume in your browser. No account required."}
+            {tr ? "Ücretsiz PDF düzenle, OCR, imza, filigran, Word çevir veya sıkıştır. LinkedIn özgeçmişini tarayıcıda sade bir şablonla yeniden oluştur. Hesap yok." : "Edit PDFs, run OCR, add signatures or watermarks, convert Word files, and compress documents for free. Build an simple resume in your browser. No account required."}
           </p>
         </div>
         <div>
@@ -31,7 +31,7 @@ export function SiteFooter() {
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <Link className="hover:underline" href="/studio">
-                {tr ? "ATS uyumlu CV stüdyosu" : "ATS-ready CV studio"}
+                {tr ? "sade CV stüdyosu" : "simple CV studio"}
               </Link>
             </li>
             {tools.map((tool) => (

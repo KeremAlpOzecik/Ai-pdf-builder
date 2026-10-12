@@ -4,13 +4,13 @@ import { SeoContent } from "@/components/seo/seo-content";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Ücretsiz PDF düzenle ve ATS uyumlu CV oluştur",
+  title: "Ücretsiz PDF düzenle ve sade CV oluştur",
   description:
     "LinkedIn CV PDF’ini düzenle, yazım hatasını düzelt, Word çevir veya birleştir. Temel PDF araçları tarayıcıda çalışır; CV içe aktarma yerel metin çıkarma ve OCR kullanır.",
   keywords: [
     "ücretsiz PDF düzenle",
     "linkedin cv pdf düzenle ücretsiz",
-    "ATS uyumlu CV Türkçe ücretsiz",
+    "sade Türkçe CV şablonları",
     "cv pdf yazım hatası düzelt",
     "OCR CV içe aktarma",
     "PDF Word çevirme",

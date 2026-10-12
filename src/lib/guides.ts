@@ -11,6 +11,20 @@ export type Guide = {
 
 export const guides: Guide[] = [
   {
+    slug: "fotograf-200-kb-kucultme", eyebrow: "Fotoğraf rehberi",
+    title: "Fotoğrafı 100, 200 veya 500 KB altına nasıl küçültürsün?",
+    description: "Başvuru formu için JPEG, PNG ve WebP görsellerini hedef dosya boyutuna cihazında küçült; kaliteyi ve piksel ölçülerini kontrol et.",
+    keywords: ["fotoğraf 200 KB küçültme", "JPG 100 KB", "fotoğraf boyut küçültme"],
+    intro: "Bir form fotoğrafın fazla büyük olduğunu söylüyorsa önce izin verilen dosya biçimini, boyut sınırını ve piksel ölçülerini oku. EkoPDF dosyayı cihazında JPEG veya WebP’ye dönüştürerek üst boyut sınırına indirmeyi dener. Kalite kaybı olabilir; sınırın altında olmak başvurunun kabulünü garanti etmez.",
+    sections: [
+      {title:"Boyut sınırını seç",body:"Fotoğraf boyutunu küçült aracında görselini seç. 100, 200 veya 500 KB düğmelerini kullanabilir, 10–25000 KB arasında özel sınır girebilirsin. Burada 1 KB, 1000 bayttır."},
+      {title:"Dosya biçimini kontrol et",body:"Form JPG/JPEG istiyorsa JPEG seç. WebP’yi ancak form destekliyorsa kullan. PNG giriş olarak kabul edilir; PNG çıktısı sunulmaz. Saydam bölgeler JPEG’de beyaz olur ve animasyon sabit kareye dönüşür."},
+      {title:"Ölçüleri ve okunabilirliği kontrol et",body:"Araç önce sıkıştırma kalitesini, gerekirse piksel ölçülerini azaltır. Sonuç boyutunu ve önizlemedeki ayrıntıları kontrol et. Formun minimum genişlik/yükseklik koşulunu karşılamıyorsa daha büyük boyut sınırı dene veya uygun başka bir fotoğraf seç."},
+      {title:"Yeni dosyayı indir",body:"İndirilen kopyayı başvuru formunda kullan. Orijinalini sakla. Fotoğraf içeriği sunucuya gönderilmez; barındırma ve analitik teknik verileri ayrıca işleyebilir."},
+    ],
+    related: [{label:"Fotoğraf boyutunu küçült",href:"/tools/compress-image"},{label:"Görselleri PDF yap",href:"/tools/jpg-pdf"}],
+  },
+  {
     slug: "ucretsiz-pdf-birlestirme",
     eyebrow: "PDF rehberi",
     title: "Ücretsiz PDF birleştirme nasıl yapılır?",

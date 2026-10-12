@@ -1,5 +1,6 @@
 export const TOOL_SLUGS = [
   "edit-pdf",
+  "compress-image",
   "word-to-pdf",
   "pdf-to-word",
   "merge",

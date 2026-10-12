@@ -12,6 +12,7 @@ export function SiteFooter() {
   const tr = useDisplayLanguage() === "TR";
   const labels = useLabels();
   const toolNames: Record<string, string> = {
+    "compress-image": tr ? "Fotoğraf boyutunu küçült" : "Compress photo",
     "edit-pdf": labels.toolEditPdf, "word-to-pdf": labels.toolWordPdf, "pdf-to-word": labels.toolPdfWord,
     merge: labels.toolMerge, split: labels.toolSplit, compress: labels.toolCompress, "jpg-pdf": labels.toolJpgPdf,
     ocr: labels.toolOcr, sign: labels.toolSign, watermark: labels.toolWatermark, rotate: labels.toolRotate,

@@ -11,6 +11,7 @@ import { FileDrop } from "@/components/tools/file-drop";
 import { PdfPlacementPreview } from "@/components/tools/pdf-placement-preview";
 import { PdfRotatePreview } from "@/components/tools/pdf-rotate-preview";
 import { ToolShell } from "@/components/tools/tool-shell";
+import { ImageCompressor } from "@/components/tools/image-compressor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ import { MAX_FILE_BYTES, isToolSlug, type ToolSlug } from "@/lib/tools";
 
 function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
   const map = {
+    "compress-image": ["Fotoğraf boyutunu küçült", "100, 200, 500 KB veya özel sınır seç; sonucu önizle ve indir."],
     "edit-pdf": [labels.toolEditPdf, labels.toolEditPdfHint],
     "word-to-pdf": [labels.toolWordPdf, labels.toolWordPdfHint],
     "pdf-to-word": [labels.toolPdfWord, labels.toolPdfWordHint],
@@ -58,6 +60,7 @@ function actionCopy(
   jpgMode: "to-pdf" | "to-jpg",
 ) {
   const map = {
+    "compress-image": "Fotoğrafı küçült",
     "word-to-pdf": labels.runWordPdf,
     "pdf-to-word": labels.runPdfWord,
     merge: labels.runMerge,
@@ -75,6 +78,8 @@ function actionCopy(
 
 export function ToolWorkspace({ slug }: { slug: string }) {
   const labels = useLabels();
+  const tr = useDisplayLanguage() === "TR";
+  if (slug === "compress-image") return <ToolShell title={tr ? "Fotoğraf boyutunu küçült" : "Compress photo to a size limit"} hint={tr ? "100, 200, 500 KB veya özel sınır seç. JPEG, PNG ve WebP dosyaları cihazında işlenir." : "Choose 100, 200, 500 KB or a custom limit. JPEG, PNG and WebP files are processed on your device."}><ImageCompressor /></ToolShell>;
   if (!isToolSlug(slug)) {
     return (
       <ToolShell title={labels.unknownTool} hint="">

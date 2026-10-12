@@ -13,6 +13,15 @@ export type ToolSeo = {
 };
 
 export const toolSeo: Record<ToolSlug, ToolSeo> = {
+  "compress-image": {
+    slug: "compress-image", title: "Fotoğrafı 100, 200 veya 500 KB altına küçült", h1: "Fotoğraf boyutunu hedef KB sınırına küçült",
+    description: "JPEG, PNG ve WebP fotoğrafları 100 KB, 200 KB, 500 KB veya özel sınıra küçült. Cihazda işlem, ücretsiz önizleme ve JPEG/WebP indirme.",
+    keywords: ["fotoğraf 200 KB küçültme", "fotoğraf 100 KB", "JPG boyut küçültme", "fotoğraf sıkıştırma"],
+    summary: "Başvuru formunun dosya boyutu sınırı için görselini seç, üst sınırı belirle ve sonucu kontrol et. Kalite veya piksel ölçüleri azalabilir; kayıpsız dönüşüm ya da başvurunun kabulü garanti edilmez. Belge içeriği sunucuya gönderilmez.",
+    steps: [{title:"Görsel seç",body:"25 MB altında JPEG, PNG veya WebP seç. En fazla 40 megapiksel desteklenir."},{title:"Üst sınırı seç",body:"100, 200, 500 KB veya 10–25000 KB arasında özel sınır seç. 1 KB, 1000 bayt olarak hesaplanır."},{title:"Önizle ve indir",body:"JPEG veya WebP çıktısını orijinalle karşılaştır. Dosya boyutunu ve piksel ölçülerini kontrol edip indir."}],
+    faqs: [{question:"Kalite kaybı olur mu?",answer:"Olabilir. Hedef boyuta ulaşmak için kalite ve gerekirse piksel ölçüleri azaltılır. İndirmeden önce önizlemeyi kontrol et."},{question:"PNG çıktısı var mı?",answer:"Hayır. JPEG veya WebP çıktısı sunulur. JPEG’de saydam alanlar beyaz olur; animasyonlar sabit kareye dönüşür."},{question:"Fotoğrafım yükleniyor mu?",answer:"Görsel içeriği sunucuya yüklenmez; işlem cihazındaki tarayıcıda yapılır. Barındırma ve analitik teknik verileri ayrıca işleyebilir."}],
+    related: [{label:"Fotoğraf küçültme rehberi",href:"/guides/fotograf-200-kb-kucultme"},{label:"Görselleri PDF yap",href:"/tools/jpg-pdf"}],
+  },
   "edit-pdf": {
     slug: "edit-pdf",
     title: "Ücretsiz PDF düzenleyici | PDF’ye yazı ve görsel ekle",

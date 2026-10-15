@@ -1,0 +1,32 @@
+{
+  "name": "ekopdf",
+  "version": "1.0.0",
+  "description": "Privacy-first Turkish PDF editing studio",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5173",
+    "test": "playwright test",
+    "prebuild": "node scripts/prepare.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "idb-keyval": "^6.3.0",
+    "jszip": "^3.10.2",
+    "lucide": "^1.57.0",
+    "mupdf": "^1.28.1",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "vite": "^6.4.4"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@4.52.5"
+  }
+}

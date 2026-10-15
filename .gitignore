@@ -46,3 +46,7 @@ next-env.d.ts
 # Generated from the installed, lockfile-pinned OCR runtime during build.
 /public/ocr/core/
 /public/ocr/worker.min.js
+/public/pdf-studio/
+/vendor/pdf-studio/public/mupdf/
+/vendor/pdf-studio/public/source.zip
+/vendor/pdf-studio/tests/*.png

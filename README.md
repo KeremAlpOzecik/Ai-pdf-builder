@@ -40,6 +40,14 @@ Open [http://localhost:3000](http://localhost:3000). The form and preview work w
 - Mobile Edit / Preview tabs
 - PDF and Word export (single-column ATS layout)
 
+## PDF editing studio
+
+`/tools/edit-pdf` embeds the ekoPDF Studio from `vendor/pdf-studio` on the same origin, replacing the former overlay-only editor. Supported embedded fonts and original sizes are reused when editing existing text. Missing glyphs block export until a full TTF/OTF is uploaded or Noto Sans is explicitly selected. Image editing, page operations, redaction, signatures, watermarks, PDF/image export and `.ekopdf` projects are included. Documents remain in the browser.
+
+`npm run build` generates `public/pdf-studio` before Next.js. Before `npm run dev`, run `node scripts/build-pdf-studio.mjs` once. Generated assets are ignored. MuPDF is copied from the root lockfile-pinned dependency. The studio's AGPL source and license are available at `/pdf-studio/source.zip` and `/pdf-studio/LICENSE.txt`; see its README for dependency licenses and font limitations. Scanned text requires OCR separately. The iframe isolates studio CSS and keyboard controls from the CV builder.
+
+After building, `npx playwright test e2e/pdf-editor.spec.ts --project=chromium --project=mobile-chromium` tests native text/font/size preservation, missing-glyph export blocking, uploaded fonts across project save/reopen, local assets and mobile export. Set `E2E_BASE_URL=https://ekopdf.com` to run these checks against production with generated sample documents. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` optionally selects a system Chromium executable.
+
 ## Client-side batch PDF tools
 
 Compression, splitting, PDF → Word, Word → PDF and PDF → JPG share `src/components/tools/batch-tool.tsx`. It accepts 15+ files, appends uploads, supports drag ordering and keyboard-accessible move buttons, and keeps status, progress, errors and output blobs associated with stable file IDs. Inputs are limited to 25 MB each and 500 MB per group.

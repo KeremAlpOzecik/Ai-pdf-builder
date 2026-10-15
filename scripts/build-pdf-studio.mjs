@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { build } from 'vite';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const studio = path.join(root, 'vendor/pdf-studio');
+await fs.cp(path.join(root, 'node_modules/mupdf/dist'), path.join(studio, 'public/mupdf'), { recursive: true });
+const source = spawnSync(process.execPath, ['scripts/prepare.mjs'], { cwd: studio, stdio: 'inherit' });
+if (source.status !== 0) process.exit(source.status || 1);
+await build({ configFile: path.join(studio, 'vite.config.js'), build: { outDir: path.join(root, 'public/pdf-studio'), emptyOutDir: true } });

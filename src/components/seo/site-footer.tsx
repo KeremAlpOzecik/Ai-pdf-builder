@@ -14,7 +14,7 @@ export function SiteFooter() {
   const toolNames: Record<string, string> = {
     "compare-pdf": tr ? "PDF belgelerini karşılaştır" : "Compare PDF documents",
     "compress-image": tr ? "Fotoğraf boyutunu küçült" : "Compress photo",
-    "edit-pdf": labels.toolEditPdf, "word-to-pdf": labels.toolWordPdf, "pdf-to-word": labels.toolPdfWord,
+    "workspace": labels.toolEditPdf, "word-to-pdf": labels.toolWordPdf, "pdf-to-word": labels.toolPdfWord,
     merge: labels.toolMerge, split: labels.toolSplit, compress: labels.toolCompress, "jpg-pdf": labels.toolJpgPdf,
     ocr: labels.toolOcr, sign: labels.toolSign, watermark: labels.toolWatermark, rotate: labels.toolRotate,
     "page-numbers": labels.toolPageNumbers,

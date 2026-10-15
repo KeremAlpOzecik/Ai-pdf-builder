@@ -41,7 +41,7 @@ function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
   const map = {
     "compare-pdf": ["PDF belge karşılaştırma", "İki PDF arasındaki metin farklarını görün."],
     "compress-image": ["Fotoğraf boyutunu küçült", "100, 200, 500 KB veya özel sınır seç; sonucu önizle ve indir."],
-    "edit-pdf": [labels.toolEditPdf, labels.toolEditPdfHint],
+    "workspace": [labels.toolEditPdf, labels.toolEditPdfHint],
     "word-to-pdf": [labels.toolWordPdf, labels.toolWordPdfHint],
     "pdf-to-word": [labels.toolPdfWord, labels.toolPdfWordHint],
     merge: [labels.toolMerge, labels.toolMergeHint],
@@ -58,7 +58,7 @@ function copyFor(slug: ToolSlug, labels: (typeof copy)[keyof typeof copy]) {
 }
 
 function actionCopy(
-  slug: Exclude<ToolSlug, "edit-pdf" | "compare-pdf">,
+  slug: Exclude<ToolSlug, "workspace" | "compare-pdf">,
   labels: (typeof copy)[keyof typeof copy],
   jpgMode: "to-pdf" | "to-jpg",
 ) {
@@ -98,19 +98,19 @@ export function ToolWorkspace({ slug }: { slug: string }) {
       title={title}
       hint={hint}
       wide={
-        slug === "edit-pdf" ||
+        slug === "workspace" ||
         slug === "sign" ||
         slug === "watermark" ||
         slug === "rotate" ||
         slug === "page-numbers"
       }
     >
-      {slug === "edit-pdf" ? <EditPdfEditor /> : <GenericTool key={slug} slug={slug} />}
+      {slug === "workspace" ? <EditPdfEditor /> : <GenericTool key={slug} slug={slug} />}
     </ToolShell>
   );
 }
 
-function GenericTool({ slug }: { slug: Exclude<ToolSlug, "edit-pdf" | "compare-pdf"> }) {
+function GenericTool({ slug }: { slug: Exclude<ToolSlug, "workspace" | "compare-pdf"> }) {
   const labels = useLabels();
   const tr = useDisplayLanguage() === "TR";
   const [results, setResults] = useState<{ blob: Blob; name: string }[]>([]);

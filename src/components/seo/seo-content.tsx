@@ -69,7 +69,7 @@ export function SeoContent() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Free PDF tools · CV templates</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight">Edit documents in your browser and download a simple resume</h2>
         <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">Merge, split, compress, rotate, sign, watermark, convert, and OCR PDF files without an account. Core PDF tools process files locally in your browser. CV import uses on-device OCR and creates a draft for you to review.</p>
-        <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold"><Link className="underline" href="/studio">Open CV studio →</Link><Link className="underline" href="/tools/edit-pdf">Open PDF editor →</Link><Link className="underline" href="/guides">View guides →</Link></div>
+        <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold"><Link className="underline" href="/studio">Open CV studio →</Link><Link className="underline" href="/tools/workspace">Open PDF editor →</Link><Link className="underline" href="/guides">View guides →</Link></div>
       </section>
       <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">FAQ</p><h2 className="mt-3 text-3xl font-semibold">Frequently asked questions</h2><div className="mt-8 grid gap-4 md:grid-cols-2">{[
         ["Are the PDF tools free?", "Yes. No account or daily limit is required."],
@@ -106,7 +106,7 @@ export function SeoContent() {
               <Link className="underline decoration-primary/40 underline-offset-4" href="/studio">
                 CV stüdyosunu aç →
               </Link>
-              <Link className="underline decoration-primary/40 underline-offset-4" href="/tools/edit-pdf">
+              <Link className="underline decoration-primary/40 underline-offset-4" href="/tools/workspace">
                 PDF düzenleyiciyi aç →
               </Link>
               <Link className="underline decoration-primary/40 underline-offset-4" href="/guides">

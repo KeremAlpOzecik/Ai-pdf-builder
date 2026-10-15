@@ -42,7 +42,7 @@ Open [http://localhost:3000](http://localhost:3000). The form and preview work w
 
 ## PDF editing studio
 
-`/tools/edit-pdf` embeds the ekoPDF Studio from `vendor/pdf-studio` on the same origin, replacing the former overlay-only editor. Supported embedded fonts and original sizes are reused when editing existing text. Missing glyphs block export until a full TTF/OTF is uploaded or Noto Sans is explicitly selected. Image editing, page operations, redaction, signatures, watermarks, PDF/image export and `.ekopdf` projects are included. Documents remain in the browser.
+`/tools/workspace` embeds the ekoPDF Studio from `vendor/pdf-studio` on the same origin, replacing the former overlay-only editor. Supported embedded fonts and original sizes are reused when editing existing text. Missing glyphs block export until a full TTF/OTF is uploaded or Noto Sans is explicitly selected. Image editing, page operations, redaction, signatures, watermarks, PDF/image export and `.ekopdf` projects are included. Documents remain in the browser.
 
 `npm run build` generates `public/pdf-studio` before Next.js. Before `npm run dev`, run `node scripts/build-pdf-studio.mjs` once. Generated assets are ignored. MuPDF is copied from the root lockfile-pinned dependency. The studio's AGPL source and license are available at `/pdf-studio/source.zip` and `/pdf-studio/LICENSE.txt`; see its README for dependency licenses and font limitations. Scanned text requires OCR separately. The iframe isolates studio CSS and keyboard controls from the CV builder.
 

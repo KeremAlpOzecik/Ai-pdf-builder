@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "tesseract.js"],
   poweredByHeader: false,
+  async redirects() {
+    return [{ source: "/tools/edit-pdf", destination: "/tools/workspace", permanent: true }];
+  },
   async headers() {
     return [{
       source: "/(.*)",

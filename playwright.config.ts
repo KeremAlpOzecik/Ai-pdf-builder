@@ -10,7 +10,7 @@ export default defineConfig({
   use: { baseURL: process.env.E2E_BASE_URL || "http://127.0.0.1:3100", trace: "retain-on-failure", ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } } : {}) },
   webServer: process.env.E2E_BASE_URL ? undefined : {
     command: "npm run start -- --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100/tools/edit-pdf",
+    url: "http://127.0.0.1:3100/tools/workspace",
     reuseExistingServer: false,
     timeout: 120_000,
   },

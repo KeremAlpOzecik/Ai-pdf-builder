@@ -26,7 +26,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     summary: "İki PDF’nin metin katmanını karşılaştır, eklenen ve silinen kelimeleri senkronize kaydırma ile incele. Görsel ve biçim farkları karşılaştırılmaz.",
     steps: [{ title: "İki PDF seç", body: "Eski ve yeni belgeyi ayrı alanlara bırak. Dosya başına en fazla 25 MB desteklenir." }, { title: "Karşılaştır", body: "Metin farkları hesaplanır. Metinsiz sayfalar için OCR uyarısı gösterilir." }, { title: "Farkları incele", body: "Silinen metinler pembe, eklenen metinler yeşil gösterilir. Özet kelime sayılarını belirtir." }],
     faqs: [{ question: "Taranmış PDF karşılaştırılabilir mi?", answer: "Metin katmanı bulunmayan sayfalar doğrudan karşılaştırılamaz. Önce OCR ile metin katmanı oluşturun ve tanıma sonucunu kontrol edin." }, { question: "Karşılaştırma sınırları nelerdir?", answer: "Her PDF için 25 MB, 300 sayfa ve 300.000 çıkarılan karakter sınırı vardır. Çok fazla fark içeren belgeler de işlem sınırına takılabilir." }, { question: "Özetteki değişiklik sayıları ne anlama gelir?", answer: "Değişiklik sayısı bitişik fark bloklarını, ekleme ve silme sayıları kelimeleri sayar. Bir kelimenin değiştirilmesi eski tarafta silme, yeni tarafta ekleme olarak görünür." }, { question: "Dosyalar sunucuya gönderilir mi?", answer: "Hayır. Karşılaştırma tarayıcıda çalışır." }],
-    related: [{ label: "PDF karşılaştırma rehberi", href: "/guides/pdf-belge-karsilastirma" }, { label: "PDF OCR", href: "/tools/ocr" }, { label: "PDF düzenle", href: "/tools/edit-pdf" }],
+    related: [{ label: "PDF karşılaştırma rehberi", href: "/guides/pdf-belge-karsilastirma" }, { label: "PDF OCR", href: "/tools/ocr" }, { label: "PDF düzenle", href: "/tools/workspace" }],
   },
   "compress-image": {
     slug: "compress-image", title: "Fotoğrafı 100, 200 veya 500 KB altına küçült", h1: "Fotoğraf boyutunu hedef KB sınırına küçült",
@@ -37,8 +37,8 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     faqs: [{question:"Fotoğrafı seçtim; yükleme tamamlandı mı?",answer:"Dosya adı, seçildi göstergesi ve orijinal önizleme fotoğrafın hazır olduğunu gösterir. Fotoğrafı küçült düğmesine basınca işlem başlar. Görsel içeriği sunucuya yüklenmez."},{question:"Kalite kaybı olur mu?",answer:"Olabilir. Hedef boyuta ulaşmak için kalite ve gerekirse piksel ölçüleri azaltılır. İndirmeden önce önizlemeyi kontrol et."},{question:"PNG çıktısı var mı?",answer:"Hayır. JPEG veya WebP çıktısı sunulur. JPEG’de saydam alanlar beyaz olur; animasyonlar sabit kareye dönüşür."},{question:"Fotoğrafım yükleniyor mu?",answer:"Görsel içeriği sunucuya yüklenmez; işlem cihazındaki tarayıcıda yapılır. Barındırma ve analitik teknik verileri ayrıca işleyebilir."}],
     related: [{label:"Fotoğraf küçültme rehberi",href:"/guides/fotograf-200-kb-kucultme"},{label:"Görselleri PDF yap",href:"/tools/jpg-pdf"}],
   },
-  "edit-pdf": {
-    slug: "edit-pdf",
+  "workspace": {
+    slug: "workspace",
     title: "Ücretsiz PDF düzenleyici | Özgün fontla metin düzenle",
     h1: "PDF metnini, görsellerini ve sayfalarını düzenle",
     description: "Desteklenen PDF metinlerini özgün font ve boyutuyla düzenle. Görsel, imza ve filigran ekle; sayfaları yönet ve PDF indir. İşlemler tarayıcıda yapılır.",
@@ -190,7 +190,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
           "Acil evrak için evet. İş başvurusu CV’si için metin seçilebilir PDF daha doğru; stüdyo veya Word çıktısı kullan.",
       },
     ],
-    related: [{ label: "PDF düzenle", href: "/tools/edit-pdf" }],
+    related: [{ label: "PDF düzenle", href: "/tools/workspace" }],
   },
   ocr: {
     slug: "ocr",
@@ -214,7 +214,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
     ],
     related: [
       { label: "PDF → Word", href: "/tools/pdf-to-word" },
-      { label: "PDF düzenle", href: "/tools/edit-pdf" },
+      { label: "PDF düzenle", href: "/tools/workspace" },
     ],
   },
   sign: {

@@ -195,7 +195,7 @@ export const guides: Guide[] = [
       },
     ],
     related: [
-      { label: "PDF düzenleyiciyi aç", href: "/tools/edit-pdf" },
+      { label: "PDF düzenleyiciyi aç", href: "/tools/workspace" },
       { label: "Yazım hatası rehberi", href: "/guides/cv-pdf-yazim-hatasi-duzeltme" },
     ],
   },
@@ -268,7 +268,7 @@ export const guides: Guide[] = [
     ],
     related: [
       { label: "LinkedIn PDF’ini stüdyoda aç", href: "/studio" },
-      { label: "PDF’te satır düzelt", href: "/tools/edit-pdf" },
+      { label: "PDF’te satır düzelt", href: "/tools/workspace" },
     ],
   },
   {
@@ -303,7 +303,7 @@ export const guides: Guide[] = [
       },
     ],
     related: [
-      { label: "PDF yazımını düzelt", href: "/tools/edit-pdf" },
+      { label: "PDF yazımını düzelt", href: "/tools/workspace" },
       { label: "CV PDF düzenleme rehberi", href: "/guides/cv-pdf-duzenleme" },
     ],
   },

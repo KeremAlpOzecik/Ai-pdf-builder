@@ -76,7 +76,7 @@ export function StudioSeo() {
           <Link className="text-primary underline underline-offset-4" href="/guides/linkedin-cv-pdf-duzenleme">
             {tr ? "LinkedIn PDF rehberi" : "LinkedIn PDF guide"} →
           </Link>
-          <Link className="text-primary underline underline-offset-4" href="/tools/edit-pdf">
+          <Link className="text-primary underline underline-offset-4" href="/tools/workspace">
             {tr ? "PDF’te yazım düzelt" : "Fix text in a PDF"} →
           </Link>
         </div>

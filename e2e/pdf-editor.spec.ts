@@ -4,13 +4,21 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import fontkit from '@pdf-lib/fontkit';
 
 const studio = (page: Page) => page.frameLocator('iframe[title="ekoPDF PDF düzenleyici"]');
+test('old route redirects and sitemap advertises the workspace route',async({request})=>{
+  const old=await request.get('/tools/edit-pdf?from=bookmark',{maxRedirects:0});
+  expect(old.status()).toBe(308);expect(old.headers().location).toBe('/tools/workspace?from=bookmark');
+  const sitemap=await (await request.get('/sitemap.xml')).text();
+  expect(sitemap).toContain('/tools/workspace');expect(sitemap).not.toContain('/tools/edit-pdf');
+  const html=await (await request.get('/tools/workspace')).text();
+  expect(html).toContain('rel="canonical" href="https://ekopdf.com/tools/workspace"');
+});
 async function open(page: Page, embedded=true) {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const font = await doc.embedFont(embedded ? await readFile('vendor/pdf-studio/public/fonts/italic.ttf') : StandardFonts.TimesRomanItalic, embedded ? {customName:'NotoSans-Italic'} : {});
   doc.addPage([595, 842]).drawText("Original editable text", {x:60,y:720,size:23,font});
   const bytes=Buffer.from(await doc.save());
-  await page.goto("/tools/edit-pdf");
+  await page.goto("/tools/workspace");
   await studio(page).locator('#file').setInputFiles({name:'test.pdf',mimeType:'application/pdf',buffer:bytes});
   await expect(studio(page).locator('#busy')).toBeHidden();
   await expect(studio(page).locator('#document')).toBeVisible();

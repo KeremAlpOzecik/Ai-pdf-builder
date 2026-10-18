@@ -1,6 +1,6 @@
-import {PDFDocument,rgb,degrees,pushGraphicsState,popGraphicsState,concatTransformationMatrix} from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
-import JSZip from 'jszip';
+let PDFDocument,rgb,degrees,pushGraphicsState,popGraphicsState,concatTransformationMatrix,fontkit,JSZip,libraries;
+// Keep export libraries off the initial editor path, too.
+function loadLibraries(){return libraries??=Promise.all([import('pdf-lib'),import('@pdf-lib/fontkit'),import('jszip')]).then(([pdf,font,zip])=>{({PDFDocument,rgb,degrees,pushGraphicsState,popGraphicsState,concatTransformationMatrix}=pdf);fontkit=font.default;JSZip=zip.default;}).catch(error=>{libraries=undefined;throw error;});}
 import {safeName} from './document-tools.js';
 let worker,serial=0;const jobs=new Map();
 // Download the PDF engine only when a document operation needs it.
@@ -20,7 +20,7 @@ let fontBytes;
 async function fonts(){if(!fontBytes)fontBytes=Promise.all(['regular','bold','italic','bolditalic'].map(async n=>{const r=await fetch('/pdf-studio/fonts/'+n+'.ttf');if(!r.ok)throw Error('Yazı tipi yüklenemedi');return r.arrayBuffer();}));return fontBytes;}
 export function removals(p){return [...(p.removed||[]),...p.objects.filter(o=>o.type==='redact').map(o=>({kind:'redact',rect:[o.x,o.y,o.x+o.w,o.y+o.h]}))];}
 export async function renderBase(p,scale=1){if(!p.sourceId)return null;const {png}=await engine('render',{sourceId:p.sourceId,index:p.index,scale,removals:removals(p)});return new Blob([png],{type:'image/png'});}
-export async function buildPDF(pages,title,{numbers=false}={}){const out=await PDFDocument.create();out.registerFontkit(fontkit);const fs=await Promise.all((await fonts()).map(b=>out.embedFont(b,{subset:true})));
+export async function buildPDF(pages,title,{numbers=false}={}){await loadLibraries();const out=await PDFDocument.create();out.registerFontkit(fontkit);const fs=await Promise.all((await fonts()).map(b=>out.embedFont(b,{subset:true})));
 for(let i=0;i<pages.length;i++){const p=pages[i];let page;if(p.sourceId){const {bytes}=await engine('export',{sourceId:p.sourceId,index:p.index,removals:removals(p)});const src=await PDFDocument.load(bytes);[page]=await out.copyPages(src,[0]);out.addPage(page);}else page=out.addPage([p.w,p.h]);
 const crop=page.getCropBox(),r=((page.getRotation().angle%360)+360)%360;const maps={0:[1,0,0,1,crop.x,crop.y],90:[0,1,-1,0,crop.x+crop.width,crop.y],180:[-1,0,0,-1,crop.x+crop.width,crop.y+crop.height],270:[0,-1,1,0,crop.x,crop.y+crop.height]};page.pushOperators(pushGraphicsState(),concatTransformationMatrix(...maps[r]));
 for(const o of p.objects){const x=o.x,y=p.h-o.y-o.h,color=hex(o.color||'#202620'),opacity=o.opacity??1;page.pushOperators(pushGraphicsState());if(o.angle){const a=o.angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a),px=o.x,py=p.h-o.y;page.pushOperators(concatTransformationMatrix(c,-s,s,c,px-c*px-s*py,py+s*px-c*py));}
@@ -33,8 +33,8 @@ if(o.type==='draw'){for(let k=1;k<o.points.length;k++)page.drawLine({start:{x:o.
 if(o.type==='image'){const raw=await fetch(o.src).then(r=>r.arrayBuffer());const img=o.src.startsWith('data:image/jpeg')?await out.embedJpg(raw):await out.embedPng(raw);page.drawImage(img,{x,y,width:o.w,height:o.h,opacity});}page.pushOperators(popGraphicsState());}
 if(numbers)page.drawText(`${i+1} / ${pages.length}`,{x:p.w/2-15,y:16,font:fs[0],size:9,color:hex('#52645a')});page.pushOperators(popGraphicsState());page.setRotation(degrees((r+(p.rotation||0))%360));}
 out.setTitle(title);out.setProducer('ekoPDF');out.setCreator('ekoPDF');return out.save();}
-export async function imageExport(bytes,format,scale=2){const sourceId=uid(),{pages}=await engine('open',{sourceId,bytes});try{const zip=new JSZip();for(let i=0;i<pages.length;i++){const {png}=await engine('render',{sourceId,index:i,scale});let data=png;if(format==='jpg'){const bitmap=await createImageBitmap(new Blob([png]));const c=document.createElement('canvas');c.width=bitmap.width;c.height=bitmap.height;c.getContext('2d').drawImage(bitmap,0,0);data=new Uint8Array(await(await new Promise(r=>c.toBlob(r,'image/jpeg',.92))).arrayBuffer());bitmap.close();}zip.file(`sayfa-${i+1}.${format}`,data);}return zip.generateAsync({type:'uint8array'});}finally{await engine('close',{sourceId});}}
-export async function splitPDF(pages,title,groups,onProgress=()=>{}){
+export async function imageExport(bytes,format,scale=2){await loadLibraries();const sourceId=uid(),{pages}=await engine('open',{sourceId,bytes});try{const zip=new JSZip();for(let i=0;i<pages.length;i++){const {png}=await engine('render',{sourceId,index:i,scale});let data=png;if(format==='jpg'){const bitmap=await createImageBitmap(new Blob([png]));const c=document.createElement('canvas');c.width=bitmap.width;c.height=bitmap.height;c.getContext('2d').drawImage(bitmap,0,0);data=new Uint8Array(await(await new Promise(r=>c.toBlob(r,'image/jpeg',.92))).arrayBuffer());bitmap.close();}zip.file(`sayfa-${i+1}.${format}`,data);}return zip.generateAsync({type:'uint8array'});}finally{await engine('close',{sourceId});}}
+export async function splitPDF(pages,title,groups,onProgress=()=>{}){await loadLibraries();
   const zip=new JSZip(),name=safeName(title),pad=n=>String(n).padStart(3,'0');
   for(let i=0;i<groups.length;i++){
     onProgress(i+1,groups.length);
@@ -44,7 +44,7 @@ export async function splitPDF(pages,title,groups,onProgress=()=>{}){
   }
   return zip.generateAsync({type:'uint8array',compression:'DEFLATE'});
 }
-export async function compressPDF(bytes,mode='lossless',onProgress=()=>{}){
+export async function compressPDF(bytes,mode='lossless',onProgress=()=>{}){await loadLibraries();
   let optimized;
   if(mode==='lossless')optimized=(await engine('optimize',{bytes})).bytes;
   else{

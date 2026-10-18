@@ -7,9 +7,54 @@ export type Guide = {
   sections: Array<{ title: string; body: string }>;
   related: Array<{ label: string; href: string }>;
   keywords: string[];
+  updatedAt?: string;
 };
 
 export const guides: Guide[] = [
+  {
+    slug: "turkce-ocr-pdf", updatedAt: "2026-10-18", eyebrow: "Türkçe OCR rehberi",
+    title: "Taranmış PDF içinde Türkçe metin nasıl aranır?",
+    description: "Taranmış PDF'ye Türkçe ve İngilizce OCR uygula. Aranabilir metin katmanı, ilk 20 sayfa sınırı ve tanıma sonucunu kontrol etme adımları.",
+    keywords: ["Türkçe OCR", "taranmış PDF metin tanıma", "PDF aranabilir yapma"],
+    intro: "PDF'deki yazıları görebildiğin halde seçemiyor veya Ctrl+F ile bulamıyorsan sayfalar yalnızca görüntü olabilir. EkoPDF OCR, Türkçe ve İngilizce metni tarayıcında tanıyıp yeni PDF'ye görünmez bir metin katmanı ekler. OCR sonucu kaynak belgeden farklı olabilir; orijinalini sakla.",
+    sections: [
+      { title: "Önce sayfanın yönünü ve netliğini kontrol et", body: "Yan duran sayfaları PDF döndür aracıyla düzelt. Eğik çekilmiş, bulanık veya düşük çözünürlüklü görüntülerde harfler yanlış tanınabilir. Mümkünse net bir tarama kullan; PDF'de zaten seçilebilir metin varsa yeniden OCR uygulamak yerine doğrudan metin çıkarma aracını dene." },
+      { title: "25 MB altındaki PDF'yi seç ve OCR'ı başlat", body: "OCR aracında PDF'ni seç. Türkçe ve İngilizce birlikte tanınır; işlem cihazındaki tarayıcıda çalışır. Tanıma motoru ve dil dosyalarının ilk indirilmesi internet bağlantısı gerektirebilir. Çok sayfalı belgeler, cihazın işlem gücüne göre zaman alır." },
+      { title: "20 sayfa sınırını hesaba kat", body: "Bu araç en fazla ilk 20 sayfayı işler; daha uzun dosyanın kalan sayfaları OCR çıktısına dahil edilmez. Örneğin 24 sayfalı belgede önce PDF böl ile 1–20 ve 21–24 aralıklarını ayrı dosyalar yap, iki dosyaya OCR uygula ve gerekiyorsa sonuçları sırayla birleştir." },
+      { title: "İsim, tarih ve Türkçe karakterleri doğrula", body: "İndirdiğin PDF'de bir ismi Ctrl+F ile ara ve bir cümleyi kopyalayıp düz metin olarak kontrol et. Özellikle ı/i, ş/s, ğ/g ve 0/O ayrımına bak. El yazısı ve tablolar doğru tanınmayabilir. Metin katmanı kaynak sayfadaki sözcük konumlarını birebir izlemeyebilir; özgün düzeni koruyan Word dönüşümü bekleme." },
+      { title: "Word'e aktaracaksan OCR'dan sonra dönüştür", body: "Aranabilir çıktıyı PDF → Word aracına ekleyebilirsin. Bu adım tanınan metni DOCX'e aktarır; tablo ve sütun düzenini yeniden kurmaz. OCR görüntüleri yeniden oluşturur; dijital imza, form ve diğer etkileşimli öğelerin korunmasını bekleme." },
+    ],
+    related: [{ label: "Türkçe PDF OCR çalıştır", href: "/tools/ocr" }, { label: "Yan duran PDF'yi düzelt", href: "/tools/rotate" }, { label: "PDF'yi 20 sayfalık bölümlere ayır", href: "/tools/split" }, { label: "Tanınan metni Word'e aktar", href: "/tools/pdf-to-word" }],
+  },
+  {
+    slug: "pdf-sayfa-ayirma", updatedAt: "2026-10-18", eyebrow: "PDF bölme rehberi",
+    title: "PDF'den tek sayfa veya seçili sayfalar nasıl ayrılır?",
+    description: "PDF'den tek sayfa çıkar, sayfa aralığını ayır veya her sayfayı ayrı PDF indir. Görsel seçim ve toplu işlemin farkını örneklerle öğren.",
+    keywords: ["PDF sayfa ayırma", "PDF tek sayfa çıkarma", "PDF bölme"],
+    intro: "On iki sayfalık bir başvuru paketinden yalnızca bir sertifikayı göndermek için bütün belgeyi paylaşman gerekmez. PDF böl aracıyla tek sayfayı, belirli aralığı veya seçtiğin sayfaları yeni bir PDF olarak çıkarabilirsin. Orijinal dosya değişmez.",
+    sections: [
+      { title: "Tek sayfa çıkarmak için başlangıç ve bitişi eşitle", body: "PDF'yi seç ve Sayfa aralığı yönteminde örneğin başlangıca 4, bitişe 4 yaz. Çıktı yalnızca dördüncü sayfayı içerir. Burada PDF içindeki sıra numarası kullanılır; sayfanın üzerinde basılı numara kapak nedeniyle farklı olabilir." },
+      { title: "Ardışık sayfaları bir aralıkla ayır", body: "On iki sayfalık bir dosyadan 3–5 aralığını seçersen yeni PDF üç sayfa içerir. Başlangıç en az 1, bitiş belgenin sayfa sayısını aşmayacak şekilde seçilmeli. Dosya başına 25 MB sınırını kontrol et." },
+      { title: "Ardışık olmayan sayfaları görsel olarak seç", body: "Tek dosyada Sayfaları görsel olarak seç yöntemine geç. Örneğin 2, 5 ve 9 numaralı sayfaları işaretle ve sonucu indir. Küçük önizlemelerde doğru sayfaları seçtiğini kontrol et. Görsel seçim toplu dosya işlemede sunulmaz." },
+      { title: "Her sayfayı ayrı dosya veya toplu ZIP olarak indir", body: "Her sayfayı ayrı indir yöntemi belgedeki sayfalar için ayrı PDF'ler üretir. Birden fazla PDF'ye aynı aralık uygulanabilir; dosya başına 25 MB ve grup toplamında 500 MB giriş sınırı vardır. Tamamlanan sonuçları ayrı ayrı ya da ZIP olarak indir." },
+      { title: "Kısa dosyalardaki hatayı ve çıktı sırasını kontrol et", body: "2–5 aralığı üç sayfalık bir dosyaya uygulanamaz; bu dosya hata verirken uygun diğer dosyalar işlenebilir. Tamamlanan sonuçları aç, ilk ve son sayfayı kontrol et. Sayfaları yeniden bir araya getirmek için PDF birleştir aracını kullan." },
+    ],
+    related: [{ label: "PDF'den sayfa ayır", href: "/tools/split" }, { label: "Sayfaları yeniden birleştir", href: "/tools/merge" }, { label: "Toplu PDF işleme rehberi", href: "/guides/toplu-pdf-isleme" }],
+  },
+  {
+    slug: "pdf-sayfa-dondurme", updatedAt: "2026-10-18", eyebrow: "PDF yön düzeltme rehberi",
+    title: "PDF'de tek sayfa veya bütün sayfalar nasıl döndürülür?",
+    description: "Yan veya ters duran PDF sayfalarını 90, 180 ya da 270 derece döndür. Tek sayfa seçimi, önizleme ve indirme adımlarını öğren.",
+    keywords: ["PDF döndür", "PDF tek sayfa döndürme", "PDF yön değiştirme"],
+    intro: "Tarayıcıda belgeyi döndürmek her zaman dosyaya kaydedilmez. EkoPDF PDF döndür aracı yeni bir PDF oluşturur; yalnızca ekran görünümünü değiştirmekle kalmaz. Tek dosyada bütün sayfaları veya seçtiğin sayfaları çevirebilirsin.",
+    sections: [
+      { title: "Yan ya da ters duran PDF'yi aç", body: "25 MB altındaki PDF'ni seç. Önizlemede sayfalar arasında gezerek hangi sayfaların yanlış yönde olduğunu belirle. Orijinal dosyayı sakla; indirilen yeni kopyayı kullanacaksın." },
+      { title: "90, 180 veya 270 derece seç", body: "Dönüş mevcut yönün üzerine uygulanır. 180 derece baş aşağı sayfayı düzeltir; yan sayfa için 90 ya da 270 dereceyi önizleyerek seç. Her belgeye aynı açının uygun olduğunu varsayma." },
+      { title: "Yalnızca hatalı sayfaları işaretle", body: "Örneğin on sayfalık belgede yalnızca dördüncü sayfa yansa Yalnızca seçtiğim sayfaları döndür seçeneğini aç ve 4. sayfayı işaretle. Diğer sayfalar için bölüp tekrar birleştirmen gerekmez. İşleme başlamak için en az bir sayfa seç." },
+      { title: "İndirilen dosyayı yeniden aç", body: "PDF döndür işlemini çalıştırıp yeni dosyayı indir. Hedef sayfanın doğru yönde olduğunu ve seçmediğin sayfaların yönünün değişmediğini kontrol et. Döndürme sayfa içeriğini OCR ile yeniden tanımaz; taramayı aranabilir yapmak için ayrı OCR adımı gerekir." },
+    ],
+    related: [{ label: "PDF sayfalarını döndür", href: "/tools/rotate" }, { label: "Düzeltilen taramaya OCR uygula", href: "/tools/ocr" }, { label: "PDF'den sayfa ayır", href: "/tools/split" }],
+  },
   {
     slug: "pdf-belge-karsilastirma", eyebrow: "PDF karşılaştırma rehberi",
     title: "İki PDF belgesi arasındaki metin farkları nasıl bulunur?",

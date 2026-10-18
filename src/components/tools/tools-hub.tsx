@@ -121,8 +121,8 @@ export function ToolsHub() {
             <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-[-0.035em] sm:text-5xl lg:text-[56px]">{tr ? "Ücretsiz PDF düzenle ve sade CV oluştur" : "Edit PDFs and build a simple CV for free"}</h1>
             <p className="mt-6 max-w-xl text-lg leading-7 text-muted-foreground">{tr ? "PDF’lerinizi düzenleyin, dönüştürün ve birleştirin. CV stüdyosunda özgeçmişinizi hazırlayın, bilgilerinizi kontrol edin ve indirin." : "Edit, convert and merge PDFs. Build your resume in CV Studio, review your details and download."}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/tools/workspace" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90"><FilePenLine className="size-4" />{tr ? "PDF yükle ve başla" : "Upload a PDF to start"}<ArrowUpRight className="size-4" /></Link>
-              <Link href="/studio" className="inline-flex min-h-12 items-center gap-2 rounded-xl border bg-card px-5 font-semibold hover:bg-muted"><Sparkles className="size-4" />{tr ? "CV Stüdyosunu aç" : "Open CV Studio"}</Link>
+              <Link prefetch={false} href="/tools/workspace" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90"><FilePenLine className="size-4" />{tr ? "PDF yükle ve başla" : "Upload a PDF to start"}<ArrowUpRight className="size-4" /></Link>
+              <Link prefetch={false} href="/studio" className="inline-flex min-h-12 items-center gap-2 rounded-xl border bg-card px-5 font-semibold hover:bg-muted"><Sparkles className="size-4" />{tr ? "CV Stüdyosunu aç" : "Open CV Studio"}</Link>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground"><span>{tr ? "✓ Kayıt gerektirmez" : "✓ No account needed"}</span><span>{tr ? "✓ Ücretsiz" : "✓ Free"}</span><span className="flex items-center gap-1"><ShieldCheck className="size-4" />{tr ? "PDF işlemleri cihazınızda" : "PDF processing on your device"}</span></div>
           </div>
@@ -139,7 +139,7 @@ export function ToolsHub() {
           </div>
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[cards[0], cards[1], cards[3], cards[6]].map((card) => (
-            <Link
+            <Link prefetch={false}
               key={card.href}
               href={card.href}
               className="group relative flex min-h-52 flex-col rounded-2xl border border-border/70 bg-card p-5 transition duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_18px_50px_rgb(28_25_23/0.10)]"
@@ -167,7 +167,7 @@ export function ToolsHub() {
           </div>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[cards[2], cards[4], cards[5], cards[7], ...premium].map((card) => (
-              <Link
+              <Link prefetch={false}
                 key={card.href}
                 href={card.href}
                 className="group relative flex min-h-0 flex-col rounded-2xl border border-border/70 bg-transparent p-4 transition duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_18px_50px_rgb(28_25_23/0.10)]"

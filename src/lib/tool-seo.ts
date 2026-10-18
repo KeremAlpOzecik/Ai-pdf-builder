@@ -11,6 +11,7 @@ export type ToolSeo = {
   steps: Array<{ title: string; body: string }>;
   faqs: Array<{ question: string; answer: string }>;
   related: Array<{ label: string; href: string }>;
+  updatedAt?: string;
 };
 
 const batchFaqs = [
@@ -125,6 +126,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
   },
   split: {
     slug: "split",
+    updatedAt: "2026-10-18",
     title: "PDF böl | Sayfa aralığını ayır",
     h1: "PDF böl",
     description: "Birden fazla PDF’yi sayfa aralığına göre böl veya her sayfayı ayrı dosya yap. Tarayıcıda toplu PDF bölme, durum takibi ve ZIP indirme.",
@@ -144,7 +146,7 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
         answer: "Evet. Sayfa aralığını seç, yeni PDF indir.",
       },
     ],
-    related: [{ label: "PDF birleştir", href: "/tools/merge" }],
+    related: [{ label: "Tek sayfa ve sayfa aralığı ayırma rehberi", href: "/guides/pdf-sayfa-ayirma" }, { label: "PDF birleştir", href: "/tools/merge" }],
   },
   compress: {
     slug: "compress",
@@ -194,13 +196,14 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
   },
   ocr: {
     slug: "ocr",
+    updatedAt: "2026-10-18",
     title: "Ücretsiz OCR PDF | Taramayı aranabilir yap",
     h1: "Taranmış PDF’i ücretsiz OCR ile aranabilir yap",
     description:
       "Tarama veya fotoğraf PDF’sine Türkçe ve İngilizce OCR ile metin katmanı ekle. İlk 20 sayfa tarayıcıda işlenir; ücretsiz ve hesapsız.",
     keywords: ["ücretsiz OCR PDF", "tarama PDF metin", "OCR PDF ücretsiz"],
     summary:
-      "Görüntü sayfalarını okuyup görünmez bir metin katmanı ekler. Belge görünümü aynı kalır; kopyala-yapıştır ve arama çalışır. Uzun dosyalarda ilk 20 sayfa işlenir.",
+      "Türkçe ve İngilizce taramaları cihazında tanıyıp yeni PDF'ye görünmez metin katmanı ekle. Çıktı en fazla ilk 20 sayfayı içerir; kalan sayfalar dahil edilmez. Sayfa görüntüleri yeniden oluşturulur, form ve dijital imzalar korunmaz. İndirmeden sonra isim, tarih ve Türkçe karakterleri kontrol et.",
     steps: [
       { title: "Tarama PDF’ini seç", body: "Telefon fotoğrafı veya tarayıcı çıktısı yükle. Her dosya 25 MB altında olmalı." },
       { title: "OCR çalıştır", body: "Sayfalar tarayıcıda okunur. Türkçe ve İngilizce birlikte tanınır." },
@@ -211,8 +214,12 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
         question: "OCR ücretsiz mi?",
         answer: "Evet. Günlük işlem limiti yok. Dosya cihazında işlenir; hesap açmazsın.",
       },
+      { question: "20 sayfadan uzun PDF'ye ne olur?", answer: "Yalnızca ilk 20 sayfa çıktıya dahil edilir. Belgeyi önce PDF böl ile en fazla 20 sayfalık parçalara ayır, her parçaya OCR uygula ve gerekirse sonuçları birleştir." },
+      { question: "Türkçe karakterler ve sayfa düzeni doğru tanınır mı?", answer: "Türkçe ve İngilizce birlikte tanınır; bulanık taramalar, tablolar ve el yazısı hatalı sonuç verebilir. Ctrl+F ile arama ve kopyala-yapıştır testi yap. Metin katmanı sözcüklerin özgün konumlarını birebir izlemeyebilir." },
     ],
     related: [
+      { label: "Türkçe OCR ve 20 sayfa sınırı rehberi", href: "/guides/turkce-ocr-pdf" },
+      { label: "Yan duran taramayı düzelt", href: "/tools/rotate" },
       { label: "PDF → Word", href: "/tools/pdf-to-word" },
       { label: "PDF düzenle", href: "/tools/workspace" },
     ],
@@ -262,24 +269,27 @@ export const toolSeo: Record<ToolSlug, ToolSeo> = {
   },
   rotate: {
     slug: "rotate",
+    updatedAt: "2026-10-18",
     title: "Ücretsiz PDF döndür",
     h1: "PDF sayfalarını ücretsiz döndür",
-    description: "Yatay taranmış sayfaları 90, 180 veya 270 derece çevir. Ücretsiz PDF rotate.",
+    description: "PDF'nin tümünü veya seçtiğin sayfaları 90, 180 ya da 270 derece döndür. Önizlemeyi kontrol et, yeni PDF'yi ücretsiz ve hesapsız indir.",
     keywords: ["PDF döndürme ücretsiz", "PDF rotate", "sayfa çevirme PDF"],
     summary:
-      "Telefonla çekilmiş evrak ters duruyorsa tüm sayfaları aynı açıyla çevir. Tek sayfa için önce böl, döndür, sonra birleştir.",
+      "Yan veya ters duran PDF'yi 90, 180 ya da 270 derece çevir ve yeni dosya olarak indir. Tek dosyada yalnızca hatalı sayfaları seçebilirsin; önce bölüp yeniden birleştirmen gerekmez. Önizleme ile açıyı kontrol et, ardından indirilen PDF'yi yeniden aç.",
     steps: [
       { title: "PDF seç", body: "Yanlış yöndeki dosyayı yükle." },
-      { title: "Açıyı seç", body: "90° çoğu yatay taramayı düzeltir." },
-      { title: "Yeni PDF indir", body: "İlk sayfayı açıp yönün doğru olduğunu gör." },
+      { title: "Açıyı ve sayfaları seç", body: "90, 180 veya 270 derece seçip önizle. Tek PDF'de yalnızca hatalı sayfaları çevirmek için Yalnızca seçtiğim sayfaları döndür seçeneğini aç ve sayfaları işaretle." },
+      { title: "Yeni PDF indir", body: "İşlemi başlat ve yeni PDF'yi indir. Döndürdüğün sayfaları ve diğer sayfaların yönünü yeniden açarak kontrol et." },
     ],
     faqs: [
       {
         question: "Tek sayfayı döndürebilir miyim?",
-        answer: "Önce sayfa aralığını ayır, döndür, gerekirse tekrar birleştir.",
+        answer: "Evet. Tek dosyada Yalnızca seçtiğim sayfaları döndür seçeneğini açıp istediğin sayfaları işaretle. Seçilmemiş sayfalara dönüş uygulanmaz.",
       },
+      { question: "Bu işlem yalnızca ekrandaki görünümü mü değiştirir?", answer: "Hayır. İndirilen yeni PDF'ye sayfa dönüşü kaydedilir. Orijinal dosyan değişmez. Önizlemede ve indirdiğin dosyada doğru açıyı kontrol et." },
     ],
     related: [
+      { label: "Tek sayfa döndürme rehberi", href: "/guides/pdf-sayfa-dondurme" },
       { label: "PDF böl", href: "/tools/split" },
       { label: "PDF birleştir", href: "/tools/merge" },
     ],

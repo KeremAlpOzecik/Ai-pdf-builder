@@ -34,7 +34,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     headline: guide.title,
     description: guide.description,
     image: absoluteUrl("/opengraph-image"),
-    dateModified: SEO_UPDATED_AT,
+    dateModified: guide.updatedAt ?? SEO_UPDATED_AT,
     inLanguage: "tr-TR",
     author: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl() },
     publisher: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl() },
@@ -66,6 +66,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           </p>
           <p className="mt-10 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{guide.eyebrow}</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">{guide.title}</h1>
+          <p className="mt-4 text-sm text-muted-foreground">Son güncelleme: <time dateTime={guide.updatedAt ?? SEO_UPDATED_AT}>{new Intl.DateTimeFormat("tr-TR", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${guide.updatedAt ?? SEO_UPDATED_AT}T00:00:00Z`))}</time></p>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">{guide.intro}</p>
           <div className="mt-12 space-y-10">
             {guide.sections.map((section) => (

@@ -1,5 +1,9 @@
 # AI CV Builder
 
+Live product: [EkoPDF — free PDF tools and CV studio](https://ekopdf.com).
+
+Use the [PDF editor](https://ekopdf.com/tools/workspace), [Turkish PDF OCR](https://ekopdf.com/tools/ocr), or [PDF page splitter](https://ekopdf.com/tools/split). Step-by-step instructions are available in the [PDF and CV guides](https://ekopdf.com/guides).
+
 ATS-friendly CV builder with a live split-screen preview. Edit locally in Zustand, import LinkedIn PDFs or screenshots through Gemini, then export PDF / Word. Optional Supabase auth stores CVs in the cloud.
 
 ## Stack

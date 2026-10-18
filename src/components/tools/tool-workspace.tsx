@@ -20,20 +20,7 @@ import { Label } from "@/components/ui/label";
 import { downloadBlob as saveBlob, stem } from "@/lib/download";
 import { copy } from "@/lib/i18n";
 import { useDisplayLanguage, useLabels } from "@/components/providers";
-import {
-  compressPdf,
-  imagesToPdf,
-  mergePdfs,
-  numberPdfPages,
-  ocrPdf,
-  pdfToJpegs,
-  rotatePdf,
-  signPdf,
-  splitPdf,
-  watermarkPdf,
-  type CompressQuality,
-  type PdfPlacement,
-} from "@/lib/pdf/ops";
+import type { CompressQuality, PdfPlacement } from "@/lib/pdf/ops";
 import { openPdf } from "@/lib/pdf/pdfjs-client";
 import { MAX_FILE_BYTES, isToolSlug, type ToolSlug } from "@/lib/tools";
 
@@ -177,6 +164,7 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "workspace" | "compare-
   }
 
   async function processOne(file: File) {
+    const { splitPdf, compressPdf, ocrPdf, signPdf, watermarkPdf, rotatePdf, numberPdfPages } = await import("@/lib/pdf/ops");
     if (slug === "word-to-pdf") {
       const { docxToPdf } = await import("@/lib/pdf/word");
       const bytes = await docxToPdf(file);
@@ -229,12 +217,15 @@ function GenericTool({ slug }: { slug: Exclude<ToolSlug, "workspace" | "compare-
     setProgress("");
     try {
       if (slug === "merge") {
+        const { mergePdfs } = await import("@/lib/pdf/ops");
         const bytes = await mergePdfs(files);
         downloadBlob(new Blob([bytes as BlobPart], { type: "application/pdf" }), "merged.pdf");
       } else if (slug === "jpg-pdf" && jpgMode === "to-pdf") {
+        const { imagesToPdf } = await import("@/lib/pdf/ops");
         const bytes = await imagesToPdf(files);
         downloadBlob(new Blob([bytes as BlobPart], { type: "application/pdf" }), "images.pdf");
       } else if (slug === "jpg-pdf") {
+        const { pdfToJpegs } = await import("@/lib/pdf/ops");
         const pages = await pdfToJpegs(files[0]);
         for (const page of pages) downloadBlob(page.blob, page.name);
       } else {

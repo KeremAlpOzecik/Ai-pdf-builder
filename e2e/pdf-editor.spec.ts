@@ -4,6 +4,17 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import fontkit from '@pdf-lib/fontkit';
 
 const studio = (page: Page) => page.frameLocator('iframe[title="ekoPDF PDF düzenleyici"]');
+test('PDF engine downloads on document open instead of the landing page', async ({ page }) => {
+  const engineRequests: string[] = [];
+  page.on('request', request => {
+    if (request.url().includes('/pdf-studio/engine.js') || request.url().includes('/mupdf-wasm.wasm')) engineRequests.push(request.url());
+  });
+  await page.goto('/tools/workspace');
+  await expect(studio(page).locator('#welcome')).toBeVisible();
+  expect(engineRequests).toEqual([]);
+  await open(page);
+  expect(engineRequests.some(url => url.includes('/mupdf-wasm.wasm'))).toBe(true);
+});
 test('old route redirects and sitemap advertises the workspace route',async({request})=>{
   const old=await request.get('/tools/edit-pdf?from=bookmark',{maxRedirects:0});
   expect(old.status()).toBe(308);expect(old.headers().location).toBe('/tools/workspace?from=bookmark');

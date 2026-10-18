@@ -76,6 +76,9 @@ export function FileDrop({
       <input
         ref={inputRef}
         type="file"
+        aria-label={multiple ? labels.dropFiles : labels.dropFile}
+        aria-describedby={id}
+        disabled={disabled}
         accept={accept}
         multiple={multiple}
         className="sr-only"

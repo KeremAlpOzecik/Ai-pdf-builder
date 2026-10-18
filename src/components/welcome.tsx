@@ -61,7 +61,7 @@ export function Welcome() {
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
             {labels.welcomeSubtitle}
           </p>
-      <p className="mt-3 text-sm text-muted-foreground/80">{labels.welcomeNoAccount}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{labels.welcomeNoAccount}</p>
           <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
             {targetLanguage === "TR" ? LOCAL_IMPORT_TR : LOCAL_IMPORT_EN}
           </p>

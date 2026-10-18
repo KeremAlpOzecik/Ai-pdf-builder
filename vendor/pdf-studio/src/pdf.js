@@ -2,10 +2,12 @@ import {PDFDocument,rgb,degrees,pushGraphicsState,popGraphicsState,concatTransfo
 import fontkit from '@pdf-lib/fontkit';
 import JSZip from 'jszip';
 import {safeName} from './document-tools.js';
-const worker=new Worker('/pdf-studio/engine.js',{type:'module'});let serial=0;const jobs=new Map();
+let worker,serial=0;const jobs=new Map();
+// Download the PDF engine only when a document operation needs it.
+function getWorker(){if(worker)return worker;worker=new Worker('/pdf-studio/engine.js',{type:'module'});
 worker.onmessage=({data})=>{const j=jobs.get(data.id);if(j){jobs.delete(data.id);data.error?j.reject(Error(data.error)):j.resolve(data.result);}};
-worker.onerror=e=>{for(const j of jobs.values())j.reject(Error(e.message||'PDF motoru başlatılamadı.'));jobs.clear();};
-export function engine(op,args={}){if(op==='open'||op==='close')fontCache.clear();return new Promise((resolve,reject)=>{const id=++serial;jobs.set(id,{resolve,reject});worker.postMessage({id,op,...args});});}
+worker.onerror=e=>{for(const j of jobs.values())j.reject(Error(e.message||'PDF motoru başlatılamadı.'));jobs.clear();worker.terminate();worker=undefined;};return worker;}
+export function engine(op,args={}){if(op==='open'||op==='close')fontCache.clear();return new Promise((resolve,reject)=>{const active=getWorker(),id=++serial;jobs.set(id,{resolve,reject});active.postMessage({id,op,...args});});}
 export const uid=()=>crypto.randomUUID();
 const fontCache=new Map();
 function fontRequest(o){return {font:o.nativeFont,object:{text:o.text,size:o.size,w:o.w,h:o.h,color:o.color,opacity:o.opacity,align:o.align}};}
